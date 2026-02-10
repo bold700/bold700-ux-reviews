@@ -477,7 +477,7 @@
 
   .url-bar {
     display: flex; align-items: center; background: var(--surface2); border: 1px solid var(--border);
-    border-radius: var(--radius); padding: 0 12px; height: 36px; width: 400px; gap: 8px;
+    border-radius: var(--radius); padding: 0 12px; height: 36px; width: 340px; min-width: 160px; gap: 8px;
   }
 
   .url-bar svg { flex-shrink: 0; color: var(--text-muted); }
@@ -489,8 +489,9 @@
     border-radius: var(--radius); font-weight: 600; font-size: 13px; cursor: pointer; transition: background 0.2s;
   }
   .btn-go:hover { background: var(--accent-hover); }
-  .btn-open-ext { background: var(--surface2); color: var(--text); border: 1px solid var(--border); padding: 0 10px; font-size: 16px; min-width: 36px; }
+  .btn-open-ext { background: var(--surface2); color: var(--text-muted); border: 1px solid var(--border); padding: 0 14px; font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 5px; }
   .btn-open-ext:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn-open-ext.active { background: var(--accent); color: #fff; border-color: var(--accent); }
 
   .topbar-right { display: flex; align-items: center; gap: 12px; }
 
@@ -512,6 +513,8 @@
     height: 44px; background: var(--surface); border-bottom: 1px solid var(--border);
     display: flex; align-items: center; justify-content: center; gap: 4px;
   }
+  #deviceBarNormal { display: flex; align-items: center; gap: 4px; }
+  #deviceBarReview { display: none; align-items: center; justify-content: space-between; width: 100%; padding: 0 24px; }
 
   .device-btn {
     display: flex; align-items: center; gap: 6px; padding: 6px 14px; background: none;
@@ -526,24 +529,16 @@
   .main { display: flex; height: calc(100vh - 100px); }
 
   /* ─ Review Modus (site in apart venster) ─ */
-  .main.review-mode .preview-panel { display: none; }
-  .main.review-mode .review-panel { width: 100%; max-width: 100%; min-width: 100%; border-right: none; }
+  .main.review-mode .preview-panel { display: none !important; }
+  .main.review-mode .review-panel { width: 100% !important; max-width: 100% !important; min-width: 100% !important; border-right: none; }
   .main.review-mode .review-body { max-width: 100%; }
-  .main.review-mode .questions-area { max-width: 760px; }
+  .main.review-mode .questions-area { max-width: 100%; }
   .main.review-mode .step-stepper { width: 200px; }
 
-  .device-bar.review-mode-bar { justify-content: space-between; padding: 0 24px; }
+  .device-bar.review-mode-bar { justify-content: center; padding: 0 24px; }
   .review-mode-info { display: flex; align-items: center; gap: 10px; font-size: 12px; color: var(--text-muted); }
   .review-mode-info .dot-live { width: 8px; height: 8px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
   @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
-  .review-mode-actions { display: flex; gap: 6px; }
-  .review-mode-actions button {
-    padding: 5px 12px; border-radius: var(--radius-sm); font-size: 11px; font-weight: 600;
-    cursor: pointer; border: 1px solid var(--border); background: var(--surface2); color: var(--text-muted); transition: all 0.2s;
-  }
-  .review-mode-actions button:hover { border-color: var(--accent); color: var(--accent); }
-  .review-mode-actions .btn-primary-sm { background: var(--accent); color: #fff; border-color: var(--accent); }
-  .review-mode-actions .btn-primary-sm:hover { background: var(--accent-hover); }
 
   /* Preview panel */
   .preview-panel {
@@ -796,6 +791,9 @@
   }
   .screenshot-btn.capture-primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); color: #fff; }
   .screenshot-btn.capture-primary:disabled { opacity: 0.6; cursor: wait; }
+  .screenshot-hint { font-size: 10px; color: var(--text-muted); opacity: 0.6; display: flex; align-items: center; gap: 3px; }
+  .screenshot-row.paste-target { border-left: 2px solid var(--accent); padding-left: 8px; }
+  .screenshot-row.paste-target .screenshot-hint { color: var(--accent); opacity: 1; }
   .capture-flash {
     position: absolute; inset: 0; background: rgba(255,255,255,0.8); z-index: 100;
     display: flex; align-items: center; justify-content: center; border-radius: var(--radius);
@@ -816,17 +814,6 @@
     display: flex; align-items: center; justify-content: center; cursor: pointer;
   }
   .screenshot-lightbox img { max-width: 90%; max-height: 90%; border-radius: var(--radius); }
-
-  .paste-capture-toast {
-    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
-    background: var(--accent); color: #fff; padding: 14px 28px; border-radius: var(--radius);
-    font-size: 14px; font-weight: 600; z-index: 5000; display: flex; align-items: center; gap: 10px;
-    box-shadow: 0 8px 32px rgba(255,107,0,0.3); animation: slideUp 0.3s ease;
-  }
-  .paste-capture-toast .toast-close {
-    background: none; border: none; color: #fff; opacity: 0.7; cursor: pointer; font-size: 18px; margin-left: 8px;
-  }
-  @keyframes slideUp { from { transform: translateX(-50%) translateY(20px); opacity:0; } to { transform: translateX(-50%) translateY(0); opacity:1; } }
 
   .severity-row { display: flex; gap: 6px; margin-top: 8px; margin-bottom: 10px; }
 
@@ -1132,8 +1119,12 @@
     .step-stepper { width: 44px; }
     .stepper-label { display: none; }
     .stepper-item { padding: 0 9px; }
-    .url-bar { width: 280px; }
+    .url-bar { width: 220px; }
     .dash-stats { grid-template-columns: repeat(2, 1fr); }
+    /* Review mode stays full-width at small screens too */
+    .main.review-mode .review-panel { width: 100%; min-width: 100%; }
+    .main.review-mode .step-stepper { width: 160px; }
+    .main.review-mode .stepper-label { display: block; }
   }
 
   /* ─ Scorecard Dashboard responsive ─ */
@@ -1298,7 +1289,7 @@
         <input type="url" id="urlInput" placeholder="Voer URL in..." onkeydown="if(event.key==='Enter')loadUrl()">
       </div>
       <button class="btn-go" onclick="loadUrl()">Laden</button>
-      <button class="btn-go btn-open-ext" onclick="openSiteInWindow()" title="Open site in apart venster (werkt altijd)">↗</button>
+      <button class="btn-go btn-open-ext" id="btnOpenExt" onclick="toggleSiteWindow()" title="Open site in apart venster"><i data-lucide="external-link" style="width:13px;height:13px"></i> Open in venster</button>
     </div>
     <div class="topbar-right">
       <div class="progress-badge">Voortgang: <span id="progressPct">0%</span></div>
@@ -1309,19 +1300,27 @@
     </div>
   </div>
 
-  <div class="device-bar">
-    <button class="device-btn active" onclick="switchDevice('desktop', this)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-      Desktop
-    </button>
-    <button class="device-btn" onclick="switchDevice('tablet', this)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="12" y1="18" x2="12" y2="18"/></svg>
-      Tablet
-    </button>
-    <button class="device-btn" onclick="switchDevice('mobile', this)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12" y2="18"/></svg>
-      Mobile
-    </button>
+  <div class="device-bar" id="deviceBar">
+    <div id="deviceBarNormal">
+      <button class="device-btn active" onclick="switchDevice('desktop', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        Desktop
+      </button>
+      <button class="device-btn" onclick="switchDevice('tablet', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="12" y1="18" x2="12" y2="18"/></svg>
+        Tablet
+      </button>
+      <button class="device-btn" onclick="switchDevice('mobile', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12" y2="18"/></svg>
+        Mobile
+      </button>
+    </div>
+    <div id="deviceBarReview">
+      <div class="review-mode-info">
+        <span class="dot-live"></span>
+        <span>Site geopend in apart venster — plak screenshots met Ctrl+V</span>
+      </div>
+    </div>
   </div>
 
   <div class="main">
@@ -2448,12 +2447,18 @@ function loadUrl() {
 
 let siteWindow = null;
 
-function openSiteInWindow() {
-  const url = document.getElementById('urlInput').value.trim();
-  if (!url) { alert('Voer eerst een URL in.'); return; }
-  let finalUrl = url;
-  if (!url.startsWith('http://') && !url.startsWith('https://')) finalUrl = 'https://' + url;
-  openSideBySide(finalUrl);
+function toggleSiteWindow() {
+  const main = document.querySelector('.main');
+  const isReviewMode = main && main.classList.contains('review-mode');
+  if (isReviewMode) {
+    exitReviewMode();
+  } else {
+    const url = document.getElementById('urlInput').value.trim();
+    if (!url) { alert('Voer eerst een URL in.'); return; }
+    let finalUrl = url;
+    if (!url.startsWith('http://') && !url.startsWith('https://')) finalUrl = 'https://' + url;
+    openSideBySide(finalUrl);
+  }
 }
 
 function openSideBySide(url) {
@@ -2463,7 +2468,58 @@ function openSideBySide(url) {
   siteWindow = window.open(url, 'bold700_preview', `width=${w},height=${screen.height},left=${screen.width - w},top=0`);
   // Resize our own window to the left half
   try { window.resizeTo(w, screen.height); window.moveTo(0, 0); } catch(e) {}
+  // Activate review mode
+  enterReviewMode();
 }
+
+function enterReviewMode() {
+  const main = document.querySelector('.main');
+  if (main) main.classList.add('review-mode');
+  // Directly hide preview panel as fallback
+  const pp = document.querySelector('.preview-panel');
+  if (pp) pp.style.display = 'none';
+  const rp = document.querySelector('.review-panel');
+  if (rp) { rp.style.width = '100%'; rp.style.maxWidth = '100%'; rp.style.minWidth = '100%'; rp.style.borderRight = 'none'; }
+  const bar = document.getElementById('deviceBar');
+  if (bar) bar.classList.add('review-mode-bar');
+  const normal = document.getElementById('deviceBarNormal');
+  const review = document.getElementById('deviceBarReview');
+  if (normal) normal.style.display = 'none';
+  if (review) review.style.display = 'flex';
+  // Toggle button text
+  const extBtn = document.getElementById('btnOpenExt');
+  if (extBtn) { extBtn.innerHTML = '<i data-lucide="arrow-left" style="width:13px;height:13px"></i> Terug naar preview'; extBtn.classList.add('active'); }
+  // Hide "Capture preview" buttons (no iframe to capture)
+  document.querySelectorAll('.screenshot-btn.capture-primary').forEach(b => b.style.display = 'none');
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+function exitReviewMode() {
+  const main = document.querySelector('.main');
+  if (main) main.classList.remove('review-mode');
+  // Restore preview panel
+  const pp = document.querySelector('.preview-panel');
+  if (pp) pp.style.display = '';
+  const rp = document.querySelector('.review-panel');
+  if (rp) { rp.style.width = ''; rp.style.maxWidth = ''; rp.style.minWidth = ''; rp.style.borderRight = ''; }
+  const bar = document.getElementById('deviceBar');
+  if (bar) bar.classList.remove('review-mode-bar');
+  const normal = document.getElementById('deviceBarNormal');
+  const review = document.getElementById('deviceBarReview');
+  if (normal) normal.style.display = 'flex';
+  if (review) review.style.display = 'none';
+  // Restore toggle button text
+  const extBtn = document.getElementById('btnOpenExt');
+  if (extBtn) { extBtn.innerHTML = '<i data-lucide="external-link" style="width:13px;height:13px"></i> Open in venster'; extBtn.classList.remove('active'); }
+  // Restore "Capture preview" buttons
+  document.querySelectorAll('.screenshot-btn.capture-primary').forEach(b => b.style.display = '');
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+  // Close site window
+  if (siteWindow && !siteWindow.closed) siteWindow.close();
+  siteWindow = null;
+}
+
+// focusSiteWindow and captureExternalScreenshot removed — simplified to toggle + Ctrl+V paste
 
 function refreshThumbnail(url) {
   const img = document.getElementById('thumbImg');
@@ -2547,6 +2603,7 @@ function prevStep() {
 // ═══════════════ RENDER STEP ═══════════════
 function renderStep(stepIndex, resetScroll) {
   if (resetScroll === undefined) resetScroll = true;
+  if (resetScroll) lastActiveQId = null; // reset paste target on step change
   const step = reviewSteps[stepIndex];
   const answers = getAnswers();
   const area = document.getElementById('questionsArea');
@@ -2575,7 +2632,7 @@ function renderStep(stepIndex, resetScroll) {
     ${step.questions.map((q, qi) => {
       const a = answers[q.id] || {};
       return `
-        <div class="question-card ${a.score === 'nvt' ? 'answered-nvt' : a.score ? 'answered' : ''}" id="card-${q.id}">
+        <div class="question-card ${a.score === 'nvt' ? 'answered-nvt' : a.score ? 'answered' : ''}" id="card-${q.id}" onclick="setActiveQuestion('${q.id}')">
           <div class="question-label"><span class="q-num">${qi + 1}.</span>${q.text}${a.autoScanned ? '<span class="auto-badge"><i data-lucide="zap"></i> auto</span>' : ''}</div>
           <div class="score-row">
             <button class="score-btn score-bad ${a.score==='bad'?'selected':''}" onclick="setScore('${q.id}','bad')"><i data-lucide="x"></i> Niet OK</button>
@@ -2597,8 +2654,8 @@ function renderStep(stepIndex, resetScroll) {
               <button class="screenshot-remove" onclick="removeScreenshot('${q.id}')" title="Verwijder">×</button>
             ` : `
               <button class="screenshot-btn capture-primary" id="capBtn-${q.id}" onclick="capturePreviewScreenshot('${q.id}')" title="Maak direct een screenshot van de preview"><i data-lucide="camera"></i> Capture preview</button>
-              <button class="screenshot-btn" onclick="startPasteCapture('${q.id}')" title="Handmatig screenshot plakken"><i data-lucide="clipboard-paste"></i> Plak</button>
               <button class="screenshot-btn" onclick="document.getElementById('file-${q.id}').click()" title="Upload een afbeelding"><i data-lucide="upload"></i> Upload</button>
+              <span class="screenshot-hint"><i data-lucide="clipboard" style="width:11px;height:11px"></i> Ctrl+V plakt screenshot</span>
             `}
             <input type="file" id="file-${q.id}" accept="image/*" style="display:none" onchange="handleScreenshot('${q.id}', this)">
           </div>
@@ -2748,39 +2805,62 @@ function removeScreenshot(qId) {
   }
 }
 
-// Paste-based screenshot capture
-let pendingPasteQId = null;
-let pasteToast = null;
+// ── Auto-paste screenshot on Ctrl+V ──
+let lastActiveQId = null; // tracks which question user last interacted with
 
-function startPasteCapture(qId) {
-  pendingPasteQId = qId;
-  // Show instruction toast
-  if (pasteToast) pasteToast.remove();
-  pasteToast = document.createElement('div');
-  pasteToast.className = 'paste-capture-toast';
-  const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
-  pasteToast.innerHTML = `<i data-lucide="camera"></i> Maak een screenshot (${isMac ? 'Cmd+Shift+4' : 'Win+Shift+S'}), selecteer het preview-gebied, en plak hier met ${isMac ? 'Cmd+V' : 'Ctrl+V'} <button class="toast-close" onclick="cancelPasteCapture()">×</button>`;
-  document.body.appendChild(pasteToast);
-  if (typeof lucide !== 'undefined') lucide.createIcons({nodes:[pasteToast]});
+function setActiveQuestion(qId) {
+  lastActiveQId = qId;
+  // Visual indicator: highlight active question's screenshot row
+  document.querySelectorAll('.screenshot-row').forEach(r => r.classList.remove('paste-target'));
+  const row = document.querySelector(`#notes-${qId}`)?.closest('.question-card')?.querySelector('.screenshot-row');
+  if (row) row.classList.add('paste-target');
 }
 
-function cancelPasteCapture() {
-  pendingPasteQId = null;
-  if (pasteToast) { pasteToast.remove(); pasteToast = null; }
+function getActiveQuestionId() {
+  // 1. If a notes textarea is focused, use that question
+  const focused = document.activeElement;
+  if (focused && focused.id && focused.id.startsWith('notes-')) {
+    return focused.id.replace('notes-', '');
+  }
+  // 2. Use last actively clicked/interacted question
+  if (lastActiveQId) {
+    // Verify it's still on the current step
+    if (typeof reviewSteps !== 'undefined' && reviewSteps[currentStep]) {
+      const onStep = reviewSteps[currentStep].questions.some(q => q.id === lastActiveQId);
+      if (onStep) return lastActiveQId;
+    }
+  }
+  // 3. Fallback: first question in current step without a screenshot
+  if (typeof reviewSteps !== 'undefined' && typeof currentStep !== 'undefined' && reviewSteps[currentStep]) {
+    const answers = getAnswers();
+    for (const q of reviewSteps[currentStep].questions) {
+      if (!answers[q.id]?.screenshot) return q.id;
+    }
+    return reviewSteps[currentStep].questions[0]?.id;
+  }
+  return null;
 }
 
-// Global paste listener
+// Global paste listener — works automatically, no need to click "Plak" first
 document.addEventListener('paste', function(e) {
-  if (!pendingPasteQId) return;
+  // Only on review screen
+  const reviewScreen = document.getElementById('reviewScreen');
+  if (!reviewScreen || reviewScreen.classList.contains('hidden')) return;
+  // Don't intercept if typing in a text field (unless it's a notes textarea)
+  const focused = document.activeElement;
+  const isTextInput = focused && (focused.tagName === 'INPUT' && focused.type !== 'file');
+  if (isTextInput) return;
+
   const items = e.clipboardData?.items;
   if (!items) return;
   for (const item of items) {
     if (item.type.startsWith('image/')) {
       e.preventDefault();
+      const targetQId = getActiveQuestionId();
+      if (!targetQId) return;
       const blob = item.getAsFile();
       const reader = new FileReader();
       reader.onload = function(ev) {
-        // Resize
         const img = new Image();
         img.onload = function() {
           const canvas = document.createElement('canvas');
@@ -2791,11 +2871,16 @@ document.addEventListener('paste', function(e) {
           canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
           const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
           const answers = getAnswers();
-          if (!answers[pendingPasteQId]) answers[pendingPasteQId] = {};
-          answers[pendingPasteQId].screenshot = dataUrl;
+          if (!answers[targetQId]) answers[targetQId] = {};
+          answers[targetQId].screenshot = dataUrl;
           saveState();
-          cancelPasteCapture();
+          // Flash the card to confirm paste
+          const card = document.getElementById('card-' + targetQId);
+          if (card) { card.style.boxShadow = '0 0 0 2px var(--accent)'; setTimeout(() => card.style.boxShadow = '', 800); }
           renderStep(currentStep, false);
+          // Upload to Firebase in background
+          const project = getActiveProject();
+          if (project) uploadScreenshotToStorage(project.id, targetQId, dataUrl);
         };
         img.src = ev.target.result;
       };
@@ -2954,8 +3039,6 @@ async function capturePreviewScreenshot(qId) {
     }
     console.error('[Capture] Failed:', e);
     if (btn) { btn.disabled = false; btn.innerHTML = '<i data-lucide="camera"></i> Capture preview'; lucide.createIcons({nodes:[btn]}); }
-    // Fall back to paste approach
-    startPasteCapture(qId);
   }
 }
 
