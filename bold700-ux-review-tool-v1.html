@@ -501,8 +501,6 @@
 
   .topbar-left { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
   .topbar-right { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
-  .topbar-right .btn-icon { flex-shrink: 0; min-width: 28px; min-height: 28px; }
-  .topbar-right .btn-nav { flex-shrink: 0; white-space: nowrap; }
 
   .lucide, i[data-lucide] { width: 1em; height: 1em; display: inline-block; vertical-align: -0.125em; stroke-width: 2; }
   .icon-inline { display: inline-flex; align-items: center; gap: 4px; }
@@ -524,8 +522,6 @@
     cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; padding: 0;
   }
   .btn-icon:hover { border-color: var(--accent); color: var(--accent); }
-  .btn-icon.scanning { animation: scanPulse 1.5s ease-in-out infinite; }
-  @keyframes scanPulse { 0%, 100% { opacity: 0.6; } 50% { opacity: 1; box-shadow: 0 0 8px rgba(59,130,246,0.4); } }
 
   /* Device bar (above preview frame) */
   .preview-device-bar {
@@ -684,14 +680,6 @@
   .step-stepper::-webkit-scrollbar { width: 4px; }
   .step-stepper::-webkit-scrollbar-thumb { background: var(--surface3); border-radius: 2px; }
 
-  .stepper-module-header {
-    padding: 8px 14px 4px 14px;
-    margin-top: 4px;
-    font-size: 10px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
   .stepper-item {
     display: flex;
     gap: 10px;
@@ -745,17 +733,17 @@
   .stepper-info { display: flex; flex-direction: column; justify-content: center; min-height: 26px; padding: 3px 0; overflow: hidden; min-width: 0; }
 
   /* Stepper states */
-  .stepper-item.pending .stepper-circle { border-color: var(--mod-color, var(--border)); color: var(--text-muted); background: transparent; opacity: 0.5; }
+  .stepper-item.pending .stepper-circle { border-color: var(--border); color: var(--text-muted); background: transparent; }
   .stepper-item.pending .stepper-line { background: var(--border); }
   .stepper-item.pending .stepper-label { color: var(--text-muted); }
 
-  .stepper-item.active .stepper-circle { border-color: var(--mod-color, var(--accent)); color: #fff; background: var(--mod-color, var(--accent)); box-shadow: 0 0 12px color-mix(in srgb, var(--mod-color, var(--accent)) 40%, transparent); }
+  .stepper-item.active .stepper-circle { border-color: var(--accent); color: #fff; background: var(--accent); box-shadow: 0 0 12px rgba(255,107,0,0.4); }
   .stepper-item.active .stepper-line { background: var(--border); }
-  .stepper-item.active .stepper-label { color: var(--mod-color, var(--accent)); font-weight: 700; }
+  .stepper-item.active .stepper-label { color: var(--accent); font-weight: 700; }
 
-  .stepper-item.completed .stepper-circle { border-color: var(--mod-color, var(--green)); color: #fff; background: var(--mod-color, var(--green)); }
-  .stepper-item.completed .stepper-line { background: var(--mod-color, var(--green)); }
-  .stepper-item.completed .stepper-label { color: var(--mod-color, var(--green)); }
+  .stepper-item.completed .stepper-circle { border-color: var(--green); color: #fff; background: var(--green); }
+  .stepper-item.completed .stepper-line { background: var(--green); }
+  .stepper-item.completed .stepper-label { color: var(--green); }
 
   .stepper-meta { font-size: 10px; font-weight: 400; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2; margin-top: 1px; color: var(--text-muted); }
 
@@ -767,14 +755,8 @@
   .questions-area::-webkit-scrollbar-track { background: transparent; }
   .questions-area::-webkit-scrollbar-thumb { background: var(--surface3); border-radius: 3px; }
 
-  .module-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; padding: 4px 10px; border-radius: 6px; margin-bottom: 8px; }
-  .module-badge .lucide { width: 14px; height: 14px; }
   .category-title { font-size: 18px; font-weight: 800; margin-bottom: 4px; }
   .category-desc { font-size: 13px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.5; }
-  .sev-badge { display: inline-block; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; padding: 2px 6px; border-radius: 4px; margin-left: 6px; vertical-align: middle; }
-  .sev-badge.sev-critical { background: rgba(239,68,68,0.15); color: var(--red); }
-  .check-impact { font-size: 11px; color: var(--yellow); margin-bottom: 8px; display: flex; align-items: flex-start; gap: 6px; line-height: 1.5; padding: 6px 8px; background: rgba(234,179,8,0.08); border-radius: 6px; }
-  .check-fix { font-size: 11px; color: var(--green); margin-bottom: 8px; display: flex; align-items: flex-start; gap: 6px; line-height: 1.5; padding: 6px 8px; background: rgba(34,197,94,0.08); border-radius: 6px; }
 
   .question-card {
     background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius);
@@ -903,11 +885,7 @@
   #scorecardTopbar .dash-topbar-left .logo { font-size: 18px; }
   #scorecardTopbar .dash-topbar-title { font-size: 14px; font-weight: 400; color: var(--text-muted); padding-left: 16px; border-left: 1px solid var(--border); }
   #scorecardTopbar .dash-topbar-meta { font-size: 11px; color: var(--text-muted); padding-right: 8px; border-right: 1px solid var(--border); }
-  #scorecardTopbar .dash-topbar-right { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
-  #scorecardTopbar .dash-topbar-right .btn-icon {
-    width: auto; height: 32px; padding: 0 12px; gap: 4px;
-    font-size: 12px; font-weight: 600; white-space: nowrap;
-  }
+  #scorecardTopbar .dash-topbar-right { display: flex; gap: 8px; align-items: center; }
 
   /* ─ KPI Strip ─ */
   .kpi-strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 20px 0; }
@@ -965,140 +943,23 @@
   .ai-plan-actions { display: flex; gap: 8px; justify-content: flex-end; padding: 10px 20px; border-top: 1px solid var(--border); background: var(--surface2); }
   .ai-plan-actions button { font-size: 11px; padding: 5px 12px; border-radius: var(--radius-sm); cursor: pointer; display: flex; align-items: center; gap: 4px; }
 
-  /* ─ Scan toast banner ─ */
-  .scan-toast { position: fixed; top: 56px; left: 50%; transform: translateX(-50%); z-index: 9999; min-width: 320px; max-width: 480px; padding: 12px 20px; border-radius: var(--radius); display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 600; box-shadow: 0 8px 32px rgba(0,0,0,0.4); animation: toastSlide 0.3s ease; pointer-events: auto; }
-  .scan-toast.scanning { background: var(--surface2); border: 1px solid var(--blue); color: var(--blue); }
-  .scan-toast.success { background: var(--surface2); border: 1px solid var(--green); color: var(--green); }
-  .scan-toast.error { background: var(--surface2); border: 1px solid var(--red); color: var(--red); }
-  .scan-toast .toast-icon { flex-shrink: 0; display: flex; align-items: center; }
-  .scan-toast .toast-text { flex: 1; }
-  .scan-toast .toast-sub { font-size: 11px; font-weight: 400; color: var(--text-muted); margin-top: 2px; }
-  .scan-toast .toast-spinner { animation: spin 1s linear infinite; }
-  .scan-toast .toast-progress { height: 3px; background: rgba(255,255,255,0.1); border-radius: 2px; margin-top: 8px; overflow: hidden; }
-  .scan-toast .toast-progress-bar { height: 100%; border-radius: 2px; transition: width 0.5s ease; }
-  @keyframes toastSlide { from { transform: translateX(-50%) translateY(-20px); opacity: 0; } to { transform: translateX(-50%) translateY(0); opacity: 1; } }
-  @keyframes toastFade { from { opacity: 1; } to { opacity: 0; transform: translateX(-50%) translateY(-10px); } }
-
-  /* ─ Audit workflow ─ */
-  .audit-badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 10px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; }
-  .audit-badge.pending { background: rgba(234,179,8,0.12); color: var(--yellow); border: 1px solid rgba(234,179,8,0.25); }
-  .audit-badge.assigned { background: rgba(59,130,246,0.12); color: var(--blue); border: 1px solid rgba(59,130,246,0.25); }
-  .audit-badge.in_progress { background: rgba(34,197,94,0.12); color: #22d3ee; border: 1px solid rgba(34,211,238,0.25); }
-  .audit-badge.completed { background: rgba(34,197,94,0.12); color: var(--green); border: 1px solid rgba(34,197,94,0.25); }
-  .role-badge.role-auditor { background: rgba(168,85,247,0.2); color: #a855f7; border: 1px solid rgba(168,85,247,0.3); }
-  .project-card.professional { border-color: rgba(168,85,247,0.3); }
-  .project-card.professional::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, transparent, #a855f7, transparent); border-radius: var(--radius) var(--radius) 0 0; }
-  .project-card.locked { opacity: 0.85; cursor: default; }
-  .project-card.locked:hover { border-color: rgba(168,85,247,0.3); transform: none; }
-  .audit-status-msg { font-size: 11px; color: var(--text-muted); margin-top: 8px; padding: 8px 10px; background: var(--surface2); border-radius: var(--radius-sm); display: flex; align-items: center; gap: 6px; line-height: 1.4; }
-  .audit-status-msg.status-pending { border-left: 2px solid var(--yellow); }
-  .audit-status-msg.status-assigned { border-left: 2px solid var(--blue); }
-  .audit-status-msg.status-in_progress { border-left: 2px solid #22d3ee; }
-  .audit-status-msg.status-completed { border-left: 2px solid var(--green); }
-  .pro-info-box { display: flex; gap: 10px; padding: 12px 14px; background: rgba(255,80,3,0.06); border: 1px solid rgba(255,80,3,0.15); border-radius: var(--radius-sm); font-size: 12px; color: var(--text-muted); line-height: 1.6; }
-  .pro-info-box strong { color: var(--text); display: block; margin-bottom: 2px; }
-
-  /* ─ Audit queue table ─ */
-  .audit-queue-wrap { overflow-x: auto; }
-  .audit-queue-table { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
-  .audit-queue-table th { background: var(--surface2); padding: 10px 14px; text-align: left; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; color: var(--text-muted); border-bottom: 1px solid var(--border); }
-  .audit-queue-table td { padding: 12px 14px; border-bottom: 1px solid var(--border); font-size: 13px; }
-  .audit-queue-table tr:last-child td { border-bottom: none; }
-  .audit-queue-table tr:hover td { background: var(--surface2); }
-  .btn-sm { padding: 4px 10px; font-size: 11px; font-weight: 600; border-radius: var(--radius-sm); cursor: pointer; border: 1px solid var(--border); background: var(--surface2); color: var(--text); display: inline-flex; align-items: center; gap: 4px; transition: all 0.15s; }
-  .btn-sm:hover { border-color: var(--accent); color: var(--accent); }
-  .btn-accent { background: var(--accent); color: #fff; border-color: var(--accent); }
-  .btn-accent:hover { background: var(--accent-hover); color: #fff; }
-  .stat-num.blue { color: var(--blue); }
-
-  /* ─ Modal overlay ─ */
-  .modal-overlay { position: fixed; inset: 0; z-index: 10000; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; }
-  .modal-box { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); width: 420px; max-width: 90vw; max-height: 80vh; overflow-y: auto; box-shadow: 0 16px 48px rgba(0,0,0,0.5); }
-  .modal-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--border); }
-  .modal-header h3 { font-size: 16px; font-weight: 700; }
-  .modal-close { background: none; border: none; color: var(--text-muted); font-size: 20px; cursor: pointer; padding: 4px; }
-  .modal-close:hover { color: var(--text); }
-  .modal-sub { padding: 10px 20px; font-size: 12px; color: var(--text-muted); border-bottom: 1px solid var(--border); }
-  .modal-body { padding: 8px; }
-  .auditor-option { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; cursor: pointer; border-radius: var(--radius-sm); transition: background 0.15s; }
-  .auditor-option:hover { background: var(--surface2); }
-  .auditor-option-info { display: flex; flex-direction: column; gap: 2px; }
-  .auditor-option-info strong { font-size: 13px; }
-
-  /* ─ User management ─ */
-  .role-select { background: var(--surface2); color: var(--text); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 4px 8px; font-size: 12px; font-weight: 600; cursor: pointer; outline: none; transition: border-color 0.15s; -webkit-appearance: none; appearance: none; }
-  .role-select:hover { border-color: var(--accent); }
-  .role-select:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(255,80,3,0.15); }
-  .role-tag { display: inline-block; padding: 3px 8px; border-radius: var(--radius-sm); font-size: 11px; font-weight: 700; }
-  .role-tag.role-admin { background: rgba(255,80,3,0.12); color: var(--accent); }
-  .role-tag.role-auditor { background: rgba(168,85,247,0.12); color: #a855f7; }
-  .role-tag.role-user { background: var(--surface3); color: var(--text-muted); }
-
-  /* ─ Auditor Application ─ */
-  .auditor-apply-card { background: linear-gradient(135deg, rgba(168,85,247,0.06), rgba(168,85,247,0.02)); border: 1px solid rgba(168,85,247,0.18); border-radius: var(--radius); padding: 20px 24px; margin-top: 24px; }
-  .auditor-apply-card h3 { font-size: 16px; font-weight: 700; margin: 0 0 8px; display: flex; align-items: center; gap: 8px; color: #a855f7; }
-  .auditor-apply-card p { font-size: 13px; color: var(--text-muted); margin: 0 0 14px; line-height: 1.5; }
-  .auditor-apply-card .apply-perks { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
-  .auditor-apply-card .apply-perk { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-muted); background: var(--surface2); padding: 4px 10px; border-radius: var(--radius-sm); }
-  .auditor-apply-card .apply-perk i { color: #a855f7; }
-  .auditor-apply-form textarea { width: 100%; min-height: 80px; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 12px; font-size: 13px; color: var(--text); resize: vertical; font-family: inherit; outline: none; transition: border-color 0.15s; box-sizing: border-box; }
-  .auditor-apply-form textarea:focus { border-color: #a855f7; box-shadow: 0 0 0 2px rgba(168,85,247,0.15); }
-  .auditor-apply-form textarea::placeholder { color: var(--text-muted); opacity: 0.6; }
-  .btn-auditor { background: linear-gradient(135deg, #a855f7, #9333ea); color: #fff; border: none; padding: 10px 20px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: opacity 0.15s, transform 0.1s; }
-  .btn-auditor:hover { opacity: 0.9; transform: translateY(-1px); }
-  .btn-auditor:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-  .apply-status { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 600; }
-  .apply-status.status-pending { background: rgba(234,179,8,0.1); color: var(--yellow); border: 1px solid rgba(234,179,8,0.2); }
-  .apply-status.status-rejected { background: rgba(239,68,68,0.1); color: var(--red); border: 1px solid rgba(239,68,68,0.2); }
-  .application-row { display: flex; align-items: center; gap: 12px; padding: 10px 14px; background: var(--surface2); border-radius: var(--radius-sm); margin-bottom: 6px; }
-  .application-row .app-info { flex: 1; min-width: 0; }
-  .application-row .app-email { font-size: 13px; font-weight: 600; }
-  .application-row .app-msg { font-size: 11px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 300px; }
-  .application-row .app-date { font-size: 11px; color: var(--text-muted); flex-shrink: 0; }
-  .application-row .app-actions { display: flex; gap: 6px; flex-shrink: 0; }
-  .btn-approve { background: rgba(34,197,94,0.12); color: var(--green); border: 1px solid rgba(34,197,94,0.2); padding: 4px 10px; border-radius: var(--radius-sm); font-size: 11px; font-weight: 700; cursor: pointer; transition: background 0.15s; }
-  .btn-approve:hover { background: rgba(34,197,94,0.2); }
-  .btn-reject { background: rgba(239,68,68,0.12); color: var(--red); border: 1px solid rgba(239,68,68,0.2); padding: 4px 10px; border-radius: var(--radius-sm); font-size: 11px; font-weight: 700; cursor: pointer; transition: background 0.15s; }
-  .btn-reject:hover { background: rgba(239,68,68,0.2); }
-
   /* ─ Category rows ─ */
   .cat-row { display: flex; align-items: center; gap: 12px; padding: 10px 20px; border-bottom: 1px solid var(--border); transition: background 0.1s; }
   .cat-row:last-child { border-bottom: none; }
   .cat-row:hover { background: var(--surface2); }
   .cat-row-score { font-size: 14px; font-weight: 800; width: 36px; text-align: right; flex-shrink: 0; }
-  .cat-row-score.sc-good, .mod-group-score.sc-good { color: var(--green); }
-  .cat-row-score.sc-ok, .mod-group-score.sc-ok { color: var(--yellow); }
-  .cat-row-score.sc-bad, .mod-group-score.sc-bad { color: var(--red); }
-  .cat-row-score.sc-na, .mod-group-score.sc-na { color: var(--text-muted); }
+  .cat-row-score.sc-good { color: var(--green); }
+  .cat-row-score.sc-ok { color: var(--yellow); }
+  .cat-row-score.sc-bad { color: var(--red); }
+  .cat-row-score.sc-na { color: var(--text-muted); }
   .cat-row-name { font-size: 12px; font-weight: 600; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .cat-row-bar { width: 80px; height: 6px; background: var(--surface3); border-radius: 3px; overflow: hidden; flex-shrink: 0; }
   .cat-row-fill { height: 100%; border-radius: 3px; }
   .cat-row-status { font-size: 10px; font-weight: 600; width: 60px; text-align: right; flex-shrink: 0; }
-  .cat-row-status.st-good, .mod-group-status.st-good { color: var(--green); }
-  .cat-row-status.st-ok, .mod-group-status.st-ok { color: var(--yellow); }
-  .cat-row-status.st-bad, .mod-group-status.st-bad { color: var(--red); }
-  .cat-row-status.st-na, .mod-group-status.st-na { color: var(--text-muted); }
-
-  /* ─ Module group in scorecard ─ */
-  .mod-group { border-bottom: 1px solid var(--border); }
-  .mod-group:last-child { border-bottom: none; }
-  .mod-group-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 20px; cursor: pointer; transition: background 0.15s; border-left: 3px solid var(--mg-color, var(--accent)); }
-  .mod-group-header:hover { background: var(--surface2); }
-  .mod-group-left { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
-  .mod-group-name { font-size: 13px; font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .mod-group-count { font-size: 10px; font-weight: 600; color: var(--text-muted); background: var(--surface3); padding: 1px 6px; border-radius: 8px; flex-shrink: 0; }
-  .mod-group-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
-  .mod-group-bar { width: 60px; height: 6px; background: var(--surface3); border-radius: 3px; overflow: hidden; }
-  .mod-group-bar-fill { height: 100%; border-radius: 3px; transition: width 0.3s; }
-  .mod-group-score { font-size: 15px; font-weight: 800; width: 36px; text-align: right; }
-  .mod-group-status { font-size: 10px; font-weight: 600; width: 60px; text-align: right; }
-  .mod-group-chevron { transition: transform 0.2s; flex-shrink: 0; }
-  .mod-group.collapsed .mod-group-chevron { transform: rotate(-90deg); }
-  .mod-group.collapsed .mod-group-body { display: none; }
-  .mod-group-body { background: var(--surface); }
-  .cat-row.cat-row-sub { padding-left: 44px; }
-  .cat-row.cat-row-sub .cat-row-name { font-weight: 500; font-size: 11px; color: var(--text-muted); }
-  .cat-row.cat-row-sub .cat-row-score { font-size: 12px; font-weight: 700; }
+  .cat-row-status.st-good { color: var(--green); }
+  .cat-row-status.st-ok { color: var(--yellow); }
+  .cat-row-status.st-bad { color: var(--red); }
+  .cat-row-status.st-na { color: var(--text-muted); }
 
   /* ─ Quick Win / Strategic items ─ */
   .action-item { padding: 10px 20px; border-bottom: 1px solid var(--border); font-size: 12px; line-height: 1.5; display: flex; gap: 8px; align-items: flex-start; }
@@ -1120,41 +981,6 @@
   .matrix-compact .mc.fi h4 { color: var(--yellow); }
   .matrix-compact .mc.nn h4 { color: var(--text-muted); }
   .matrix-compact .mc .mc-count { font-size: 24px; font-weight: 900; line-height: 1; }
-
-  /* ─ Site Insights (Premium) ─ */
-  .site-insights-card { margin-bottom: 16px; }
-  .premium-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; padding: 3px 8px; border-radius: 6px; background: rgba(234,179,8,0.12); color: #d4a017; border: 1px solid rgba(234,179,8,0.25); }
-  .premium-badge.active { background: rgba(34,197,94,0.12); color: var(--green); border-color: rgba(34,197,94,0.25); }
-  .insights-locked-overlay { position: absolute; inset: 0; z-index: 2; display: flex; align-items: center; justify-content: center; background: rgba(var(--bg-rgb, 15,15,15), 0.7); backdrop-filter: blur(4px); border-radius: var(--radius); }
-  .insights-locked-content { text-align: center; padding: 24px; }
-  .insights-locked-content strong { display: block; font-size: 14px; color: var(--text); margin-bottom: 6px; }
-  .insights-locked-content p { font-size: 12px; color: var(--text-muted); line-height: 1.6; max-width: 280px; }
-  .insights-preview-blur { filter: blur(3px); opacity: 0.5; pointer-events: none; padding: 16px 20px; }
-  .insights-domain { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--text-muted); padding: 0 20px 12px; border-bottom: 1px solid var(--border); margin-bottom: 12px; }
-  .insights-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; padding: 0 20px; }
-  .insight-stat { text-align: center; padding: 12px 8px; background: var(--surface2); border-radius: var(--radius-sm); }
-  .insight-stat-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 4px; }
-  .insight-stat-value { font-size: 20px; font-weight: 900; color: var(--text); line-height: 1.2; display: flex; align-items: center; justify-content: center; gap: 4px; }
-  .insight-stat-sub { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
-  .delta-up { color: var(--green) !important; }
-  .delta-down { color: var(--red) !important; }
-  .delta-flat { color: var(--text-muted) !important; }
-  .insights-chart { padding: 12px 20px 0; }
-  .insights-chart-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 8px; }
-  .insights-chart-body { display: flex; flex-direction: column; gap: 6px; }
-  .insights-chart-points { display: flex; justify-content: space-between; font-size: 10px; color: var(--text-muted); }
-  .insights-chart-points small { font-size: 9px; }
-  .insights-point { text-align: center; }
-  .insights-empty-chart { display: flex; align-items: center; gap: 10px; padding: 16px 20px; font-size: 11px; color: var(--text-muted); }
-  .insights-history { padding: 12px 20px 4px; border-top: 1px solid var(--border); margin-top: 12px; }
-  .insights-history-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 8px; }
-  .insights-history-row { display: flex; align-items: center; gap: 10px; padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
-  .insights-history-row:last-child { border-bottom: none; }
-  .insights-h-score { font-weight: 800; width: 32px; text-align: right; flex-shrink: 0; }
-  .insights-h-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text); }
-  .insights-h-date { font-size: 10px; color: var(--text-muted); flex-shrink: 0; }
-  .insight-loading { display: inline-flex; }
-  @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
   /* ─ Collapsible findings ─ */
   .findings-toggle {
@@ -1421,43 +1247,34 @@
       <input type="text" id="npName" class="form-input" placeholder="bijv. Webshop Review">
     </div>
 
-    <!-- Mode selection: available to all users -->
-    <div id="npModeFields">
+    <!-- Admin-only: professional mode fields -->
+    <div id="npAdminFields" class="hidden">
       <div class="form-group">
         <label>Modus</label>
         <div class="mode-choice">
           <div class="mode-option selected" onclick="selectMode('self-service', this)">
             <div class="mode-icon"><i data-lucide="scan-search"></i></div>
             <div class="mode-name">Self-Service</div>
-            <div class="mode-desc">Ik doe het zelf.</div>
+            <div class="mode-desc">Klant doorloopt zelf.</div>
           </div>
           <div class="mode-option" onclick="selectMode('professional', this)">
-            <div class="mode-icon"><i data-lucide="briefcase"></i></div>
+            <div class="mode-icon"><i data-lucide="user"></i></div>
             <div class="mode-name">Professional</div>
-            <div class="mode-desc">Laat een expert dit doen.</div>
+            <div class="mode-desc">Jij voert de audit uit.</div>
           </div>
         </div>
       </div>
-      <div class="form-group hidden" id="npClientGroup">
+      <div class="form-group" id="npClientGroup" class="hidden">
         <label>Bedrijfsnaam klant</label>
         <input type="text" id="npClient" class="form-input" placeholder="bijv. Bakkerij de Goudkorst">
       </div>
-      <div class="form-group hidden" id="npPackageGroup">
+      <div class="form-group" id="npPackageGroup" class="hidden">
         <label>Pakket</label>
         <select id="npPackage" class="form-select">
           <option value="quick">Quick Scan — €497</option>
           <option value="deep">Deep Review — €997</option>
           <option value="full">Full Audit + Redesign — €2.497</option>
         </select>
-      </div>
-      <div class="form-group hidden" id="npProInfo">
-        <div class="pro-info-box">
-          <i data-lucide="info" style="width:14px;height:14px;flex-shrink:0;margin-top:1px"></i>
-          <div>
-            <strong>Hoe werkt het?</strong><br>
-            Na het indienen wordt je aanvraag beoordeeld en toegewezen aan een erkende UX auditor. Je ontvangt een volledig rapport met concrete verbeterpunten.
-          </div>
-        </div>
       </div>
     </div>
 
@@ -1493,7 +1310,7 @@
         <button class="btn-nav btn-prev" onclick="prevStep()"><i data-lucide="chevron-left"></i> Vorige</button>
       </div>
       <div class="topbar-center">
-        <div class="topbar-title">UX Review <span id="topbarProjectName" style="opacity:0.5;font-weight:400"> </span></div>
+        <div class="topbar-title">UX Review</div>
         <div class="topbar-subtitle">
           <span class="step-indicator" id="stepIndicator">Stap 1 / 19</span>
           <div id="deviceBarReview">
@@ -1634,7 +1451,6 @@
   </div>
 </div>
 
-<script src="modules/module-data.js"></script>
 <script>
 // ═══════════════ BRAND LOGO SVG ═══════════════
 function brandLogo(size, animate) {
@@ -1644,11 +1460,9 @@ function brandLogo(size, animate) {
 }
 
 // ═══════════════════════════════════════════════════════════
-// DATA: Module-based review steps (loaded from modules/module-data.js)
-// Falls back to legacy steps if module data not loaded
+// DATA: All review steps from the BOLD700 UX Review Playbook
 // ═══════════════════════════════════════════════════════════
-let reviewSteps = [];
-const LEGACY_STEPS_BACKUP = [
+const reviewSteps = [
   {
     id: 'heuristic1', title: '1. Zichtbaarheid Systeemstatus', shortTitle: 'Systeemstatus', impact: 'high',
     desc: 'Nielsen Heuristic #1 — Het systeem moet gebruikers altijd op de hoogte houden van wat er gebeurt.',
@@ -1891,26 +1705,8 @@ const LEGACY_STEPS_BACKUP = [
   }
 ];
 
-// Initialize module-based steps if module data is available
-if (typeof buildReviewSteps === 'function' && typeof MODULE_CHECKS !== 'undefined') {
-  reviewSteps = buildReviewSteps(null); // null = use default config, will be rebuilt per project
-} else {
-  reviewSteps = LEGACY_STEPS_BACKUP; // Fallback if module-data.js not loaded
-}
-
 // ═══════════════ TIPS PER VRAAG ═══════════════
-// Auto-generated from module data (with legacy fallback)
-const questionTips = {};
-if (typeof MODULE_CHECKS !== 'undefined') {
-  Object.values(MODULE_CHECKS).flat().forEach(function(check) {
-    if (check.fix_suggestion_nl) {
-      questionTips[check.id] = check.fix_suggestion_nl;
-      if (check.legacy_id) questionTips[check.legacy_id] = check.fix_suggestion_nl;
-    }
-  });
-} else {
-  // Legacy tips fallback
-  Object.assign(questionTips, {
+const questionTips = {
   h1q1:'Voeg breadcrumbs toe en markeer actieve menu-item visueel',
   h1q2:'Implementeer skeleton loaders bij asynchroon laden',
   h1q3:'Toon visuele feedback (toast/animatie) na elke actie',
@@ -2037,8 +1833,7 @@ if (typeof MODULE_CHECKS !== 'undefined') {
   sm10:'Gebruik onclick (up-event) in plaats van onmousedown. Gebruikers moeten een klik kunnen annuleren door weg te slepen.',
   sm11:'Als een knop "Zoeken" zegt, moet de aria-label ook "Zoeken" zijn — niet iets anders. Zichtbare tekst = accessible name.',
   sm12:'Als je device-motion gebruikt (schudden om te resetten), bied dan altijd een knop-alternatief en laat de motion uitschakelbaar zijn.'
-  });
-}
+};
 
 // ═══════════════ FIREBASE CONFIG ═══════════════
 const firebaseConfig = {
@@ -2062,11 +1857,8 @@ let activeProjectId = null;
 let currentStep = 0;
 let newProjectMode = 'self-service';
 let isAdmin = false;
-let isAuditor = false;
 let currentUser = null;    // Firebase Auth user object
 let userProfile = null;    // Firestore user profile { role, createdAt, ... }
-let allAuditors = [];      // Cached auditor list (admin only)
-let auditRequests = [];    // Professional projects for admin/auditor views
 let saveTimer = null;
 let authMode = 'login';    // 'login' or 'register'
 
@@ -2122,24 +1914,6 @@ async function loadState() {
       const snapshot = await db.collection('projects').orderBy('createdAt', 'desc').get();
       projects = snapshot.docs.map(d => ({ ...d.data(), id: d.id }));
       console.log('[Firebase] Loaded', projects.length, 'projects (admin mode)');
-    } else if (isAuditor) {
-      // Auditor: load projects assigned to them + their own self-service projects
-      let snapshot;
-      try {
-        snapshot = await db.collection('projects').where('assignedTo', '==', currentUser.uid).get();
-      } catch(e) { snapshot = { docs: [] }; }
-      const assignedProjects = snapshot.docs.map(d => ({ ...d.data(), id: d.id }));
-      // Also load their own projects (if they do self-service reviews too)
-      let ownSnapshot;
-      try {
-        ownSnapshot = await db.collection('projects').where('userId', '==', currentUser.uid).get();
-      } catch(e) { ownSnapshot = { docs: [] }; }
-      const ownProjects = ownSnapshot.docs.map(d => ({ ...d.data(), id: d.id }));
-      // Merge without duplicates
-      const seen = new Set();
-      projects = [...assignedProjects, ...ownProjects].filter(p => { if (seen.has(p.id)) return false; seen.add(p.id); return true; });
-      projects.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
-      console.log('[Firebase] Loaded', projects.length, 'projects for auditor', currentUser.uid);
     } else {
       // Regular user: load only their projects by userId
       let snapshot;
@@ -2153,28 +1927,21 @@ async function loadState() {
       projects.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
       console.log('[Firebase] Loaded', projects.length, 'projects for user', currentUser.uid);
 
-      // Migrate localStorage projects ONLY if they belong to this user (or have no owner)
+      // Migrate any localStorage projects that don't have a userId
       try {
         const saved = localStorage.getItem('bold700_projects');
         if (saved) {
           const localProjects = JSON.parse(saved);
-          let migrated = 0;
           for (const lp of localProjects) {
-            // Skip projects that already exist in Firestore for this user
-            if (projects.find(p => p.id === lp.id)) continue;
-            // Only migrate if project has no userId (legacy) or belongs to this user
-            if (lp.userId && lp.userId !== currentUser.uid) {
-              console.log('[Firebase] Skipping localStorage project', lp.id, '— belongs to another user');
-              continue;
+            if (!projects.find(p => p.id === lp.id)) {
+              lp.userId = currentUser.uid;
+              lp.leadEmail = currentUser.email;
+              projects.push(lp);
+              await syncProjectToFirestore(lp);
             }
-            lp.userId = currentUser.uid;
-            lp.leadEmail = currentUser.email;
-            projects.push(lp);
-            await syncProjectToFirestore(lp);
-            migrated++;
           }
           localStorage.removeItem('bold700_projects'); // Clean up after migration
-          if (migrated > 0) console.log('[Firebase] Migrated', migrated, 'localStorage projects');
+          console.log('[Firebase] Migrated localStorage projects');
         }
       } catch(e) {}
     }
@@ -2182,81 +1949,6 @@ async function loadState() {
     console.warn('[Firebase] Load failed:', e.message);
     projects = [];
   }
-}
-
-// ── Load audit requests (admin sees all, auditor sees pending + their own) ──
-async function loadAuditRequests() {
-  auditRequests = [];
-  try {
-    const snapshot = await db.collection('projects').where('mode', '==', 'professional').get();
-    auditRequests = snapshot.docs.map(d => ({ ...d.data(), id: d.id }));
-    auditRequests.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
-    console.log('[Firebase] Loaded', auditRequests.length, 'audit requests');
-  } catch(e) {
-    console.warn('[Firebase] Audit requests load failed:', e.message);
-    // Fallback: filter from already loaded projects
-    auditRequests = projects.filter(p => p.mode === 'professional');
-  }
-}
-
-// ── Load auditor list (admin only) ──
-async function loadAuditors() {
-  if (!isAdmin) return;
-  try {
-    const snapshot = await db.collection('users').where('role', '==', 'auditor').get();
-    allAuditors = snapshot.docs.map(d => ({ uid: d.id, ...d.data() }));
-    console.log('[Firebase] Loaded', allAuditors.length, 'auditors');
-  } catch(e) {
-    console.warn('[Firebase] Auditors load failed:', e.message);
-    allAuditors = [];
-  }
-}
-
-// ── Assign project to auditor ──
-async function assignToAuditor(projectId, auditorId, auditorName) {
-  try {
-    await db.collection('projects').doc(projectId).update({
-      assignedTo: auditorId,
-      assignedToName: auditorName || '',
-      auditStatus: 'assigned',
-      assignedAt: new Date().toISOString()
-    });
-    // Update local state
-    const p = auditRequests.find(r => r.id === projectId) || projects.find(r => r.id === projectId);
-    if (p) { p.assignedTo = auditorId; p.assignedToName = auditorName; p.auditStatus = 'assigned'; p.assignedAt = new Date().toISOString(); }
-    if (isAdmin) renderAuditQueue();
-    showScanToast('success', 'Audit toegewezen', `Toegewezen aan ${auditorName}`, 3000);
-  } catch(e) {
-    console.error('[Firebase] Assign failed:', e);
-    showScanToast('error', 'Toewijzing mislukt', e.message, 4000);
-  }
-}
-
-// ── Update audit status ──
-async function updateAuditStatus(projectId, newStatus) {
-  const updates = { auditStatus: newStatus };
-  if (newStatus === 'in_progress') updates.startedAt = new Date().toISOString();
-  if (newStatus === 'completed') updates.completedAt = new Date().toISOString();
-  try {
-    await db.collection('projects').doc(projectId).update(updates);
-    const p = auditRequests.find(r => r.id === projectId) || projects.find(r => r.id === projectId);
-    if (p) Object.assign(p, updates);
-    if (isAuditor) renderAuditorDashboard();
-    if (isAdmin) renderAuditQueue();
-  } catch(e) {
-    console.error('[Firebase] Status update failed:', e);
-  }
-}
-
-// ── Auditor claims an open request ──
-async function claimAuditRequest(projectId) {
-  if (!currentUser) return;
-  const name = userProfile?.email || currentUser.email || 'Auditor';
-  await assignToAuditor(projectId, currentUser.uid, name);
-  // Reload into auditor's project list
-  const req = auditRequests.find(r => r.id === projectId);
-  if (req && !projects.find(p => p.id === projectId)) projects.push(req);
-  if (isAuditor) renderAuditorDashboard();
 }
 
 // ── Upload screenshot to Firebase Storage ──
@@ -2304,17 +1996,14 @@ function showDashboard() {
   document.getElementById('newProjectScreen').classList.add('hidden');
   document.getElementById('reviewScreen').classList.add('hidden');
   document.getElementById('scorecardScreen').classList.add('hidden');
-
-  // Clear project URL param so refresh lands on dashboard
-  clearUrlParam('p');
   document.body.style.overflow = 'hidden';
   // Show email + role badge
   const emailEl = document.getElementById('dashUserEmail');
   if (emailEl && currentUser) emailEl.textContent = currentUser.email;
   const roleBadge = document.getElementById('dashRoleBadge');
   if (roleBadge) {
-    const role = isAdmin ? 'admin' : isAuditor ? 'auditor' : (userProfile && userProfile.plan === 'pro') ? 'pro' : 'free';
-    const labels = { admin: 'Admin', auditor: 'Auditor', pro: 'Pro', free: 'Free' };
+    const role = isAdmin ? 'admin' : (userProfile && userProfile.plan === 'pro') ? 'pro' : 'free';
+    const labels = { admin: 'Admin', pro: 'Pro', free: 'Free' };
     roleBadge.textContent = labels[role];
     roleBadge.className = 'role-badge role-' + role;
   }
@@ -2325,31 +2014,23 @@ function renderDashboard() {
   const statsEl = document.getElementById('dashStats');
   const gridEl = document.getElementById('projectsGrid');
 
-  // Filter: non-admin/auditor users only see their own projects
-  const visibleProjects = (isAdmin || isAuditor)
-    ? projects
-    : projects.filter(p => p.userId === currentUser?.uid);
-
-  const totalProjects = visibleProjects.length;
-  const selfServiceProjects = visibleProjects.filter(p => p.mode !== 'professional');
-  const completedProjects = visibleProjects.filter(p => {
+  const totalProjects = projects.length;
+  const completedProjects = projects.filter(p => {
     const s = calcProjectScore(p);
-    return s && (s.answered + (s.nvt||0)) === s.total;
+    return (s.answered + (s.nvt||0)) === s.total;
   }).length;
-  const needsHelp = visibleProjects.filter(p => { const s = calcProjectScore(p); return s && s.avg > 0 && s.avg < 7; }).length;
+  const needsHelp = projects.filter(p => { const s = calcProjectScore(p); return s.avg > 0 && s.avg < 7; }).length;
   const isFree = !isAdmin && !(userProfile && userProfile.plan === 'pro');
-  // Free limit only counts self-service reviews, not professional audit requests
-  const remaining = FREE_PROJECT_LIMIT - selfServiceProjects.length;
+  const remaining = FREE_PROJECT_LIMIT - totalProjects;
 
-  // Stats row — admin sees audit queue, users see their limit
+  // Stats row — admin sees leads, users see their limit
   if (isAdmin) {
-    const pendingAudits = auditRequests.filter(r => !r.auditStatus || r.auditStatus === 'pending').length;
-    const activeAudits = auditRequests.filter(r => r.auditStatus === 'assigned' || r.auditStatus === 'in_progress').length;
+    const leadsCollected = projects.filter(p => p.leadEmail).length;
     statsEl.innerHTML = `
       <div class="stat-card"><div class="stat-num accent">${totalProjects}</div><div class="stat-label">Projecten</div></div>
       <div class="stat-card"><div class="stat-num green">${completedProjects}</div><div class="stat-label">Afgerond</div></div>
-      <div class="stat-card"><div class="stat-num ${pendingAudits > 0 ? 'yellow' : ''}">${pendingAudits}</div><div class="stat-label">Open Aanvragen</div></div>
-      <div class="stat-card"><div class="stat-num blue">${activeAudits}</div><div class="stat-label">Actieve Audits</div></div>
+      <div class="stat-card"><div class="stat-num red">${needsHelp}</div><div class="stat-label">Hulp Nodig</div></div>
+      <div class="stat-card"><div class="stat-num ${leadsCollected > 0 ? 'accent' : 'yellow'}">${leadsCollected}</div><div class="stat-label">Leads</div></div>
     `;
   } else {
     statsEl.innerHTML = `
@@ -2380,48 +2061,20 @@ function renderDashboard() {
     `;
   }
 
-  visibleProjects.slice().reverse().forEach(p => {
-    const score = calcProjectScore(p) || { answered: 0, total: 1, avg: 0, nvt: 0 };
+  projects.slice().reverse().forEach(p => {
+    const score = calcProjectScore(p);
     const pct = Math.round((score.answered / score.total) * 100);
     const scoreClass = score.avg >= 7.5 ? 'good' : score.avg >= 5 ? 'ok' : score.avg > 0 ? 'bad' : 'na';
+    const status = pct === 100 ? 'completed' : pct > 0 ? 'in-progress' : 'not-started';
+    const statusLabel = pct === 100 ? 'Afgerond' : pct > 0 ? `${pct}% klaar` : 'Niet gestart';
     const pkgLabels = { quick: 'Quick Scan', deep: 'Deep Review', full: 'Full Audit' };
-    const isProfessional = p.mode === 'professional';
-    const auditSt = p.auditStatus || (isProfessional ? 'pending' : null);
-
-    // Status for self-service: progress based; professional: audit workflow based
-    let status, statusLabel;
-    if (isProfessional && !isAdmin) {
-      status = auditSt || 'pending';
-      const auditLabels = { pending: 'In afwachting', assigned: 'Toegewezen', in_progress: 'Audit loopt', completed: 'Afgerond' };
-      statusLabel = auditLabels[status] || 'In afwachting';
-    } else {
-      status = pct === 100 ? 'completed' : pct > 0 ? 'in-progress' : 'not-started';
-      statusLabel = pct === 100 ? 'Afgerond' : pct > 0 ? `${pct}% klaar` : 'Niet gestart';
-    }
 
     // Admin: show extra info (lead email, share link)
     const adminInfo = isAdmin && p.leadEmail ? `<div style="font-size:11px;color:var(--green);margin-top:4px"><i data-lucide="mail" style="width:12px;height:12px"></i> ${p.leadEmail}</div>` : '';
     const shareLink = isAdmin ? `<button class="pc-share-btn" onclick="event.stopPropagation();copyShareLink('${p.id}')" title="Kopieer deelbare link" style="position:absolute;top:8px;right:32px;background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:14px;padding:4px"><i data-lucide="link" style="width:14px;height:14px"></i></button>` : '';
 
-    // Professional project: show audit status message for clients
-    let auditStatusHtml = '';
-    if (isProfessional && !isAdmin) {
-      const msgs = {
-        pending: 'Je aanvraag is ontvangen. Een auditor wordt binnenkort toegewezen.',
-        assigned: `Toegewezen aan ${p.assignedToName || 'een auditor'} op ${p.assignedAt ? new Date(p.assignedAt).toLocaleDateString('nl-NL') : '—'}`,
-        in_progress: `Audit is gestart${p.startedAt ? ' op ' + new Date(p.startedAt).toLocaleDateString('nl-NL') : ''}. Je ontvangt binnenkort resultaten.`,
-        completed: 'Je audit is afgerond! Klik om het rapport te bekijken.'
-      };
-      auditStatusHtml = `<div class="audit-status-msg status-${auditSt}"><i data-lucide="${auditSt === 'completed' ? 'check-circle' : auditSt === 'in_progress' ? 'loader' : auditSt === 'assigned' ? 'user-check' : 'clock'}" style="width:12px;height:12px"></i> ${msgs[auditSt] || msgs.pending}</div>`;
-    }
-
-    // Client can only open completed professional audits (or admin can open any)
-    const canOpen = !isProfessional || isAdmin || auditSt === 'completed';
-    const clickAction = canOpen ? `openProject('${p.id}')` : '';
-    const cardClass = `project-card${isProfessional ? ' professional' : ''}${!canOpen ? ' locked' : ''}`;
-
     cards += `
-      <div class="${cardClass}" ${canOpen ? `onclick="${clickAction}"` : ''} style="position:relative">
+      <div class="project-card" onclick="openProject('${p.id}')" style="position:relative">
         ${shareLink}
         <button class="pc-delete" onclick="event.stopPropagation();deleteProject('${p.id}')" title="Verwijder project">×</button>
         <div class="pc-header">
@@ -2429,18 +2082,16 @@ function renderDashboard() {
             <div class="pc-name">${p.name}</div>
             ${p.client ? `<div class="pc-client">${p.client}</div>` : ''}
           </div>
-          ${isProfessional ? `<span class="audit-badge ${auditSt}">${statusLabel}</span>` : `<span class="pc-badge ${status}">${statusLabel}</span>`}
+          <span class="pc-badge ${status}">${statusLabel}</span>
         </div>
         <div class="pc-url">${p.url}</div>
         ${adminInfo}
-        ${auditStatusHtml}
-        ${!isProfessional || auditSt === 'completed' ? `
         <div class="pc-score-bar">
           <div class="bar-track"><div class="bar-fill ${scoreClass}" style="width:${score.avg > 0 ? score.avg * 10 : 0}%"></div></div>
           <div class="pc-score-num ${scoreClass}">${score.avg > 0 ? score.avg.toFixed(1) : '—'}</div>
-        </div>` : ''}
+        </div>
         <div class="pc-footer">
-          <span class="pc-package">${isProfessional ? pkgLabels[p.package] || 'Professional' : 'Self-Service'}</span>
+          <span class="pc-package">${p.mode === 'self-service' ? 'Self-Service' : pkgLabels[p.package] || 'Review'}</span>
           <span>${new Date(p.createdAt).toLocaleDateString('nl-NL')}</span>
         </div>
       </div>
@@ -2448,795 +2099,6 @@ function renderDashboard() {
   });
 
   gridEl.innerHTML = cards;
-
-  // Clean up role-specific sections
-  const existingQueue = document.getElementById('auditQueueSection');
-  const existingUserMgmt = document.getElementById('userManagementSection');
-  const existingApps = document.getElementById('auditorApplicationsSection');
-  const existingApply = document.getElementById('auditorApplySection');
-
-  if (!isAdmin) {
-    if (existingQueue) existingQueue.remove();
-    if (existingUserMgmt) existingUserMgmt.remove();
-    if (existingApps) existingApps.remove();
-
-    // Regular users: show auditor application card
-    if (!isAuditor) {
-      renderAuditorApplySection();
-    } else {
-      if (existingApply) existingApply.remove();
-    }
-  } else {
-    // Admin: clean up user-only sections
-    if (existingApply) existingApply.remove();
-
-    // Admin: render audit queue
-    let queueEl = existingQueue;
-    if (!queueEl) {
-      queueEl = document.createElement('div');
-      queueEl.id = 'auditQueueSection';
-      gridEl.parentElement.appendChild(queueEl);
-    }
-    renderAuditQueue();
-
-    // Admin: render auditor applications
-    let appsEl = existingApps;
-    if (!appsEl) {
-      appsEl = document.createElement('div');
-      appsEl.id = 'auditorApplicationsSection';
-      gridEl.parentElement.appendChild(appsEl);
-    }
-    renderAuditorApplicationsAdmin();
-
-    // Admin: render user management
-    let userMgmtEl = existingUserMgmt;
-    if (!userMgmtEl) {
-      userMgmtEl = document.createElement('div');
-      userMgmtEl.id = 'userManagementSection';
-      gridEl.parentElement.appendChild(userMgmtEl);
-    }
-    renderUserManagement();
-  }
-
-  if (typeof lucide !== 'undefined') lucide.createIcons();
-}
-
-// ═══════════════ ADMIN: USER MANAGEMENT ═══════════════
-let allUsers = [];
-
-async function loadAllUsers() {
-  if (!isAdmin) return;
-  try {
-    const snapshot = await db.collection('users').get();
-    allUsers = snapshot.docs.map(d => ({ uid: d.id, ...d.data() }));
-    allUsers.sort((a, b) => (a.email || '').localeCompare(b.email || ''));
-    console.log('[Admin] Loaded', allUsers.length, 'users');
-  } catch(e) {
-    console.warn('[Firebase] Users load failed:', e.message);
-    allUsers = [];
-  }
-}
-
-async function changeUserRole(uid, newRole) {
-  if (!isAdmin || !uid) return;
-  // Safety: can't change your own role
-  if (uid === currentUser?.uid) { alert('Je kunt je eigen rol niet wijzigen.'); return; }
-  const validRoles = ['user', 'auditor', 'admin'];
-  if (!validRoles.includes(newRole)) return;
-
-  try {
-    await db.collection('users').doc(uid).update({ role: newRole });
-    // Update local cache
-    const u = allUsers.find(u => u.uid === uid);
-    if (u) u.role = newRole;
-    // Also update allAuditors cache
-    if (newRole === 'auditor') {
-      if (!allAuditors.find(a => a.uid === uid)) allAuditors.push(u || { uid });
-    } else {
-      allAuditors = allAuditors.filter(a => a.uid !== uid);
-    }
-    showScanToast('success', 'Rol bijgewerkt', `${u?.email || uid} is nu ${newRole}`, 3000);
-    renderUserManagement();
-  } catch(e) {
-    console.error('[Firebase] Role change failed:', e);
-    showScanToast('error', 'Rol wijzigen mislukt', e.message, 4000);
-  }
-}
-
-async function changeUserPlan(uid, newPlan) {
-  if (!isAdmin || !uid) return;
-  try {
-    await db.collection('users').doc(uid).update({ plan: newPlan });
-    const u = allUsers.find(u => u.uid === uid);
-    if (u) u.plan = newPlan;
-    showScanToast('success', 'Plan bijgewerkt', `${u?.email || uid} is nu ${newPlan}`, 3000);
-    renderUserManagement();
-  } catch(e) {
-    console.error('[Firebase] Plan change failed:', e);
-    showScanToast('error', 'Plan wijzigen mislukt', e.message, 4000);
-  }
-}
-
-async function renderUserManagement() {
-  const el = document.getElementById('userManagementSection');
-  if (!el) return;
-
-  // Load users if not yet loaded
-  if (allUsers.length === 0) await loadAllUsers();
-
-  const roleIcons = { admin: 'shield', auditor: 'briefcase', user: 'user' };
-  const roleColors = { admin: 'var(--accent)', auditor: '#a855f7', user: 'var(--text-muted)' };
-  const planColors = { pro: 'var(--green)', free: 'var(--text-muted)' };
-
-  el.innerHTML = `
-    <div style="margin-top:24px">
-      <h2 style="font-size:18px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px">
-        <i data-lucide="users" style="width:18px;height:18px;color:var(--accent)"></i> Gebruikers Beheer
-        <span style="font-size:12px;font-weight:400;color:var(--text-muted)">${allUsers.length} gebruikers</span>
-      </h2>
-      <div class="audit-queue-wrap">
-        <table class="audit-queue-table">
-          <thead><tr>
-            <th>E-mail</th>
-            <th>Rol</th>
-            <th>Plan</th>
-            <th>Projecten</th>
-            <th>Aangemeld</th>
-            <th>Acties</th>
-          </tr></thead>
-          <tbody>
-            ${allUsers.map(u => {
-              const isSelf = u.uid === currentUser?.uid;
-              const role = u.role || 'user';
-              const plan = u.plan || 'free';
-              const userProjectCount = projects.filter(p => p.userId === u.uid).length;
-              return `<tr>
-                <td>
-                  <div style="display:flex;align-items:center;gap:8px">
-                    <i data-lucide="${roleIcons[role] || 'user'}" style="width:14px;height:14px;color:${roleColors[role] || 'var(--text-muted)'}"></i>
-                    <span style="font-size:13px">${u.email || u.uid}</span>
-                    ${isSelf ? '<span style="font-size:9px;background:var(--accent);color:#fff;padding:1px 5px;border-radius:4px;font-weight:700">JIJ</span>' : ''}
-                  </div>
-                </td>
-                <td>
-                  ${isSelf ? `<span class="role-tag role-${role}">${role}</span>` : `
-                  <select class="role-select" onchange="changeUserRole('${u.uid}', this.value)" ${isSelf ? 'disabled' : ''}>
-                    <option value="user" ${role === 'user' ? 'selected' : ''}>User</option>
-                    <option value="auditor" ${role === 'auditor' ? 'selected' : ''}>Auditor</option>
-                    <option value="admin" ${role === 'admin' ? 'selected' : ''}>Admin</option>
-                  </select>`}
-                </td>
-                <td>
-                  <select class="role-select" onchange="changeUserPlan('${u.uid}', this.value)">
-                    <option value="free" ${plan === 'free' ? 'selected' : ''}>Free</option>
-                    <option value="pro" ${plan === 'pro' ? 'selected' : ''}>Pro</option>
-                  </select>
-                </td>
-                <td>
-                  ${userProjectCount > 0 ? `<button class="btn btn-sm" onclick="showUserProjects('${u.uid}','${(u.email || u.uid).replace(/'/g, "\\'")}')" style="font-size:11px;padding:3px 8px">${userProjectCount} <i data-lucide="external-link" style="width:10px;height:10px"></i></button>` : '<span style="font-size:11px;color:var(--text-muted)">0</span>'}
-                </td>
-                <td style="font-size:11px;color:var(--text-muted)">${u.createdAt ? new Date(u.createdAt).toLocaleDateString('nl-NL') : '—'}</td>
-                <td>
-                  <div style="display:flex;align-items:center;gap:6px">
-                    ${u.role === 'auditor' ? `<span style="font-size:10px;color:#a855f7"><i data-lucide="briefcase" style="width:10px;height:10px"></i> Auditor</span>` : ''}
-                    ${!isSelf ? `<button class="btn-reject" onclick="adminDeleteUser('${u.uid}','${(u.email || u.uid).replace(/'/g, "\\'")}')" style="font-size:10px;padding:2px 6px" title="Verwijder profiel"><i data-lucide="trash-2" style="width:10px;height:10px"></i></button>` : ''}
-                  </div>
-                </td>
-              </tr>`;
-            }).join('')}
-          </tbody>
-        </table>
-      </div>
-    </div>`;
-
-  if (typeof lucide !== 'undefined') lucide.createIcons();
-}
-
-// ═══════════════ ADMIN: PROJECT MANAGEMENT PER USER ═══════════════
-function showUserProjects(uid, email) {
-  if (!isAdmin) return;
-  const userProjects = projects.filter(p => p.userId === uid);
-  if (userProjects.length === 0) { showScanToast('info', 'Geen projecten', `${email} heeft geen projecten.`, 2000); return; }
-
-  // Build user list for reassignment (exclude current owner)
-  const otherUsers = allUsers.filter(u => u.uid !== uid);
-
-  const overlay = document.createElement('div');
-  overlay.className = 'modal-overlay';
-  overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
-
-  const pkgLabels = { quick: 'Quick Scan', deep: 'Deep Review', full: 'Full Audit' };
-
-  overlay.innerHTML = `
-    <div class="modal-box" style="max-width:600px;max-height:80vh;overflow-y:auto">
-      <h3 style="font-size:16px;font-weight:700;margin:0 0 16px;display:flex;align-items:center;gap:8px">
-        <i data-lucide="folder" style="width:16px;height:16px;color:var(--accent)"></i>
-        Projecten van ${email}
-        <span style="font-size:12px;font-weight:400;color:var(--text-muted)">${userProjects.length} project${userProjects.length !== 1 ? 'en' : ''}</span>
-      </h3>
-      <div style="display:flex;flex-direction:column;gap:8px">
-        ${userProjects.map(p => {
-          const score = calcProjectScore(p) || { avg: 0 };
-          const mode = p.mode === 'professional' ? 'Professional' : 'Self-Service';
-          return `
-          <div class="application-row" style="flex-wrap:wrap;gap:8px" id="uproj-${p.id}">
-            <div class="app-info" style="min-width:180px">
-              <div class="app-email">${p.name || '—'}</div>
-              <div class="app-msg">${p.url || '—'} · ${mode} · ${score.avg > 0 ? score.avg.toFixed(1) : '—'}</div>
-            </div>
-            <div class="app-date">${p.createdAt ? new Date(p.createdAt).toLocaleDateString('nl-NL') : '—'}</div>
-            <div class="app-actions" style="flex-wrap:wrap">
-              <select class="role-select" id="reassign-${p.id}" style="font-size:10px;padding:2px 6px;max-width:160px">
-                <option value="">Hertoewijzen aan...</option>
-                ${otherUsers.map(u => `<option value="${u.uid}">${u.email || u.uid}</option>`).join('')}
-              </select>
-              <button class="btn-approve" onclick="reassignProject('${p.id}', document.getElementById('reassign-${p.id}').value)" style="font-size:10px">
-                <i data-lucide="arrow-right" style="width:10px;height:10px"></i> Wijs toe
-              </button>
-              <button class="btn-reject" onclick="adminDeleteProject('${p.id}','${uid}','${email.replace(/'/g, "\\'")}')" style="font-size:10px">
-                <i data-lucide="trash-2" style="width:10px;height:10px"></i> Verwijder
-              </button>
-            </div>
-          </div>`;
-        }).join('')}
-      </div>
-      <div style="margin-top:16px;text-align:right">
-        <button class="btn btn-secondary btn-sm" onclick="this.closest('.modal-overlay').remove()">Sluiten</button>
-      </div>
-    </div>`;
-
-  document.body.appendChild(overlay);
-  if (typeof lucide !== 'undefined') lucide.createIcons();
-}
-
-async function reassignProject(projectId, newUserId) {
-  if (!isAdmin || !projectId || !newUserId) {
-    showScanToast('error', 'Selecteer gebruiker', 'Kies eerst een gebruiker om aan toe te wijzen.', 2000);
-    return;
-  }
-  const newUser = allUsers.find(u => u.uid === newUserId);
-  try {
-    await db.collection('projects').doc(projectId).update({
-      userId: newUserId,
-      leadEmail: newUser?.email || ''
-    });
-    // Update local cache
-    const p = projects.find(p => p.id === projectId);
-    if (p) { p.userId = newUserId; p.leadEmail = newUser?.email || ''; }
-    showScanToast('success', 'Hertoegewezen', `Project naar ${newUser?.email || newUserId}`, 3000);
-    // Remove row from modal
-    const row = document.getElementById('uproj-' + projectId);
-    if (row) row.style.display = 'none';
-  } catch(e) {
-    console.error('[Firebase] Reassign failed:', e);
-    showScanToast('error', 'Mislukt', e.message, 4000);
-  }
-}
-
-async function adminDeleteProject(projectId, ownerUid, ownerEmail) {
-  if (!isAdmin || !projectId) return;
-  if (!confirm(`Project "${projectId}" verwijderen van ${ownerEmail}? Dit kan niet ongedaan worden.`)) return;
-  try {
-    await db.collection('projects').doc(projectId).delete();
-    projects = projects.filter(p => p.id !== projectId);
-    showScanToast('success', 'Verwijderd', 'Project is verwijderd.', 3000);
-    const row = document.getElementById('uproj-' + projectId);
-    if (row) row.style.display = 'none';
-  } catch(e) {
-    console.error('[Firebase] Delete failed:', e);
-    showScanToast('error', 'Verwijderen mislukt', e.message, 4000);
-  }
-}
-
-async function adminDeleteUser(uid, email) {
-  if (!isAdmin || !uid) return;
-  if (uid === currentUser?.uid) { showScanToast('error', 'Niet mogelijk', 'Je kunt je eigen profiel niet verwijderen.', 3000); return; }
-
-  const userProjects = projects.filter(p => p.userId === uid);
-  const msg = userProjects.length > 0
-    ? `Profiel "${email}" verwijderen inclusief ${userProjects.length} project(en)?\n\nDit verwijdert:\n• Gebruikersprofiel uit Firestore\n• Alle ${userProjects.length} project(en)\n• Eventuele auditor aanvraag\n\nDit kan niet ongedaan worden.`
-    : `Profiel "${email}" verwijderen uit Firestore?\n\nDit kan niet ongedaan worden.`;
-
-  if (!confirm(msg)) return;
-
-  try {
-    // Delete all user's projects
-    for (const p of userProjects) {
-      await db.collection('projects').doc(p.id).delete();
-    }
-    projects = projects.filter(p => p.userId !== uid);
-
-    // Delete auditor application if exists
-    try { await db.collection('auditor_applications').doc(uid).delete(); } catch(e) {}
-
-    // Delete user profile
-    await db.collection('users').doc(uid).delete();
-
-    // Update local caches
-    allUsers = allUsers.filter(u => u.uid !== uid);
-    allAuditors = allAuditors.filter(a => a.uid !== uid);
-    auditorApplications = auditorApplications.filter(a => a.id !== uid);
-
-    showScanToast('success', 'Profiel verwijderd', `${email} en ${userProjects.length} project(en) verwijderd.`, 4000);
-    renderUserManagement();
-    renderDashboard();
-  } catch(e) {
-    console.error('[Firebase] User delete failed:', e);
-    showScanToast('error', 'Verwijderen mislukt', e.message, 4000);
-  }
-}
-
-// ═══════════════ AUDITOR APPLICATION ═══════════════
-let myAuditorApplication = null; // Cached application status for current user
-
-async function checkAuditorApplication() {
-  if (!currentUser || isAdmin || isAuditor) { myAuditorApplication = null; return; }
-  try {
-    const doc = await db.collection('auditor_applications').doc(currentUser.uid).get();
-    myAuditorApplication = doc.exists ? doc.data() : null;
-  } catch(e) {
-    console.warn('[Firebase] Could not check auditor application:', e.message);
-    myAuditorApplication = null;
-  }
-}
-
-async function submitAuditorApplication() {
-  if (!currentUser) return;
-  const textarea = document.getElementById('auditorApplyMsg');
-  const message = textarea ? textarea.value.trim() : '';
-  if (message.length < 10) {
-    showScanToast('error', 'Te kort', 'Schrijf minimaal een korte motivatie (10+ tekens).', 3000);
-    return;
-  }
-
-  const btn = document.getElementById('auditorApplyBtn');
-  if (btn) { btn.disabled = true; btn.innerHTML = '<i data-lucide="loader" style="width:12px;height:12px;animation:spin 1s linear infinite"></i> Versturen...'; }
-
-  try {
-    const application = {
-      userId: currentUser.uid,
-      email: currentUser.email,
-      displayName: currentUser.displayName || currentUser.email,
-      message: message,
-      status: 'pending',
-      createdAt: new Date().toISOString()
-    };
-    await db.collection('auditor_applications').doc(currentUser.uid).set(application);
-    myAuditorApplication = application;
-    showScanToast('success', 'Aanvraag verstuurd!', 'We beoordelen je aanvraag zo snel mogelijk.', 4000);
-    renderAuditorApplySection();
-  } catch(e) {
-    console.error('[Firebase] Application submit failed:', e);
-    showScanToast('error', 'Mislukt', 'Kon aanvraag niet versturen: ' + e.message, 4000);
-    if (btn) { btn.disabled = false; btn.innerHTML = '<i data-lucide="send" style="width:12px;height:12px"></i> Aanvraag Versturen'; }
-  }
-}
-
-function renderAuditorApplySection() {
-  // Only show for regular users (not admin, not auditor)
-  if (isAdmin || isAuditor) return;
-
-  let el = document.getElementById('auditorApplySection');
-  if (!el) {
-    el = document.createElement('div');
-    el.id = 'auditorApplySection';
-    const gridEl = document.getElementById('projectsGrid');
-    if (gridEl && gridEl.parentElement) gridEl.parentElement.appendChild(el);
-    else return;
-  }
-
-  // Already an auditor? Don't show
-  if (userProfile && userProfile.role === 'auditor') { el.innerHTML = ''; return; }
-
-  const app = myAuditorApplication;
-
-  if (app && app.status === 'pending') {
-    // Application submitted, waiting
-    el.innerHTML = `
-      <div class="auditor-apply-card">
-        <h3><i data-lucide="clock" style="width:18px;height:18px"></i> Auditor Aanvraag Verstuurd</h3>
-        <div class="apply-status status-pending">
-          <i data-lucide="hourglass" style="width:14px;height:14px"></i>
-          Je aanvraag wordt beoordeeld. We laten je zo snel mogelijk weten of je bent goedgekeurd.
-        </div>
-        <p style="margin-top:10px;font-size:11px;color:var(--text-muted)">Ingediend op ${app.createdAt ? new Date(app.createdAt).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' }) : '—'}</p>
-      </div>`;
-  } else if (app && app.status === 'rejected') {
-    // Rejected — can reapply
-    el.innerHTML = `
-      <div class="auditor-apply-card">
-        <h3><i data-lucide="briefcase" style="width:18px;height:18px"></i> Word Auditor</h3>
-        <div class="apply-status status-rejected">
-          <i data-lucide="x-circle" style="width:14px;height:14px"></i>
-          Je eerdere aanvraag is helaas afgewezen.${app.rejectReason ? ' Reden: ' + app.rejectReason : ''}
-        </div>
-        <p style="margin-top:12px">Je kunt opnieuw een aanvraag indienen met aanvullende informatie.</p>
-        <div class="auditor-apply-form">
-          <textarea id="auditorApplyMsg" placeholder="Vertel waarom je een goede UX auditor zou zijn. Bijv. ervaring, achtergrond, motivatie..."></textarea>
-          <button class="btn-auditor" id="auditorApplyBtn" onclick="submitAuditorApplication()" style="margin-top:8px">
-            <i data-lucide="send" style="width:12px;height:12px"></i> Opnieuw Aanvragen
-          </button>
-        </div>
-      </div>`;
-  } else {
-    // No application yet — show apply form
-    el.innerHTML = `
-      <div class="auditor-apply-card">
-        <h3><i data-lucide="briefcase" style="width:18px;height:18px"></i> Word Auditor</h3>
-        <p>Heb je ervaring met UX en wil je professionele audits uitvoeren voor klanten? Vraag het auditor-account aan.</p>
-        <div class="apply-perks">
-          <div class="apply-perk"><i data-lucide="check-circle" style="width:12px;height:12px"></i> Voer audits uit voor klanten</div>
-          <div class="apply-perk"><i data-lucide="check-circle" style="width:12px;height:12px"></i> Claim open aanvragen</div>
-          <div class="apply-perk"><i data-lucide="check-circle" style="width:12px;height:12px"></i> Auditor badge op je profiel</div>
-        </div>
-        <div class="auditor-apply-form">
-          <textarea id="auditorApplyMsg" placeholder="Vertel kort over je UX-ervaring en waarom je auditor wilt worden..."></textarea>
-          <button class="btn-auditor" id="auditorApplyBtn" onclick="submitAuditorApplication()" style="margin-top:8px">
-            <i data-lucide="send" style="width:12px;height:12px"></i> Aanvraag Versturen
-          </button>
-        </div>
-      </div>`;
-  }
-
-  if (typeof lucide !== 'undefined') lucide.createIcons();
-}
-
-// ── Admin: load & manage auditor applications ──
-let auditorApplications = [];
-
-async function loadAuditorApplications() {
-  if (!isAdmin) return;
-  try {
-    const snapshot = await db.collection('auditor_applications').get();
-    auditorApplications = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-    auditorApplications.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
-  } catch(e) {
-    console.warn('[Firebase] Auditor applications load failed:', e.message);
-    auditorApplications = [];
-  }
-}
-
-async function approveAuditorApplication(userId) {
-  if (!isAdmin || !userId) return;
-  try {
-    // Update application status
-    await db.collection('auditor_applications').doc(userId).update({ status: 'approved', reviewedAt: new Date().toISOString(), reviewedBy: currentUser.uid });
-    // Change user role to auditor
-    await db.collection('users').doc(userId).update({ role: 'auditor' });
-    // Update local caches
-    const app = auditorApplications.find(a => a.id === userId);
-    if (app) app.status = 'approved';
-    const user = allUsers.find(u => u.uid === userId);
-    if (user) user.role = 'auditor';
-    if (!allAuditors.find(a => a.uid === userId)) allAuditors.push(user || { uid: userId });
-    showScanToast('success', 'Goedgekeurd!', `${app?.email || userId} is nu auditor.`, 3000);
-    renderAuditorApplicationsAdmin();
-    renderUserManagement();
-  } catch(e) {
-    console.error('[Firebase] Approve application failed:', e);
-    showScanToast('error', 'Goedkeuring mislukt', e.message, 4000);
-  }
-}
-
-async function rejectAuditorApplication(userId) {
-  if (!isAdmin || !userId) return;
-  try {
-    await db.collection('auditor_applications').doc(userId).update({ status: 'rejected', reviewedAt: new Date().toISOString(), reviewedBy: currentUser.uid });
-    const app = auditorApplications.find(a => a.id === userId);
-    if (app) app.status = 'rejected';
-    showScanToast('success', 'Afgewezen', `Aanvraag van ${app?.email || userId} afgewezen.`, 3000);
-    renderAuditorApplicationsAdmin();
-  } catch(e) {
-    console.error('[Firebase] Reject application failed:', e);
-    showScanToast('error', 'Afwijzing mislukt', e.message, 4000);
-  }
-}
-
-function renderAuditorApplicationsAdmin() {
-  let el = document.getElementById('auditorApplicationsSection');
-  if (!el || !isAdmin) return;
-
-  const pending = auditorApplications.filter(a => a.status === 'pending');
-  const recent = auditorApplications.filter(a => a.status !== 'pending').slice(0, 5);
-
-  if (auditorApplications.length === 0) {
-    el.innerHTML = '';
-    return;
-  }
-
-  el.innerHTML = `
-    <div style="margin-top:24px">
-      <h2 style="font-size:18px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px">
-        <i data-lucide="user-check" style="width:18px;height:18px;color:#a855f7"></i> Auditor Aanvragen
-        ${pending.length > 0 ? `<span class="audit-badge pending">${pending.length} nieuw</span>` : ''}
-      </h2>
-      ${pending.length > 0 ? `
-        <div style="margin-bottom:12px">
-          ${pending.map(a => `
-            <div class="application-row">
-              <div class="app-info">
-                <div class="app-email">${a.email || a.displayName || a.id}</div>
-                <div class="app-msg" title="${(a.message || '').replace(/"/g, '&quot;')}">${a.message || '—'}</div>
-              </div>
-              <div class="app-date">${a.createdAt ? new Date(a.createdAt).toLocaleDateString('nl-NL') : '—'}</div>
-              <div class="app-actions">
-                <button class="btn-approve" onclick="approveAuditorApplication('${a.id}')"><i data-lucide="check" style="width:10px;height:10px"></i> Goedkeuren</button>
-                <button class="btn-reject" onclick="rejectAuditorApplication('${a.id}')"><i data-lucide="x" style="width:10px;height:10px"></i> Afwijzen</button>
-              </div>
-            </div>
-          `).join('')}
-        </div>
-      ` : '<div style="color:var(--text-muted);font-size:13px;margin-bottom:12px">Geen openstaande aanvragen.</div>'}
-      ${recent.length > 0 ? `
-        <details style="margin-top:4px">
-          <summary style="font-size:12px;color:var(--text-muted);cursor:pointer;user-select:none">Recent beoordeeld (${recent.length})</summary>
-          <div style="margin-top:8px">
-            ${recent.map(a => `
-              <div class="application-row" style="opacity:0.6">
-                <div class="app-info">
-                  <div class="app-email">${a.email || a.id}</div>
-                </div>
-                <span class="role-tag role-${a.status === 'approved' ? 'auditor' : 'user'}">${a.status === 'approved' ? 'Goedgekeurd' : 'Afgewezen'}</span>
-                <div class="app-date">${a.reviewedAt ? new Date(a.reviewedAt).toLocaleDateString('nl-NL') : '—'}</div>
-              </div>
-            `).join('')}
-          </div>
-        </details>
-      ` : ''}
-    </div>`;
-
-  if (typeof lucide !== 'undefined') lucide.createIcons();
-}
-
-// ═══════════════ ADMIN: AUDIT QUEUE ═══════════════
-function renderAuditQueue() {
-  const el = document.getElementById('auditQueueSection');
-  if (!el) return;
-
-  const pending = auditRequests.filter(r => !r.auditStatus || r.auditStatus === 'pending');
-  const assigned = auditRequests.filter(r => r.auditStatus === 'assigned');
-  const inProgress = auditRequests.filter(r => r.auditStatus === 'in_progress');
-  const completed = auditRequests.filter(r => r.auditStatus === 'completed');
-  const pkgLabels = { quick: 'Quick Scan', deep: 'Deep Review', full: 'Full Audit' };
-
-  function auditRow(r, showActions) {
-    const st = r.auditStatus || 'pending';
-    const stLabel = { pending: 'In afwachting', assigned: 'Toegewezen', in_progress: 'Bezig', completed: 'Afgerond' }[st];
-    return `<tr class="aq-row">
-      <td><strong>${r.name || '—'}</strong>${r.client ? '<br><span style="font-size:11px;color:var(--text-muted)">' + r.client + '</span>' : ''}</td>
-      <td style="font-size:12px">${r.url ? r.url.replace(/^https?:\/\/(www\.)?/, '').substring(0, 30) : '—'}</td>
-      <td><span class="audit-badge ${st}">${stLabel}</span></td>
-      <td style="font-size:12px">${pkgLabels[r.package] || r.package || '—'}</td>
-      <td style="font-size:12px">${r.assignedToName || '<span style="color:var(--text-muted)">—</span>'}</td>
-      <td style="font-size:11px;color:var(--text-muted)">${r.createdAt ? new Date(r.createdAt).toLocaleDateString('nl-NL') : '—'}</td>
-      <td>${showActions ? `<button class="btn btn-sm btn-accent" onclick="event.stopPropagation();showAssignModal('${r.id}')"><i data-lucide="user-plus" style="width:11px;height:11px"></i> Toewijzen</button>` :
-        st === 'assigned' ? `<button class="btn btn-sm" onclick="event.stopPropagation();showAssignModal('${r.id}')">Herwijzen</button>` :
-        st === 'completed' ? `<button class="btn btn-sm" onclick="event.stopPropagation();openProject('${r.id}')">Bekijk</button>` : ''}</td>
-    </tr>`;
-  }
-
-  el.innerHTML = `
-    <div style="margin-top:24px">
-      <h2 style="font-size:18px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px">
-        <i data-lucide="clipboard-list" style="width:18px;height:18px;color:var(--accent)"></i> Audit Aanvragen
-        ${pending.length > 0 ? `<span class="audit-badge pending">${pending.length} nieuw</span>` : ''}
-      </h2>
-      ${auditRequests.length === 0 ? '<div style="color:var(--text-muted);font-size:13px;padding:20px 0">Nog geen audit aanvragen.</div>' : `
-      <div class="audit-queue-wrap">
-        <table class="audit-queue-table">
-          <thead><tr>
-            <th>Project</th><th>Website</th><th>Status</th><th>Pakket</th><th>Auditor</th><th>Datum</th><th>Acties</th>
-          </tr></thead>
-          <tbody>
-            ${pending.map(r => auditRow(r, true)).join('')}
-            ${assigned.map(r => auditRow(r, false)).join('')}
-            ${inProgress.map(r => auditRow(r, false)).join('')}
-            ${completed.map(r => auditRow(r, false)).join('')}
-          </tbody>
-        </table>
-      </div>`}
-    </div>`;
-
-  if (typeof lucide !== 'undefined') lucide.createIcons();
-}
-
-// ── Admin: Auditor assignment modal ──
-async function showAssignModal(projectId) {
-  await loadAuditors();
-  const project = auditRequests.find(r => r.id === projectId) || projects.find(p => p.id === projectId);
-  if (!project) return;
-
-  const overlay = document.createElement('div');
-  overlay.className = 'modal-overlay';
-  overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
-
-  const auditorList = allAuditors.length > 0
-    ? allAuditors.map(a => `
-      <div class="auditor-option" onclick="selectAuditorAndAssign('${projectId}', '${a.uid}', '${(a.email || '').replace(/'/g, '')}', this)">
-        <div class="auditor-option-info">
-          <strong>${a.email || a.uid}</strong>
-          ${a.auditCount ? `<span style="font-size:10px;color:var(--text-muted)">${a.auditCount} audits voltooid</span>` : ''}
-        </div>
-        <i data-lucide="chevron-right" style="width:14px;height:14px;color:var(--text-muted)"></i>
-      </div>`).join('')
-    : '<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:13px">Geen auditors gevonden.<br>Maak eerst een account aan met role: auditor.</div>';
-
-  overlay.innerHTML = `
-    <div class="modal-box">
-      <div class="modal-header">
-        <h3>Auditor Toewijzen</h3>
-        <button class="modal-close" onclick="this.closest('.modal-overlay').remove()">×</button>
-      </div>
-      <div class="modal-sub">Project: <strong>${project.name}</strong> · ${project.client || project.url}</div>
-      <div class="modal-body">${auditorList}</div>
-    </div>`;
-
-  document.body.appendChild(overlay);
-  if (typeof lucide !== 'undefined') lucide.createIcons();
-}
-
-async function selectAuditorAndAssign(projectId, auditorId, auditorName, el) {
-  el.style.opacity = '0.5';
-  el.style.pointerEvents = 'none';
-  await assignToAuditor(projectId, auditorId, auditorName);
-  const overlay = el.closest('.modal-overlay');
-  if (overlay) overlay.remove();
-}
-
-// ═══════════════ AUDITOR DASHBOARD ═══════════════
-function showAuditorDashboard() {
-  if (!currentUser) { showAuthScreen(); return; }
-  document.getElementById('authScreen').classList.add('hidden');
-  document.getElementById('dashboardScreen').classList.remove('hidden');
-  document.getElementById('newProjectScreen').classList.add('hidden');
-  document.getElementById('reviewScreen').classList.add('hidden');
-  document.getElementById('scorecardScreen').classList.add('hidden');
-  clearUrlParam('p');
-  document.body.style.overflow = 'hidden';
-
-  const emailEl = document.getElementById('dashUserEmail');
-  if (emailEl && currentUser) emailEl.textContent = currentUser.email;
-  const roleBadge = document.getElementById('dashRoleBadge');
-  if (roleBadge) { roleBadge.textContent = 'Auditor'; roleBadge.className = 'role-badge role-auditor'; }
-
-  renderAuditorDashboard();
-}
-
-function renderAuditorDashboard() {
-  const statsEl = document.getElementById('dashStats');
-  const gridEl = document.getElementById('projectsGrid');
-  const uid = currentUser?.uid;
-
-  const myAssigned = auditRequests.filter(r => r.assignedTo === uid && (r.auditStatus === 'assigned' || r.auditStatus === 'in_progress'));
-  const myCompleted = auditRequests.filter(r => r.assignedTo === uid && r.auditStatus === 'completed');
-  const openRequests = auditRequests.filter(r => !r.auditStatus || r.auditStatus === 'pending');
-  const pkgLabels = { quick: 'Quick Scan', deep: 'Deep Review', full: 'Full Audit' };
-
-  // Own self-service projects (not assigned audits)
-  const assignedIds = new Set(auditRequests.filter(r => r.assignedTo === uid).map(r => r.id));
-  const myOwnProjects = projects.filter(p => p.userId === uid && !assignedIds.has(p.id));
-
-  statsEl.innerHTML = `
-    <div class="stat-card"><div class="stat-num accent">${myAssigned.length}</div><div class="stat-label">Actieve Audits</div></div>
-    <div class="stat-card"><div class="stat-num green">${myCompleted.length}</div><div class="stat-label">Audit Afgerond</div></div>
-    <div class="stat-card"><div class="stat-num ${openRequests.length > 0 ? 'yellow' : ''}">${openRequests.length}</div><div class="stat-label">Open Aanvragen</div></div>
-    <div class="stat-card"><div class="stat-num">${myOwnProjects.length}</div><div class="stat-label">Eigen Reviews</div></div>
-  `;
-
-  let html = '';
-
-  // ── Mijn Audits (assigned + in_progress) ──
-  if (myAssigned.length > 0) {
-    html += '<h2 style="font-size:16px;font-weight:700;margin:0 0 12px;grid-column:1/-1;display:flex;align-items:center;gap:6px"><i data-lucide="clipboard-check" style="width:16px;height:16px;color:var(--accent)"></i> Mijn Audits</h2>';
-    myAssigned.forEach(r => {
-      const st = r.auditStatus || 'assigned';
-      html += `
-        <div class="project-card professional" onclick="${st === 'assigned' ? `updateAuditStatus('${r.id}','in_progress');openProject('${r.id}')` : `openProject('${r.id}')`}" style="position:relative;cursor:pointer">
-          <div class="pc-header">
-            <div>
-              <div class="pc-name">${r.name}</div>
-              ${r.client ? `<div class="pc-client">${r.client}</div>` : ''}
-            </div>
-            <span class="audit-badge ${st}">${st === 'assigned' ? 'Start Audit' : 'Bezig'}</span>
-          </div>
-          <div class="pc-url">${r.url}</div>
-          <div class="pc-footer">
-            <span class="pc-package">${pkgLabels[r.package] || 'Professional'}</span>
-            <span>${r.assignedAt ? new Date(r.assignedAt).toLocaleDateString('nl-NL') : '—'}</span>
-          </div>
-        </div>`;
-    });
-  }
-
-  // ── Open Aanvragen (claimable) ──
-  if (openRequests.length > 0) {
-    html += '<h2 style="font-size:16px;font-weight:700;margin:16px 0 12px;grid-column:1/-1;display:flex;align-items:center;gap:6px"><i data-lucide="inbox" style="width:16px;height:16px;color:var(--yellow)"></i> Open Aanvragen</h2>';
-    openRequests.forEach(r => {
-      html += `
-        <div class="project-card" style="position:relative">
-          <div class="pc-header">
-            <div>
-              <div class="pc-name">${r.name}</div>
-              ${r.client ? `<div class="pc-client">${r.client}</div>` : ''}
-            </div>
-            <span class="audit-badge pending">Open</span>
-          </div>
-          <div class="pc-url">${r.url}</div>
-          <div class="pc-footer">
-            <span class="pc-package">${pkgLabels[r.package] || 'Professional'}</span>
-            <span>${r.createdAt ? new Date(r.createdAt).toLocaleDateString('nl-NL') : '—'}</span>
-          </div>
-          <button class="btn btn-accent btn-sm" style="margin-top:8px;width:100%" onclick="event.stopPropagation();claimAuditRequest('${r.id}')"><i data-lucide="hand" style="width:12px;height:12px"></i> Claim deze audit</button>
-        </div>`;
-    });
-  }
-
-  // ── Afgeronde Audits ──
-  if (myCompleted.length > 0) {
-    html += '<h2 style="font-size:16px;font-weight:700;margin:16px 0 12px;grid-column:1/-1;display:flex;align-items:center;gap:6px"><i data-lucide="check-circle" style="width:16px;height:16px;color:var(--green)"></i> Afgerond</h2>';
-    myCompleted.forEach(r => {
-      html += `
-        <div class="project-card" onclick="openProject('${r.id}')" style="position:relative;cursor:pointer;opacity:0.7">
-          <div class="pc-header">
-            <div>
-              <div class="pc-name">${r.name}</div>
-              ${r.client ? `<div class="pc-client">${r.client}</div>` : ''}
-            </div>
-            <span class="audit-badge completed">Afgerond</span>
-          </div>
-          <div class="pc-url">${r.url}</div>
-          <div class="pc-footer">
-            <span class="pc-package">${pkgLabels[r.package] || 'Professional'}</span>
-            <span>${r.completedAt ? new Date(r.completedAt).toLocaleDateString('nl-NL') : '—'}</span>
-          </div>
-        </div>`;
-    });
-  }
-
-  // ── Eigen Reviews (self-service projects) ──
-  html += `<h2 style="font-size:16px;font-weight:700;margin:16px 0 12px;grid-column:1/-1;display:flex;align-items:center;gap:6px"><i data-lucide="folder" style="width:16px;height:16px;color:var(--accent)"></i> Mijn Eigen Reviews</h2>`;
-
-  // "New project" card
-  html += `
-    <div class="project-card new-project" onclick="showNewProject()">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-      <span>Eigen Review</span>
-    </div>`;
-
-  if (myOwnProjects.length > 0) {
-    myOwnProjects.slice().reverse().forEach(p => {
-      const score = calcProjectScore(p) || { answered: 0, total: 1, avg: 0, nvt: 0 };
-      const pct = Math.round((score.answered / score.total) * 100);
-      const scoreClass = score.avg >= 7.5 ? 'good' : score.avg >= 5 ? 'ok' : score.avg > 0 ? 'bad' : 'na';
-      const status = pct === 100 ? 'completed' : pct > 0 ? 'in-progress' : 'not-started';
-      const statusLabel = pct === 100 ? 'Afgerond' : pct > 0 ? `${pct}% klaar` : 'Niet gestart';
-
-      html += `
-        <div class="project-card" onclick="openProject('${p.id}')" style="position:relative;cursor:pointer">
-          <button class="pc-delete" onclick="event.stopPropagation();deleteProject('${p.id}')" title="Verwijder project">×</button>
-          <div class="pc-header">
-            <div>
-              <div class="pc-name">${p.name}</div>
-              ${p.client ? `<div class="pc-client">${p.client}</div>` : ''}
-            </div>
-            <span class="pc-badge ${status}">${statusLabel}</span>
-          </div>
-          <div class="pc-url">${p.url}</div>
-          <div class="pc-score-bar">
-            <div class="bar-track"><div class="bar-fill ${scoreClass}" style="width:${score.avg > 0 ? score.avg * 10 : 0}%"></div></div>
-            <div class="pc-score-num ${scoreClass}">${score.avg > 0 ? score.avg.toFixed(1) : '—'}</div>
-          </div>
-          <div class="pc-footer">
-            <span class="pc-package">Self-Service</span>
-            <span>${new Date(p.createdAt).toLocaleDateString('nl-NL')}</span>
-          </div>
-        </div>`;
-    });
-  } else {
-    html += '<div style="grid-column:1/-1;color:var(--text-muted);font-size:13px;padding:8px 0">Nog geen eigen reviews. Maak er een aan voor je eigen klanten.</div>';
-  }
-
-  gridEl.innerHTML = html;
   if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
@@ -3268,11 +2130,12 @@ function showNewProject() {
   document.getElementById('dashboardScreen').classList.add('hidden');
   document.getElementById('newProjectScreen').classList.remove('hidden');
   newProjectMode = 'self-service';
-  // Mode fields are now visible to everyone
-  const modeFields = document.getElementById('npModeFields');
-  if (modeFields) modeFields.classList.remove('hidden');
-  // Reset mode selection visual
-  document.querySelectorAll('.mode-option').forEach((e, i) => e.classList.toggle('selected', i === 0));
+  // Show admin fields (modus, klant, pakket) only for admin
+  const adminFields = document.getElementById('npAdminFields');
+  if (adminFields) {
+    if (isAdmin) { adminFields.classList.remove('hidden'); }
+    else { adminFields.classList.add('hidden'); }
+  }
   updateNewProjectForm();
 }
 
@@ -3286,11 +2149,13 @@ function selectMode(mode, el) {
 function updateNewProjectForm() {
   const clientGroup = document.getElementById('npClientGroup');
   const packageGroup = document.getElementById('npPackageGroup');
-  const proInfo = document.getElementById('npProInfo');
-  const isPro = newProjectMode === 'professional';
-  if (clientGroup) clientGroup.classList.toggle('hidden', !isPro);
-  if (packageGroup) packageGroup.classList.toggle('hidden', !isPro);
-  if (proInfo) proInfo.classList.toggle('hidden', !isPro);
+  if (newProjectMode === 'self-service') {
+    clientGroup.classList.add('hidden');
+    packageGroup.classList.add('hidden');
+  } else {
+    clientGroup.classList.remove('hidden');
+    packageGroup.classList.remove('hidden');
+  }
 }
 
 function createProject() {
@@ -3302,17 +2167,10 @@ function createProject() {
 
   if (!url || !name) { alert('Vul minimaal een URL en projectnaam in.'); return; }
 
-  // Check free limit only for self-service mode (professional requests are always allowed)
-  const isFreeUser = !isAdmin && !isAuditor && !(userProfile && userProfile.plan === 'pro');
-  const selfServiceCount = projects.filter(p => p.mode !== 'professional' && p.userId === currentUser?.uid).length;
-  if (isFreeUser && newProjectMode === 'self-service' && selfServiceCount >= FREE_PROJECT_LIMIT) {
+  // Check free limit for non-admin, non-pro users
+  const isFreeUser = !isAdmin && !(userProfile && userProfile.plan === 'pro');
+  if (isFreeUser && projects.length >= FREE_PROJECT_LIMIT) {
     alert('Je hebt je ' + FREE_PROJECT_LIMIT + ' gratis reviews gebruikt. Upgrade naar Pro voor onbeperkte reviews.');
-    return;
-  }
-
-  // Validate professional-specific fields
-  if (newProjectMode === 'professional' && !client) {
-    alert('Vul een bedrijfsnaam in voor de professional audit.');
     return;
   }
 
@@ -3326,31 +2184,16 @@ function createProject() {
     audience, mode: newProjectMode,
     userId: currentUser ? currentUser.uid : null,
     leadEmail: currentUser ? currentUser.email : '',
-    answers: {}, currentStep: 0, createdAt: new Date().toISOString(),
-    moduleConfig: typeof getDefaultModuleConfig === 'function' ? getDefaultModuleConfig() : null
+    answers: {}, currentStep: 0, createdAt: new Date().toISOString()
   };
-
-  // Professional mode → add audit workflow fields
-  if (newProjectMode === 'professional') {
-    project.auditStatus = 'pending';
-    project.assignedTo = null;
-    project.assignedToName = null;
-    project.assignedAt = null;
-    project.completedAt = null;
-  }
 
   projects.push(project);
   saveState();
 
-  if (newProjectMode === 'professional') {
-    // Show confirmation and go to dashboard (client can't start review themselves)
-    showScanToast('success', 'Aanvraag ingediend!', 'Een auditor wordt binnenkort toegewezen.', 5000);
-    showDashboard();
-  } else {
-    // Self-service → open project for review
-    updateUrlParam('p', projectId);
-    openProject(projectId);
-  }
+  // Update URL so the visitor can bookmark/share their project
+  updateUrlParam('p', projectId);
+
+  openProject(projectId);
 }
 
 // ═══════════════ AUTH ═══════════════
@@ -3383,18 +2226,13 @@ async function handleAuth() {
     if (authMode === 'register') {
       const cred = await auth.createUserWithEmailAndPassword(email, password);
       // Create user profile in Firestore
-      try {
-        await db.collection('users').doc(cred.user.uid).set({
-          email: email,
-          role: 'user',
-          plan: 'free',
-          createdAt: new Date().toISOString()
-        });
-        console.log('[Auth] Registered + profile created:', email);
-      } catch(profileErr) {
-        console.error('[Auth] Profile creation failed (check Firestore Security Rules):', profileErr.message);
-        // Auth account was created but profile wasn't — onAuthStateChanged will retry
-      }
+      await db.collection('users').doc(cred.user.uid).set({
+        email: email,
+        role: 'user',
+        plan: 'free',
+        createdAt: new Date().toISOString()
+      });
+      console.log('[Auth] Registered:', email);
     } else {
       await auth.signInWithEmailAndPassword(email, password);
       console.log('[Auth] Logged in:', email);
@@ -3450,16 +2288,7 @@ function showLanding() {
 // ── URL parameter management ──
 function updateUrlParam(key, value) {
   const url = new URL(window.location.href);
-  if (value === null || value === undefined) {
-    url.searchParams.delete(key);
-  } else {
-    url.searchParams.set(key, value);
-  }
-  window.history.replaceState({}, '', url.toString());
-}
-function clearUrlParam(key) {
-  const url = new URL(window.location.href);
-  url.searchParams.delete(key);
+  url.searchParams.set(key, value);
   window.history.replaceState({}, '', url.toString());
 }
 
@@ -3476,24 +2305,7 @@ function openProject(id) {
   const project = getActiveProject();
   if (!project) return;
 
-  // ── Migrate legacy answers to new module IDs if needed ──
-  if (project.answers && typeof LEGACY_ID_MAP !== 'undefined') {
-    const hasLegacyIds = Object.keys(project.answers).some(k => LEGACY_ID_MAP[k]);
-    if (hasLegacyIds) {
-      project.answers = migrateLegacyAnswers(project.answers);
-      saveState();
-    }
-  }
-
-  // ── Build review steps from project module config ──
-  if (typeof buildReviewSteps === 'function') {
-    reviewSteps = buildReviewSteps(project.moduleConfig || (typeof getDefaultModuleConfig === 'function' ? getDefaultModuleConfig() : null));
-  } else if (reviewSteps.length === 0) {
-    reviewSteps = LEGACY_STEPS_BACKUP;
-  }
-
   currentStep = project.currentStep || 0;
-  if (currentStep >= reviewSteps.length) currentStep = 0;
 
   // Update URL to reflect current project
   updateUrlParam('p', id);
@@ -3502,8 +2314,8 @@ function openProject(id) {
   document.getElementById('dashboardScreen').classList.add('hidden');
   document.getElementById('newProjectScreen').classList.add('hidden');
   document.getElementById('reviewScreen').classList.remove('hidden');
-  const pnEl = document.getElementById('topbarProjectName');
-  if (pnEl) pnEl.textContent = '| ' + project.name;
+  const pnEl = document.getElementById('displayProjectName');
+  if (pnEl) pnEl.textContent = project.name + (project.client ? ' — ' + project.client : '');
   document.getElementById('urlInput').value = project.url;
 
   buildStepper();
@@ -3516,7 +2328,6 @@ function backToDashboard() {
   const project = getActiveProject();
   if (project) { project.currentStep = currentStep; saveState(); }
   document.getElementById('reviewScreen').classList.add('hidden');
-  clearUrlParam('p');
   showDashboard();
 }
 
@@ -3754,52 +2565,43 @@ function buildStepper() {
         <div class="stepper-progress-bar"><div class="stepper-progress-fill" style="width:${pct}%;background:${progressColor}"></div></div>
         <div class="stepper-progress-pct" id="progressPct" style="color:${progressColor}">${pct}%</div>
       </div>
-    </div>` + (() => {
-    let lastModuleId = null;
-    return reviewSteps.map((step, i) => {
-      const scored = step.questions.filter(q => answers[q.id]?.score && answers[q.id].score !== 'nvt');
-      const total = step.questions.length;
-      const isCompleted = step.questions.every(q => answers[q.id]?.score);
-      const isLast = i === reviewSteps.length - 1;
+    </div>` + reviewSteps.map((step, i) => {
+    const scored = step.questions.filter(q => answers[q.id]?.score && answers[q.id].score !== 'nvt');
+    const total = step.questions.length;
+    const isCompleted = step.questions.every(q => answers[q.id]?.score);
+    const isLast = i === reviewSteps.length - 1;
 
-      let avg = 0;
-      let meta = '';
+    let avg = 0;
+    let meta = '';
 
-      if (scored.length > 0) {
-        const sum = scored.reduce((s, q) => {
-          const sc = answers[q.id].score;
-          return s + (sc === 'good' ? 10 : sc === 'ok' ? 5 : 0);
-        }, 0);
-        avg = sum / scored.length;
-        meta = `<div class="stepper-meta">${avg.toFixed(1)} · ${scored.length}/${total} beoordeeld</div>`;
-      }
+    if (scored.length > 0) {
+      const sum = scored.reduce((s, q) => {
+        const sc = answers[q.id].score;
+        return s + (sc === 'good' ? 10 : sc === 'ok' ? 5 : 0);
+      }, 0);
+      avg = sum / scored.length;
+      meta = `<div class="stepper-meta">${avg.toFixed(1)} · ${scored.length}/${total} beoordeeld</div>`;
+    }
 
-      const isActive = i === currentStep;
-      const status = isActive ? 'active' : isCompleted ? 'completed' : 'pending';
-      const isFirst = i === 0;
-      const chk = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+    const isActive = i === currentStep;
+    const status = isActive ? 'active' : isCompleted ? 'completed' : 'pending';
 
-      // Module header when module changes
-      let moduleHeader = '';
-      if (step.moduleId && step.moduleId !== lastModuleId) {
-        lastModuleId = step.moduleId;
-        moduleHeader = `<div class="stepper-module-header" style="border-left:3px solid ${step.moduleColor || 'var(--accent)'}"><span style="color:${step.moduleColor || 'var(--accent)'}">${step.moduleName || ''}</span></div>`;
-      }
+    const isFirst = i === 0;
+    const chk = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
 
-      return `${moduleHeader}
-        <div class="stepper-item ${status}" onclick="goToStep(${i})" ${step.moduleColor ? `style="--mod-color:${step.moduleColor}"` : ''}>
-          <div class="stepper-track">
-            <div class="stepper-line line-top${isFirst?' line-hidden':''}"></div>
-            <div class="stepper-circle">${isCompleted && !isActive ? chk : i + 1}</div>
-            <div class="stepper-line line-btm${isLast?' line-hidden':''}"></div>
-          </div>
-          <div class="stepper-info">
-            <div class="stepper-label">${step.shortTitle}</div>
-            ${meta}
-          </div>
-        </div>`;
-    }).join('');
-  })();
+    return `
+      <div class="stepper-item ${status}" onclick="goToStep(${i})">
+        <div class="stepper-track">
+          <div class="stepper-line line-top${isFirst?' line-hidden':''}"></div>
+          <div class="stepper-circle">${isCompleted && !isActive ? chk : i + 1}</div>
+          <div class="stepper-line line-btm${isLast?' line-hidden':''}"></div>
+        </div>
+        <div class="stepper-info">
+          <div class="stepper-label">${step.shortTitle}</div>
+          ${meta}
+        </div>
+      </div>`;
+  }).join('');
   // Scroll active step into view
   setTimeout(() => {
     const active = stepper.querySelector('.stepper-item.active');
@@ -3828,7 +2630,7 @@ function renderStep(stepIndex, resetScroll) {
   const answers = getAnswers();
   const area = document.getElementById('questionsArea');
   const prevScrollTop = area.scrollTop;
-  document.getElementById('stepIndicator').textContent = step.moduleName ? `${step.moduleName} · Stap ${stepIndex + 1} / ${reviewSteps.length}` : `Stap ${stepIndex + 1} / ${reviewSteps.length}`;
+  document.getElementById('stepIndicator').textContent = `Stap ${stepIndex + 1} / ${reviewSteps.length}`;
 
   const stepScored = step.questions.filter(q => answers[q.id]?.score && answers[q.id].score !== 'nvt');
   const stepNvt = step.questions.filter(q => answers[q.id]?.score === 'nvt').length;
@@ -3840,7 +2642,6 @@ function renderStep(stepIndex, resetScroll) {
   const scoreClass = stepEffective === 0 ? 'neutral' : avgScore >= 8 ? 'good' : avgScore >= 5 ? 'ok' : 'bad';
 
   area.innerHTML = `
-    ${step.moduleColor ? `<div class="module-badge" style="background:${step.moduleColor}22;border:1px solid ${step.moduleColor}44;color:${step.moduleColor}"><i data-lucide="${step.moduleIcon || 'box'}"></i> ${step.moduleName || ''}</div>` : ''}
     <div class="category-title">${step.title}</div>
     <div class="category-desc">${step.desc}</div>
     <div class="score-summary">
@@ -3854,9 +2655,7 @@ function renderStep(stepIndex, resetScroll) {
       const a = answers[q.id] || {};
       return `
         <div class="question-card ${a.score === 'nvt' ? 'answered-nvt' : a.score ? 'answered' : ''}" id="card-${q.id}" onclick="setActiveQuestion('${q.id}')">
-          <div class="question-label"><span class="q-num">${qi + 1}.</span>${q.text}${a.autoScanned ? '<span class="auto-badge"><i data-lucide="zap"></i> auto</span>' : ''}${q.type === 'auto' ? '<span class="auto-badge" style="background:#3b82f622;color:#3b82f6;border-color:#3b82f644"><i data-lucide="cpu"></i> auto-check</span>' : ''}${q.severity === 'critical' ? '<span class="sev-badge sev-critical">kritiek</span>' : ''}</div>
-          ${q.business_impact_nl && (a.score === 'bad' || a.score === 'ok') ? '<div class="check-impact"><i data-lucide="alert-triangle" style="width:12px;height:12px;flex-shrink:0"></i> ' + q.business_impact_nl + '</div>' : ''}
-          ${q.fix_suggestion_nl && (a.score === 'bad' || a.score === 'ok') ? '<div class="check-fix"><i data-lucide="wrench" style="width:12px;height:12px;flex-shrink:0"></i> ' + q.fix_suggestion_nl + '</div>' : ''}
+          <div class="question-label"><span class="q-num">${qi + 1}.</span>${q.text}${a.autoScanned ? '<span class="auto-badge"><i data-lucide="zap"></i> auto</span>' : ''}</div>
           <div class="score-row">
             <button class="score-btn score-bad ${a.score==='bad'?'selected':''}" onclick="setScore('${q.id}','bad')"><i data-lucide="x"></i> Niet OK</button>
             <button class="score-btn score-ok ${a.score==='ok'?'selected':''}" onclick="setScore('${q.id}','ok')">~ Matig</button>
@@ -4004,7 +2803,6 @@ function handleScreenshot(qId, input) {
       canvas.height = img.height * scale;
       canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
       const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
-      saveCurrentAnswers();
       addScreenshot(qId, dataUrl);
       renderStep(currentStep, false);
     };
@@ -4053,7 +2851,6 @@ function removeScreenshot(qId, idx) {
   }
   delete answers[qId].screenshot; // clean up old field
   saveState();
-  saveCurrentAnswers();
   renderStep(currentStep, false);
 }
 
@@ -4122,7 +2919,6 @@ document.addEventListener('paste', function(e) {
           canvas.height = img.height * scale;
           canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
           const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
-          saveCurrentAnswers();
           addScreenshot(targetQId, dataUrl);
           // Flash the card to confirm paste
           const card = document.getElementById('card-' + targetQId);
@@ -4273,7 +3069,6 @@ async function capturePreviewScreenshot(qId) {
     setTimeout(() => flash.remove(), 600);
 
     // Store screenshot
-    saveCurrentAnswers();
     addScreenshot(qId, dataUrl);
     renderStep(currentStep, false);
 
@@ -4329,36 +3124,6 @@ function promptApiKey() {
   return current;
 }
 
-// ── Scan toast banner helpers ──
-let scanToastEl = null;
-let scanToastTimer = null;
-function showScanToast(type, title, sub, autoHide) {
-  if (scanToastEl) scanToastEl.remove();
-  if (scanToastTimer) { clearTimeout(scanToastTimer); scanToastTimer = null; }
-  const icon = type === 'scanning' ? '<i data-lucide="loader" class="toast-spinner" style="width:16px;height:16px"></i>'
-    : type === 'success' ? '<i data-lucide="check-circle" style="width:16px;height:16px"></i>'
-    : '<i data-lucide="alert-circle" style="width:16px;height:16px"></i>';
-  const el = document.createElement('div');
-  el.className = `scan-toast ${type}`;
-  el.innerHTML = `<span class="toast-icon">${icon}</span><div class="toast-text"><div>${title}</div>${sub ? '<div class="toast-sub">' + sub + '</div>' : ''}</div>`;
-  document.body.appendChild(el);
-  if (typeof lucide !== 'undefined') lucide.createIcons({nodes:[el]});
-  scanToastEl = el;
-  if (autoHide) {
-    scanToastTimer = setTimeout(() => {
-      el.style.animation = 'toastFade 0.3s ease forwards';
-      setTimeout(() => { el.remove(); scanToastEl = null; }, 300);
-    }, autoHide);
-  }
-}
-function hideScanToast() {
-  if (scanToastEl) {
-    scanToastEl.style.animation = 'toastFade 0.3s ease forwards';
-    setTimeout(() => { if (scanToastEl) { scanToastEl.remove(); scanToastEl = null; } }, 300);
-  }
-  if (scanToastTimer) { clearTimeout(scanToastTimer); scanToastTimer = null; }
-}
-
 async function runAutoScan() {
   const project = getActiveProject();
   if (!project) return;
@@ -4368,46 +3133,46 @@ async function runAutoScan() {
   if (!url.startsWith('http')) url = 'https://' + url;
 
   const btn = document.getElementById('btnAutoScan');
-  // Keep button stable — just show spinner icon
-  btn.classList.add('scanning');
+  btn.innerHTML = '<i data-lucide="loader"></i> Scanning…'; lucide.createIcons({nodes:[btn]});
   btn.style.pointerEvents = 'none';
-  btn.style.opacity = '0.6';
 
   const answers = project.answers;
 
   // Helper: auto-fill a question (skip if already manually answered)
   function autoFill(qId, score, note) {
-    const mappedId = (typeof LEGACY_ID_MAP !== 'undefined' && LEGACY_ID_MAP[qId]) ? LEGACY_ID_MAP[qId] : qId;
-    if (!answers[mappedId]) answers[mappedId] = {};
-    if (answers[mappedId].score && !answers[mappedId].autoScanned) return;
-    answers[mappedId].score = score;
-    answers[mappedId].notes = (answers[mappedId].notes ? answers[mappedId].notes + '\n' : '') + '[Auto-scan] ' + note;
-    answers[mappedId].autoScanned = true;
+    if (!answers[qId]) answers[qId] = {};
+    // Don't overwrite manually scored answers
+    if (answers[qId].score && !answers[qId].autoScanned) return;
+    answers[qId].score = score;
+    answers[qId].notes = (answers[qId].notes ? answers[qId].notes + '\n' : '') + '[Auto-scan] ' + note;
+    answers[qId].autoScanned = true;
   }
 
   let domFilled = 0;
   let psiFilled = 0;
 
   // ── Phase 1: DOM-based checks (fast, works always) ──
-  showScanToast('scanning', 'DOM analyse uitvoeren…', 'Pagina wordt geanalyseerd');
   try {
+    btn.innerHTML = '<i data-lucide="loader"></i> DOM analyse…'; lucide.createIcons({nodes:[btn]});
     const pageData = await getPageDocument(url);
     if (pageData) {
       domFilled = runDomChecks(pageData, answers, autoFill);
     }
   } catch(e) { console.warn('DOM checks error:', e); }
 
+  // Save intermediate results so user sees DOM results even if PSI fails
   saveState();
   renderStep(currentStep, false);
   buildStepper();
 
   // ── Phase 2: PageSpeed Insights API (slower, richer data) ──
+  // Only run for professional mode
   const isPro = project.mode !== 'self-service';
 
   if (isPro) {
     let apiKey = getApiKey();
     try {
-      showScanToast('scanning', 'PageSpeed Insights laden…', 'Dit duurt 10-30 seconden');
+      btn.innerHTML = '<i data-lucide="loader"></i> PageSpeed… (10-30s)'; lucide.createIcons({nodes:[btn]});
       const apiUrl = `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(url)}&category=performance&category=seo&category=accessibility&strategy=mobile&key=${encodeURIComponent(apiKey)}`;
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 60000);
@@ -4421,6 +3186,7 @@ async function runAutoScan() {
       const audits = data.lighthouseResult?.audits || {};
       const cats = data.lighthouseResult?.categories || {};
 
+      // Performance scores
       const perfScore = (cats.performance?.score || 0) * 100;
       const lcp = audits['largest-contentful-paint']?.numericValue;
       const cls = audits['cumulative-layout-shift']?.numericValue;
@@ -4449,6 +3215,7 @@ async function runAutoScan() {
         psiFilled++;
       }
 
+      // Touch targets
       const tapAudit = audits['tap-targets'];
       if (tapAudit) {
         const failCount = tapAudit.details?.items?.length || 0;
@@ -4457,12 +3224,14 @@ async function runAutoScan() {
         psiFilled++;
       }
 
+      // Font size (mobile)
       const fontAudit = audits['font-size'];
       if (fontAudit) {
         autoFill('mbq3', fontAudit.score === 1 ? 'good' : 'ok', fontAudit.score === 1 ? 'Lettergrootte is leesbaar op mobiel' : 'Sommige tekst te klein op mobiel');
         psiFilled++;
       }
 
+      // Accessibility score (enriches DOM-based hcq5)
       const a11yScore = (cats.accessibility?.score || 0) * 100;
       if (a11yScore > 0) {
         autoFill('hcq5', a11yScore >= 90 ? 'good' : a11yScore >= 50 ? 'ok' : 'bad', `Lighthouse Accessibility: ${a11yScore.toFixed(0)}/100`);
@@ -4479,39 +3248,42 @@ async function runAutoScan() {
       if (isQuota) {
         const newKey = promptApiKey();
         if (newKey && newKey !== apiKey) {
-          btn.classList.remove('scanning');
+          btn.innerHTML = '<i data-lucide="zap"></i> Auto-Scan'; lucide.createIcons({nodes:[btn]});
           btn.style.pointerEvents = '';
-          btn.style.opacity = '';
-          hideScanToast();
           runAutoScan();
           return;
         }
       }
+      // If DOM checks worked but PSI failed, still show partial success
       if (domFilled > 0) {
         console.warn('PSI failed but DOM checks succeeded:', msg);
       } else {
-        showScanToast('error', 'Scan mislukt', msg.substring(0, 60), 5000);
-        btn.classList.remove('scanning');
-        btn.style.pointerEvents = '';
-        btn.style.opacity = '';
+        btn.innerHTML = '<i data-lucide="alert-circle"></i> ' + msg.substring(0, 35); lucide.createIcons({nodes:[btn]});
+        btn.style.borderColor = 'var(--red)';
+        btn.style.color = 'var(--red)';
+        setTimeout(() => {
+          btn.innerHTML = '<i data-lucide="zap"></i> Auto-Scan'; lucide.createIcons({nodes:[btn]});
+          btn.style.borderColor = 'var(--blue)';
+          btn.style.color = 'var(--blue)';
+          btn.style.pointerEvents = '';
+        }, 5000);
         console.error('Auto-scan error:', err);
         return;
       }
     }
   }
 
-  // ── Show results in toast ──
+  // ── Show results ──
   const totalFilled = Object.values(answers).filter(a => a.autoScanned).length;
-  showScanToast('success',
-    `${totalFilled} vragen automatisch ingevuld`,
-    `${domFilled} via DOM analyse${psiFilled > 0 ? ` · ${psiFilled} via PageSpeed` : ''}`,
-    4000
-  );
-
-  // Reset button
-  btn.classList.remove('scanning');
-  btn.style.pointerEvents = '';
-  btn.style.opacity = '';
+  btn.innerHTML = `<i data-lucide="check"></i> ${totalFilled} vragen ingevuld`; lucide.createIcons({nodes:[btn]});
+  btn.style.borderColor = 'var(--green)';
+  btn.style.color = 'var(--green)';
+  setTimeout(() => {
+    btn.innerHTML = '<i data-lucide="zap"></i> Auto-Scan'; lucide.createIcons({nodes:[btn]});
+    btn.style.borderColor = 'var(--blue)';
+    btn.style.color = 'var(--blue)';
+    btn.style.pointerEvents = '';
+  }, 3000);
 }
 
 // ═══════════════ DOM-BASED AUTO-CHECKS ═══════════════
@@ -5177,38 +3949,6 @@ function showScorecard() {
     return { ...step, avg, cls, status, stCls, effective, nvt };
   });
 
-  // Group catScores by module
-  const moduleGroups = {};
-  const moduleOrder = [];
-  catScores.forEach(c => {
-    const mId = c.moduleId || 'other';
-    if (!moduleGroups[mId]) {
-      moduleGroups[mId] = {
-        id: mId,
-        name: c.moduleName || c.title,
-        color: c.moduleColor || 'var(--accent)',
-        icon: c.moduleIcon || 'box',
-        steps: [],
-        totalEffective: 0,
-        totalScoreSum: 0
-      };
-      moduleOrder.push(mId);
-    }
-    moduleGroups[mId].steps.push(c);
-    if (c.effective > 0) {
-      moduleGroups[mId].totalEffective += c.effective;
-      moduleGroups[mId].totalScoreSum += c.avg >= 0 ? c.avg * c.effective : 0;
-    }
-  });
-  // Calculate module-level averages
-  moduleOrder.forEach(mId => {
-    const mg = moduleGroups[mId];
-    mg.avg = mg.totalEffective > 0 ? mg.totalScoreSum / mg.totalEffective : -1;
-    mg.cls = mg.totalEffective === 0 ? 'sc-na' : mg.avg >= 7.5 ? 'sc-good' : mg.avg >= 5 ? 'sc-ok' : 'sc-bad';
-    mg.status = mg.totalEffective === 0 ? 'Alles n.v.t.' : mg.avg >= 7.5 ? 'Goed' : mg.avg >= 5 ? 'Aandacht nodig' : 'Kritiek';
-    mg.stCls = mg.totalEffective === 0 ? 'st-na' : mg.avg >= 7.5 ? 'st-good' : mg.avg >= 5 ? 'st-ok' : 'st-bad';
-  });
-
   const allIssues = [];
   reviewSteps.forEach(step => {
     step.questions.forEach(q => {
@@ -5342,39 +4082,17 @@ function showScorecard() {
     <div class="dash-grid">
       <div class="dash-card">
         <div class="dash-card-head">
-          <h3><i data-lucide="bar-chart-3" style="width:14px;height:14px;color:var(--accent)"></i> Module Scores</h3>
-          <span style="font-size:11px;color:var(--text-muted)">${moduleOrder.length} modules · ${catScores.filter(c => c.effective > 0).length} categorieën</span>
+          <h3><i data-lucide="bar-chart-3" style="width:14px;height:14px;color:var(--accent)"></i> Categorie Scores</h3>
+          <span style="font-size:11px;color:var(--text-muted)">${catScores.filter(c => c.effective > 0).length} categorieën</span>
         </div>
-        <div class="dash-card-body compact" style="max-height:600px;overflow-y:auto">
-          ${moduleOrder.map(mId => {
-            const mg = moduleGroups[mId];
-            const barColor = mg.cls === 'sc-good' ? 'var(--green)' : mg.cls === 'sc-ok' ? 'var(--yellow)' : mg.cls === 'sc-bad' ? 'var(--red)' : 'var(--border)';
-            return `
-            <div class="mod-group" data-module="${mId}">
-              <div class="mod-group-header" onclick="this.parentElement.classList.toggle('collapsed')" style="--mg-color:${mg.color}">
-                <div class="mod-group-left">
-                  <i data-lucide="${mg.icon}" style="width:14px;height:14px;color:${mg.color}"></i>
-                  <span class="mod-group-name">${mg.name}</span>
-                  <span class="mod-group-count">${mg.steps.length} checks</span>
-                </div>
-                <div class="mod-group-right">
-                  <div class="mod-group-bar"><div class="mod-group-bar-fill" style="width:${mg.avg >= 0 ? mg.avg * 10 : 0}%;background:${mg.color}"></div></div>
-                  <div class="mod-group-score ${mg.cls}">${mg.avg >= 0 ? mg.avg.toFixed(1) : '—'}</div>
-                  <div class="mod-group-status ${mg.stCls}">${mg.status}</div>
-                  <i data-lucide="chevron-down" class="mod-group-chevron" style="width:12px;height:12px;color:var(--text-muted)"></i>
-                </div>
-              </div>
-              <div class="mod-group-body">
-                ${mg.steps.map(c => `
-                <div class="cat-row cat-row-sub">
-                  <div class="cat-row-score ${c.cls}">${c.avg >= 0 ? c.avg.toFixed(1) : '—'}</div>
-                  <div class="cat-row-name">${c.title}</div>
-                  <div class="cat-row-bar"><div class="cat-row-fill" style="width:${c.avg >= 0 ? c.avg * 10 : 0}%;background:${c.cls === 'sc-good' ? 'var(--green)' : c.cls === 'sc-ok' ? 'var(--yellow)' : c.cls === 'sc-bad' ? 'var(--red)' : 'var(--border)'}"></div></div>
-                  <div class="cat-row-status ${c.stCls}">${c.status}</div>
-                </div>`).join('')}
-              </div>
-            </div>`;
-          }).join('')}
+        <div class="dash-card-body compact" style="max-height:500px;overflow-y:auto">
+          ${catScores.map(c => `
+            <div class="cat-row">
+              <div class="cat-row-score ${c.cls}">${c.avg >= 0 ? c.avg.toFixed(1) : '—'}</div>
+              <div class="cat-row-name">${c.title}</div>
+              <div class="cat-row-bar"><div class="cat-row-fill" style="width:${c.avg >= 0 ? c.avg * 10 : 0}%;background:${c.cls === 'sc-good' ? 'var(--green)' : c.cls === 'sc-ok' ? 'var(--yellow)' : c.cls === 'sc-bad' ? 'var(--red)' : 'var(--border)'}"></div></div>
+              <div class="cat-row-status ${c.stCls}">${c.status}</div>
+            </div>`).join('')}
         </div>
       </div>
 
@@ -5411,8 +4129,6 @@ function showScorecard() {
       </div>
     </div>
 
-    <div id="siteInsightsContainer"></div>
-
     ${allIssues.length > 0 ? `
     <button class="findings-toggle" onclick="toggleFindings()" id="findingsToggle">
       <span><i data-lucide="list" style="width:14px;height:14px"></i> Alle Bevindingen (${allIssues.length})</span>
@@ -5434,245 +4150,6 @@ function showScorecard() {
   `;
 
   document.getElementById('scorecardScreen').classList.remove('hidden');
-  if (typeof lucide !== 'undefined') lucide.createIcons();
-
-  // Render Site Insights (premium feature)
-  const insightsContainer = document.getElementById('siteInsightsContainer');
-  if (insightsContainer) renderSiteInsights(project, overallAvg, insightsContainer);
-}
-
-// ═══════════════ SITE INSIGHTS (Premium) ═══════════════
-
-function normalizeUrl(url) {
-  if (!url) return '';
-  try {
-    let u = url.trim().toLowerCase();
-    if (!/^https?:\/\//i.test(u)) u = 'https://' + u;
-    const parsed = new URL(u);
-    // Normalize to hostname only (strip www, path, query, hash)
-    return parsed.hostname.replace(/^www\./, '');
-  } catch(e) { return url.trim().toLowerCase().replace(/^(https?:\/\/)?(www\.)?/, '').split('/')[0]; }
-}
-
-function getSameUrlReviews(currentProject) {
-  if (!currentProject || !currentProject.url) return [];
-  const normUrl = normalizeUrl(currentProject.url);
-  return projects
-    .filter(p => p.id !== currentProject.id && normalizeUrl(p.url) === normUrl && p.answers && Object.keys(p.answers).length > 0)
-    .sort((a, b) => (a.createdAt || '').localeCompare(b.createdAt || ''));
-}
-
-function calcProjectScore(proj) {
-  if (!proj || !proj.answers) return null;
-  const ans = proj.answers;
-  const allQIds = Object.keys(ans);
-  const nvt = allQIds.filter(k => ans[k].score === 'nvt').length;
-  const scored = allQIds.filter(k => ans[k].score && ans[k].score !== 'nvt');
-  const effective = allQIds.length - nvt;
-  if (effective === 0) return null;
-  const sum = scored.reduce((s, k) => s + (ans[k].score === 'good' ? 10 : ans[k].score === 'ok' ? 6 : 3), 0);
-  return { avg: sum / effective, scored: scored.length, effective, date: proj.createdAt || proj.updatedAt || '' };
-}
-
-// ── Site Benchmark: write anonymized score to Firestore ──
-async function writeSiteBenchmark(project, score) {
-  if (!currentUser || !project || !project.url || score == null) return;
-  const domain = normalizeUrl(project.url);
-  if (!domain) return;
-  try {
-    const benchRef = db.collection('site_benchmarks').doc(domain);
-    const benchDoc = await benchRef.get();
-    const now = new Date().toISOString();
-    if (benchDoc.exists) {
-      const data = benchDoc.data();
-      // Update running average
-      const entries = data.entries || [];
-      // Check if this user already has an entry — update it
-      const existingIdx = entries.findIndex(e => e.uid === currentUser.uid && e.projectId === project.id);
-      if (existingIdx >= 0) {
-        entries[existingIdx] = { uid: currentUser.uid, projectId: project.id, score, date: now };
-      } else {
-        entries.push({ uid: currentUser.uid, projectId: project.id, score, date: now });
-      }
-      const avgScore = entries.reduce((s, e) => s + e.score, 0) / entries.length;
-      await benchRef.set({ domain, avgScore, reviewCount: entries.length, lastUpdated: now, entries }, { merge: true });
-    } else {
-      await benchRef.set({
-        domain, avgScore: score, reviewCount: 1, lastUpdated: now,
-        entries: [{ uid: currentUser.uid, projectId: project.id, score, date: now }]
-      });
-    }
-  } catch(e) { console.warn('[Benchmark] Write failed:', e.message); }
-}
-
-// ── Read site benchmark for a domain ──
-async function readSiteBenchmark(url) {
-  const domain = normalizeUrl(url);
-  if (!domain) return null;
-  try {
-    const benchDoc = await db.collection('site_benchmarks').doc(domain).get();
-    if (benchDoc.exists) return benchDoc.data();
-  } catch(e) { console.warn('[Benchmark] Read failed:', e.message); }
-  return null;
-}
-
-// ── SVG sparkline generator ──
-function buildSparkline(dataPoints, width, height, color) {
-  if (!dataPoints || dataPoints.length < 2) return '';
-  const min = Math.min(...dataPoints) - 0.5;
-  const max = Math.max(...dataPoints) + 0.5;
-  const range = max - min || 1;
-  const step = width / (dataPoints.length - 1);
-  const points = dataPoints.map((v, i) => `${(i * step).toFixed(1)},${(height - ((v - min) / range) * height).toFixed(1)}`).join(' ');
-  const lastY = height - ((dataPoints[dataPoints.length - 1] - min) / range) * height;
-  return `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" style="overflow:visible">
-    <polyline points="${points}" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-    <circle cx="${width}" cy="${lastY.toFixed(1)}" r="3" fill="${color}"/>
-  </svg>`;
-}
-
-// ── Render Site Insights section ──
-function renderSiteInsights(project, currentScore, container) {
-  const isPremium = isAdmin || (userProfile && userProfile.plan === 'pro');
-  const sameUrlReviews = getSameUrlReviews(project);
-  const hasHistory = sameUrlReviews.length > 0;
-  const domain = normalizeUrl(project.url);
-
-  // Build score history (past reviews + current)
-  const history = sameUrlReviews.map(p => calcProjectScore(p)).filter(Boolean);
-  if (currentScore > 0) history.push({ avg: currentScore, date: project.createdAt || new Date().toISOString() });
-
-  // Calculate delta
-  const delta = history.length >= 2 ? history[history.length - 1].avg - history[history.length - 2].avg : null;
-  const deltaClass = delta > 0 ? 'delta-up' : delta < 0 ? 'delta-down' : 'delta-flat';
-  const deltaIcon = delta > 0 ? 'trending-up' : delta < 0 ? 'trending-down' : 'minus';
-  const deltaText = delta !== null ? (delta > 0 ? '+' : '') + delta.toFixed(1) : '—';
-
-  // Sparkline data
-  const sparkData = history.map(h => h.avg);
-
-  if (!isPremium) {
-    // Show locked premium teaser
-    container.innerHTML = `
-      <div class="dash-card site-insights-card">
-        <div class="dash-card-head">
-          <h3><i data-lucide="line-chart" style="width:14px;height:14px;color:var(--accent)"></i> Site Insights</h3>
-          <span class="premium-badge"><i data-lucide="crown" style="width:10px;height:10px"></i> Premium</span>
-        </div>
-        <div class="dash-card-body" style="position:relative;overflow:hidden">
-          <div class="insights-locked-overlay">
-            <div class="insights-locked-content">
-              <i data-lucide="lock" style="width:28px;height:28px;opacity:0.4;margin-bottom:8px"></i>
-              <strong>Review Geschiedenis & Benchmarks</strong>
-              <p>Zie hoe je scores verbeteren over tijd, vergelijk met andere reviewers, en track je voortgang per module.</p>
-              <button class="btn btn-primary btn-sm" onclick="upgradeForAi()" style="margin-top:8px"><i data-lucide="crown" style="width:12px;height:12px"></i> Upgrade naar Pro</button>
-            </div>
-          </div>
-          <div class="insights-preview-blur">
-            <div class="insights-grid">
-              <div class="insight-stat">
-                <div class="insight-stat-label">Reviews dit domein</div>
-                <div class="insight-stat-value">${hasHistory ? history.length : '—'}</div>
-              </div>
-              <div class="insight-stat">
-                <div class="insight-stat-label">Score trend</div>
-                <div class="insight-stat-value">—</div>
-              </div>
-              <div class="insight-stat">
-                <div class="insight-stat-label">Community gemiddelde</div>
-                <div class="insight-stat-value">—</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>`;
-  } else {
-    // Full premium view
-    // Async: fetch community benchmark
-    const benchmarkPlaceholder = 'si-benchmark-' + Date.now();
-    container.innerHTML = `
-      <div class="dash-card site-insights-card">
-        <div class="dash-card-head">
-          <h3><i data-lucide="line-chart" style="width:14px;height:14px;color:var(--accent)"></i> Site Insights</h3>
-          <span class="premium-badge active"><i data-lucide="crown" style="width:10px;height:10px"></i> Pro</span>
-        </div>
-        <div class="dash-card-body">
-          <div class="insights-domain"><i data-lucide="globe" style="width:12px;height:12px"></i> ${domain || project.url}</div>
-          <div class="insights-grid">
-            <div class="insight-stat">
-              <div class="insight-stat-label">Reviews</div>
-              <div class="insight-stat-value">${history.length}</div>
-              <div class="insight-stat-sub">${hasHistory ? 'van dit domein' : 'eerste review'}</div>
-            </div>
-            <div class="insight-stat">
-              <div class="insight-stat-label">Trend</div>
-              <div class="insight-stat-value ${deltaClass}">${delta !== null ? `<i data-lucide="${deltaIcon}" style="width:16px;height:16px"></i> ${deltaText}` : '—'}</div>
-              <div class="insight-stat-sub">${delta !== null ? (delta > 0 ? 'verbeterd' : delta < 0 ? 'verslechterd' : 'stabiel') + ' t.o.v. vorige' : 'geen vorige review'}</div>
-            </div>
-            <div class="insight-stat" id="${benchmarkPlaceholder}">
-              <div class="insight-stat-label">Community</div>
-              <div class="insight-stat-value">
-                <span class="insight-loading"><i data-lucide="loader" style="width:14px;height:14px;animation:spin 1s linear infinite"></i></span>
-              </div>
-              <div class="insight-stat-sub">laden...</div>
-            </div>
-          </div>
-          ${sparkData.length >= 2 ? `
-          <div class="insights-chart">
-            <div class="insights-chart-label">Score verloop</div>
-            <div class="insights-chart-body">
-              ${buildSparkline(sparkData, 280, 50, currentScore >= 7.5 ? '#22c55e' : currentScore >= 5 ? '#eab308' : '#ef4444')}
-              <div class="insights-chart-points">
-                ${history.map((h, i) => `<span class="insights-point">${h.avg.toFixed(1)}${h.date ? '<br><small>' + new Date(h.date).toLocaleDateString('nl-NL', {day:'numeric',month:'short'}) + '</small>' : ''}</span>`).join('')}
-              </div>
-            </div>
-          </div>` : `
-          <div class="insights-empty-chart">
-            <i data-lucide="trending-up" style="width:20px;height:20px;opacity:0.2"></i>
-            <span>Doe nog een review van ${domain || 'dit domein'} om je voortgang te zien</span>
-          </div>`}
-          ${hasHistory ? `
-          <div class="insights-history">
-            <div class="insights-history-label">Eerdere reviews</div>
-            ${sameUrlReviews.map(p => {
-              const s = calcProjectScore(p);
-              const sClass = !s ? 'sc-na' : s.avg >= 7.5 ? 'sc-good' : s.avg >= 5 ? 'sc-ok' : 'sc-bad';
-              return `<div class="insights-history-row">
-                <span class="insights-h-score ${sClass}">${s ? s.avg.toFixed(1) : '—'}</span>
-                <span class="insights-h-name">${p.name}</span>
-                <span class="insights-h-date">${p.createdAt ? new Date(p.createdAt).toLocaleDateString('nl-NL') : '—'}</span>
-              </div>`;
-            }).join('')}
-          </div>` : ''}
-        </div>
-      </div>`;
-
-    // Async: load community benchmark
-    readSiteBenchmark(project.url).then(bench => {
-      const el = document.getElementById(benchmarkPlaceholder);
-      if (!el) return;
-      if (bench && bench.reviewCount > 0) {
-        const otherCount = bench.entries ? bench.entries.filter(e => e.uid !== (currentUser?.uid || '')).length : 0;
-        const benchClass = bench.avgScore >= 7.5 ? 'sc-good' : bench.avgScore >= 5 ? 'sc-ok' : 'sc-bad';
-        const diff = currentScore - bench.avgScore;
-        const diffText = diff > 0 ? '+' + diff.toFixed(1) + ' boven' : diff < 0 ? diff.toFixed(1) + ' onder' : 'gelijk aan';
-        el.innerHTML = `
-          <div class="insight-stat-label">Community</div>
-          <div class="insight-stat-value ${benchClass}">${bench.avgScore.toFixed(1)}</div>
-          <div class="insight-stat-sub">${bench.reviewCount} review${bench.reviewCount !== 1 ? 's' : ''}${otherCount > 0 ? ' · ' + diffText + ' gem.' : ''}</div>`;
-      } else {
-        el.innerHTML = `
-          <div class="insight-stat-label">Community</div>
-          <div class="insight-stat-value" style="color:var(--text-muted)">—</div>
-          <div class="insight-stat-sub">nog geen data</div>`;
-      }
-      if (typeof lucide !== 'undefined') lucide.createIcons();
-    });
-
-    // Write current score to benchmark
-    if (currentScore > 0) writeSiteBenchmark(project, currentScore);
-  }
-
   if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
@@ -5703,7 +4180,6 @@ function toggleFindings() {
 function backToDashboardFromScorecard() {
   document.getElementById('scorecardScreen').classList.add('hidden');
   document.getElementById('reviewScreen').classList.add('hidden');
-  clearUrlParam('p');
   showDashboard();
 }
 
@@ -6141,9 +4617,7 @@ auth.onAuthStateChanged(async (user) => {
     currentUser = null;
     userProfile = null;
     isAdmin = false;
-    isAuditor = false;
     projects = [];
-    auditRequests = [];
     showAuthScreen();
     return;
   }
@@ -6158,24 +4632,14 @@ auth.onAuthStateChanged(async (user) => {
     if (userDoc.exists) {
       userProfile = userDoc.data();
       isAdmin = userProfile.role === 'admin';
-      isAuditor = userProfile.role === 'auditor';
     } else {
-      // Profile doesn't exist yet — create it
+      // Profile doesn't exist yet (legacy user) — create it
       userProfile = { email: user.email, role: 'user', plan: 'free', createdAt: new Date().toISOString() };
-      try {
-        await db.collection('users').doc(user.uid).set(userProfile);
-        console.log('[Firebase] Profile created for', user.email);
-      } catch(writeErr) {
-        console.error('[Firebase] Could not create profile — check Firestore Security Rules!', writeErr.message);
-        console.error('[Firebase] Go to Firebase Console → Firestore → Rules and ensure users can create their own profile.');
-      }
+      await db.collection('users').doc(user.uid).set(userProfile);
     }
   } catch(e) {
     console.warn('[Firebase] Could not load user profile:', e.message);
-    if (e.message && (e.message.includes('permission') || e.message.includes('Missing'))) {
-      console.error('[Firebase] ⚠ Firestore Security Rules blokkeren toegang! Update je rules in Firebase Console.');
-    }
-    userProfile = { email: user.email, role: 'user', plan: 'free' };
+    userProfile = { role: 'user', plan: 'free' };
   }
 
   await loadState();
@@ -6184,34 +4648,15 @@ auth.onAuthStateChanged(async (user) => {
   // Hide auth screen
   document.getElementById('authScreen').classList.add('hidden');
 
-  // Load audit requests for admin/auditor
-  if (isAdmin || isAuditor) {
-    await loadAuditRequests();
-  }
-
-  // Load auditor application data
-  if (isAdmin) {
-    await loadAuditorApplications();
-  } else if (!isAuditor) {
-    await checkAuditorApplication();
-  }
-
   // URL routing
   if (urlProjectId && projects.find(p => p.id === urlProjectId)) {
     openProject(urlProjectId);
     return;
   }
 
-  // Route based on role
-  if (isAdmin) {
-    console.log('[Admin] Alle', projects.length, 'projecten zichtbaar.');
-    showDashboard();
-  } else if (isAuditor) {
-    console.log('[Auditor]', auditRequests.length, 'audit requests geladen.');
-    showAuditorDashboard();
-  } else {
-    showDashboard();
-  }
+  // Everyone goes to the dashboard
+  if (isAdmin) console.log('[Admin] Alle', projects.length, 'projecten zichtbaar.');
+  showDashboard();
 });
 </script>
 </body>
