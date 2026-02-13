@@ -1301,19 +1301,33 @@
     .stepper-progress { display: none; }
     .stepper-item { padding: 0 9px; }
     .topbar-subtitle { font-size: 10px; gap: 4px; }
+    .topbar-center { flex: 0 1 auto; min-width: 0; }
+    .topbar-title { font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .topbar-row { padding: 6px 8px; gap: 4px; }
     .dash-stats { grid-template-columns: repeat(2, 1fr); }
     /* Buttons: icon-only on small screens */
     .btn-label { display: none; }
     .btn-open-ext { padding: 0 10px; }
     .screenshot-btn { padding: 6px 8px; }
     .screenshot-hint { display: none; }
-    .btn-nav { padding: 4px 10px; font-size: 12px; }
-    .topbar-right .btn-icon { display: none; }
+    .btn-nav { padding: 4px 8px; font-size: 11px; }
+    .topbar-right { gap: 3px; }
+    .topbar-right .btn-icon { width: 24px; height: 24px; font-size: 10px; min-width: 24px; min-height: 24px; }
+    .topbar-right .btn-icon i[data-lucide] { width: 12px; height: 12px; }
     /* Review mode stays full-width at small screens too */
     .main.review-mode .review-panel { width: 100%; min-width: 100%; }
     .main.review-mode .step-stepper { width: 160px; }
     .main.review-mode .stepper-label { display: block; }
     .main.review-mode .stepper-progress { display: block; }
+  }
+
+  @media (max-width: 768px) {
+    .topbar-center { display: none; }
+    .topbar-row { justify-content: space-between; }
+    .topbar-right .btn-icon { width: 28px; height: 28px; min-width: 28px; min-height: 28px; }
+    .topbar-right .btn-icon i[data-lucide] { width: 14px; height: 14px; }
+    .topbar-right { gap: 4px; }
+    .btn-nav { padding: 4px 10px; font-size: 12px; }
   }
 
   /* ─ Scorecard Dashboard responsive ─ */
@@ -2516,8 +2530,7 @@ function renderAdminConfig() {
   const el = document.getElementById('adminConfigSection');
   if (!el || !isAdmin) return;
 
-  const hasKey = !!_cachedAiKey;
-  const maskedKey = hasKey ? _cachedAiKey.substring(0, 12) + '...' + _cachedAiKey.slice(-4) : '';
+  const hasProxy = !!_aiProxyUrl;
 
   el.innerHTML = `
     <div style="margin-top:24px">
@@ -2527,12 +2540,13 @@ function renderAdminConfig() {
       <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
           <div>
-            <div style="font-size:13px;font-weight:700;margin-bottom:4px">AI Actieplan (Anthropic API Key)</div>
-            <div style="font-size:11px;color:var(--text-muted)">${hasKey ? `Actief · ${maskedKey}` : 'Niet ingesteld — AI Actieplan is uitgeschakeld'}</div>
+            <div style="font-size:13px;font-weight:700;margin-bottom:4px">AI Actieplan (Proxy URL)</div>
+            <div style="font-size:11px;color:var(--text-muted)">${hasProxy ? `Actief · ${_aiProxyUrl}` : 'Niet ingesteld — AI Actieplan is uitgeschakeld'}</div>
+            <div style="font-size:10px;color:var(--text-muted);margin-top:4px">Cloudflare Worker URL. API key staat veilig op de server, niet in de browser.</div>
           </div>
           <div style="display:flex;gap:6px">
-            <input type="password" id="adminAiKeyInput" placeholder="sk-ant-..." value="${_cachedAiKey || ''}" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:6px 10px;font-size:12px;color:var(--text);width:280px;font-family:monospace;outline:none" />
-            <button class="btn btn-accent btn-sm" onclick="saveAiKeyToFirestore(document.getElementById('adminAiKeyInput').value.trim())">Opslaan</button>
+            <input type="url" id="adminAiProxyInput" placeholder="https://bold700-ai.workers.dev" value="${_aiProxyUrl || ''}" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:6px 10px;font-size:12px;color:var(--text);width:320px;font-family:monospace;outline:none" />
+            <button class="btn btn-accent btn-sm" onclick="saveAiConfig(document.getElementById('adminAiProxyInput').value.trim())">Opslaan</button>
           </div>
         </div>
       </div>
@@ -4433,7 +4447,7 @@ async function runAutoScan() {
   try {
     const pageData = await getPageDocument(url);
     if (pageData) {
-      domFilled = runDomChecks(pageData, answers, autoFill);
+      domFilled = await runDomChecks(pageData, answers, autoFill);
     }
   } catch(e) { console.warn('DOM checks error:', e); }
 
@@ -4509,6 +4523,236 @@ async function runAutoScan() {
         psiFilled++;
       }
 
+      // ══════ PERFORMANCE PSI CHECKS (perf-*) ══════
+
+      // perf-003: LCP
+      if (lcp !== undefined) {
+        const lcpSec = lcp / 1000;
+        autoFill('perf-003', lcpSec < 2.5 ? 'good' : lcpSec < 4 ? 'ok' : 'bad',
+          `LCP: ${lcpSec.toFixed(1)}s ${lcpSec >= 2.5 ? '(moet <2.5s)' : '(goed)'}`);
+        psiFilled++;
+      }
+      // perf-004: CLS
+      if (cls !== undefined) {
+        autoFill('perf-004', cls < 0.1 ? 'good' : cls < 0.25 ? 'ok' : 'bad',
+          `CLS: ${cls.toFixed(3)} ${cls >= 0.1 ? '(moet <0.1)' : '(goed)'}`);
+        psiFilled++;
+      }
+      // perf-005: INP/TBT
+      const tbt = audits['total-blocking-time']?.numericValue;
+      if (tbt !== undefined) {
+        autoFill('perf-005', tbt < 200 ? 'good' : tbt < 600 ? 'ok' : 'bad',
+          `Total Blocking Time: ${tbt.toFixed(0)}ms ${tbt >= 200 ? '(moet <200ms)' : '(goed)'}`);
+        psiFilled++;
+      }
+      // perf-006: FCP
+      if (fcp !== undefined) {
+        const fcpSec = fcp / 1000;
+        autoFill('perf-006', fcpSec < 1.8 ? 'good' : fcpSec < 3 ? 'ok' : 'bad',
+          `FCP: ${fcpSec.toFixed(1)}s ${fcpSec >= 1.8 ? '(moet <1.8s)' : '(goed)'}`);
+        psiFilled++;
+      }
+      // perf-007: TTFB
+      const ttfb = audits['server-response-time']?.numericValue;
+      if (ttfb !== undefined) {
+        autoFill('perf-007', ttfb < 600 ? 'good' : ttfb < 1500 ? 'ok' : 'bad',
+          `TTFB: ${ttfb.toFixed(0)}ms ${ttfb >= 600 ? '(moet <600ms)' : '(goed)'}`);
+        psiFilled++;
+      }
+      // perf-008: Speed Index
+      if (speed !== undefined) {
+        const si = speed / 1000;
+        autoFill('perf-008', si < 3.4 ? 'good' : si < 5.8 ? 'ok' : 'bad',
+          `Speed Index: ${si.toFixed(1)}s ${si >= 3.4 ? '(moet <3.4s)' : '(goed)'}`);
+        psiFilled++;
+      }
+
+      // perf-011: Render-blocking resources
+      const rbo = audits['render-blocking-resources'];
+      if (rbo) {
+        const items = rbo.details?.items?.length || 0;
+        autoFill('perf-011', rbo.score === 1 ? 'good' : items > 5 ? 'bad' : 'ok',
+          rbo.score === 1 ? 'Geen render-blocking resources' : `${items} render-blocking resources (${(rbo.numericValue/1000).toFixed(1)}s vertraging)`);
+        psiFilled++;
+      }
+      // perf-012: Unused CSS
+      const unusedCSS = audits['unused-css-rules'];
+      if (unusedCSS) {
+        autoFill('perf-012', unusedCSS.score === 1 ? 'good' : 'ok',
+          unusedCSS.score === 1 ? 'Geen significante ongebruikte CSS' : `Ongebruikte CSS: ${((unusedCSS.numericValue || 0)/1024).toFixed(0)}KB te besparen`);
+        psiFilled++;
+      }
+      // perf-013: Unused JavaScript
+      const unusedJS = audits['unused-javascript'];
+      if (unusedJS) {
+        autoFill('perf-013', unusedJS.score === 1 ? 'good' : 'ok',
+          unusedJS.score === 1 ? 'Geen significante ongebruikte JS' : `Ongebruikte JS: ${((unusedJS.numericValue || 0)/1024).toFixed(0)}KB te besparen`);
+        psiFilled++;
+      }
+      // perf-014: JS execution time
+      const bootup = audits['bootup-time'];
+      if (bootup) {
+        autoFill('perf-014', bootup.score === 1 ? 'good' : bootup.numericValue > 3500 ? 'bad' : 'ok',
+          `JS uitvoeringstijd: ${(bootup.numericValue/1000).toFixed(1)}s`);
+        psiFilled++;
+      }
+      // perf-015: Main thread work
+      const mainThread = audits['mainthread-work-breakdown'];
+      if (mainThread) {
+        autoFill('perf-015', mainThread.score === 1 ? 'good' : mainThread.numericValue > 4000 ? 'bad' : 'ok',
+          `Main thread werk: ${(mainThread.numericValue/1000).toFixed(1)}s`);
+        psiFilled++;
+      }
+      // perf-016: DOM size (PSI version)
+      const domSize = audits['dom-size'];
+      if (domSize) {
+        const count = domSize.numericValue || 0;
+        autoFill('perf-016', count < 1500 ? 'good' : count < 3000 ? 'ok' : 'bad',
+          `DOM grootte: ${count} elementen (Lighthouse) ${count >= 1500 ? '— te groot' : ''}`);
+        psiFilled++;
+      }
+      // perf-017: Critical request chains
+      const crc = audits['critical-request-chains'];
+      if (crc) {
+        autoFill('perf-017', crc.score === 1 ? 'good' : 'ok',
+          crc.displayValue || 'Critical request chains geanalyseerd');
+        psiFilled++;
+      }
+      // perf-019: Images optimized
+      const imgOpt = audits['uses-optimized-images'];
+      if (imgOpt) {
+        autoFill('perf-019', imgOpt.score === 1 ? 'good' : 'ok',
+          imgOpt.score === 1 ? 'Afbeeldingen zijn geoptimaliseerd' : `Afbeeldingen optimaliseren: ${((imgOpt.numericValue || 0)/1024).toFixed(0)}KB te besparen`);
+        psiFilled++;
+      }
+      // perf-020: Modern image formats
+      const modernImg = audits['modern-image-formats'];
+      if (modernImg) {
+        autoFill('perf-020', modernImg.score === 1 ? 'good' : 'bad',
+          modernImg.score === 1 ? 'Moderne afbeeldingsformaten gebruikt' : `Gebruik WebP/AVIF: ${((modernImg.numericValue || 0)/1024).toFixed(0)}KB te besparen`);
+        psiFilled++;
+      }
+      // perf-021: Responsive images
+      const respImg = audits['uses-responsive-images'];
+      if (respImg) {
+        autoFill('perf-021', respImg.score === 1 ? 'good' : 'ok',
+          respImg.score === 1 ? 'Responsive images correct' : `Afbeeldingen niet responsive: ${((respImg.numericValue || 0)/1024).toFixed(0)}KB te besparen`);
+        psiFilled++;
+      }
+      // perf-022: Text compression
+      const textComp = audits['uses-text-compression'];
+      if (textComp) {
+        autoFill('perf-022', textComp.score === 1 ? 'good' : 'bad',
+          textComp.score === 1 ? 'Tekstcompressie (gzip/brotli) actief' : `Geen tekstcompressie: ${((textComp.numericValue || 0)/1024).toFixed(0)}KB te besparen`);
+        psiFilled++;
+      }
+      // perf-023: CSS minified
+      const cssMin = audits['unminified-css'];
+      if (cssMin) {
+        autoFill('perf-023', cssMin.score === 1 ? 'good' : 'ok',
+          cssMin.score === 1 ? 'CSS is geminified' : `CSS niet geminified: ${((cssMin.numericValue || 0)/1024).toFixed(0)}KB te besparen`);
+        psiFilled++;
+      }
+      // perf-024: JS minified
+      const jsMin = audits['unminified-javascript'];
+      if (jsMin) {
+        autoFill('perf-024', jsMin.score === 1 ? 'good' : 'ok',
+          jsMin.score === 1 ? 'JavaScript is geminified' : `JS niet geminified: ${((jsMin.numericValue || 0)/1024).toFixed(0)}KB te besparen`);
+        psiFilled++;
+      }
+      // perf-025: Font display
+      const fontDisplay = audits['font-display'];
+      if (fontDisplay) {
+        autoFill('perf-025', fontDisplay.score === 1 ? 'good' : 'ok',
+          fontDisplay.score === 1 ? 'font-display correct geconfigureerd' : 'Font-display niet optimaal — voeg display=swap toe');
+        psiFilled++;
+      }
+      // perf-026: Preload
+      const preload = audits['uses-rel-preload'];
+      if (preload) {
+        autoFill('perf-026', preload.score === 1 ? 'good' : 'ok',
+          preload.score === 1 ? 'Kritieke resources correct gepreload' : 'Preload hints ontbreken voor kritieke resources');
+        psiFilled++;
+      }
+      // perf-027: Preconnect
+      const preconnect = audits['uses-rel-preconnect'];
+      if (preconnect) {
+        autoFill('perf-027', preconnect.score === 1 ? 'good' : 'ok',
+          preconnect.score === 1 ? 'Preconnect correct geconfigureerd' : 'Preconnect ontbreekt voor externe origins');
+        psiFilled++;
+      }
+      // perf-028: Offscreen images
+      const offscreen = audits['offscreen-images'];
+      if (offscreen) {
+        autoFill('perf-028', offscreen.score === 1 ? 'good' : 'ok',
+          offscreen.score === 1 ? 'Offscreen images worden lazy geladen' : `Offscreen images: ${((offscreen.numericValue || 0)/1024).toFixed(0)}KB te besparen met lazy loading`);
+        psiFilled++;
+      }
+      // perf-029: Browser caching
+      const caching = audits['uses-long-cache-ttl'];
+      if (caching) {
+        autoFill('perf-029', caching.score === 1 ? 'good' : caching.score >= 0.5 ? 'ok' : 'bad',
+          caching.score === 1 ? 'Browser caching correct geconfigureerd' : `Caching optimaliseren: ${caching.details?.items?.length || 0} resources zonder goede cache-headers`);
+        psiFilled++;
+      }
+      // perf-030: HTTP/2
+      const http2 = audits['uses-http2'];
+      if (http2) {
+        autoFill('perf-030', http2.score === 1 ? 'good' : 'ok',
+          http2.score === 1 ? 'HTTP/2 wordt gebruikt' : 'Niet alle resources via HTTP/2 — upgrade aanbevolen');
+        psiFilled++;
+      }
+      // perf-035: Third-party impact
+      const thirdParty = audits['third-party-summary'];
+      if (thirdParty) {
+        const items = thirdParty.details?.items?.length || 0;
+        autoFill('perf-035', items <= 3 ? 'good' : items <= 8 ? 'ok' : 'bad',
+          `${items} third-party scripts gedetecteerd ${items > 8 ? '— te veel impact' : ''}`);
+        psiFilled++;
+      }
+      // perf-036: Third-party facades
+      const facades = audits['third-party-facades'];
+      if (facades) {
+        autoFill('perf-036', facades.score === 1 ? 'good' : 'ok',
+          facades.score === 1 ? 'Third-party facades correct geïmplementeerd' : 'Overweeg facades voor zware third-party embeds');
+        psiFilled++;
+      }
+
+      // ══════ MOBILE PSI CHECKS (mob-*) ══════
+      // mob-002: Tap targets (already done above)
+      // mob-006: Content width
+      const contentWidth = audits['content-width'];
+      if (contentWidth) {
+        autoFill('mob-006', contentWidth.score === 1 ? 'good' : 'bad',
+          contentWidth.score === 1 ? 'Content past correct in viewport' : 'Content breder dan viewport — scrollt horizontaal');
+        psiFilled++;
+      }
+      // mob-011: Tap target spacing
+      if (tapAudit) {
+        autoFill('mob-011', tapAudit.score === 1 ? 'good' : 'ok',
+          tapAudit.score === 1 ? 'Voldoende ruimte tussen touch targets' : 'Touch targets staan te dicht bij elkaar');
+        psiFilled++;
+      }
+      // mob-019: Mobile speed score
+      autoFill('mob-019', perfScore >= 90 ? 'good' : perfScore >= 50 ? 'ok' : 'bad',
+        `Mobiele performance score: ${perfScore.toFixed(0)}/100`);
+      psiFilled++;
+      // mob-020: Mobile LCP
+      if (lcp !== undefined) {
+        autoFill('mob-020', lcp < 2500 ? 'good' : lcp < 4000 ? 'ok' : 'bad',
+          `Mobiele LCP: ${(lcp/1000).toFixed(1)}s ${lcp >= 2500 ? '(moet <2.5s)' : '(goed)'}`);
+        psiFilled++;
+      }
+
+      // ══════ SECURITY PSI CHECKS ══════
+      const vulnLibs = audits['no-vulnerable-libraries'];
+      if (vulnLibs) {
+        autoFill('sec-014', vulnLibs.score === 1 ? 'good' : 'bad',
+          vulnLibs.score === 1 ? 'Geen kwetsbare JS bibliotheken (Lighthouse)' :
+          `${vulnLibs.details?.items?.length || 0} kwetsbare bibliotheken gevonden!`);
+        psiFilled++;
+      }
+
       saveState();
       renderStep(currentStep, false);
       buildStepper();
@@ -4575,7 +4819,21 @@ async function getPageDocument(url) {
     return { doc, source: 'fetch', css: false };
   } catch(e) { /* CORS blocked */ }
 
-  // Try 3: proxy fallback
+  // Try 3: Cloudflare Worker proxy (works from file:// and any origin)
+  try {
+    const workerProxy = getAiProxyUrl();
+    if (workerProxy) {
+      const proxyBase = workerProxy.replace(/\/$/, '');
+      const resp = await fetch(`${proxyBase}/fetch?url=${encodeURIComponent(url)}`);
+      if (!resp.ok) throw new Error(resp.status);
+      const html = await resp.text();
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(html, 'text/html');
+      return { doc, source: 'worker-proxy', css: false };
+    }
+  } catch(e) { console.warn('[AutoScan] Worker proxy failed:', e.message); }
+
+  // Try 4: allorigins fallback
   try {
     const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
     const resp = await fetch(proxyUrl);
@@ -4589,7 +4847,7 @@ async function getPageDocument(url) {
   return null;
 }
 
-function runDomChecks(pageData, answers, autoFill) {
+async function runDomChecks(pageData, answers, autoFill) {
   if (!pageData || !pageData.doc) return 0;
   const doc = pageData.doc;
   const canCSS = pageData.css; // only true for same-origin iframe
@@ -5183,6 +5441,1362 @@ function runDomChecks(pageData, answers, autoFill) {
     if (ogImg) ogParts.push('og:image');
     if (schema) ogParts.push('structured data (JSON-LD)');
     // No direct question for this, but enrich seq2 notes if possible
+  } catch(e) {}
+
+  // ── sec-001: HTTPS enforced (check if URL uses HTTPS) ──
+  try {
+    const pageUrl = doc.querySelector('link[rel="canonical"]')?.getAttribute('href') || doc.baseURI || '';
+    const isHttps = pageUrl.startsWith('https://') || url.startsWith('https://');
+    const hsts = doc.querySelector('meta[http-equiv="Strict-Transport-Security"]');
+    if (isHttps) {
+      autoFill('sec-001', 'good', `Site draait op HTTPS${hsts ? ' + HSTS header gevonden' : ''}`);
+    } else {
+      autoFill('sec-001', 'bad', 'Site draait niet op HTTPS — onversleutelde verbinding');
+    }
+    filled++;
+  } catch(e) {}
+
+  // ── sec-002: SSL certificate valid (if HTTPS loads = cert is valid) ──
+  try {
+    if (pageData.source === 'fetch' || pageData.source === 'worker-proxy' || pageData.source === 'iframe') {
+      const isHttps = url.startsWith('https://');
+      if (isHttps) {
+        autoFill('sec-002', 'good', 'SSL certificaat is geldig (pagina laadt succesvol via HTTPS)');
+      } else {
+        autoFill('sec-002', 'ok', 'Kon SSL certificaat niet controleren — site gebruikt geen HTTPS');
+      }
+      filled++;
+    }
+  } catch(e) {}
+
+  // ── sec-003: TLS version (inferred — if modern HTTPS works, TLS 1.2+ is used) ──
+  try {
+    const isHttps = url.startsWith('https://');
+    if (isHttps && (pageData.source === 'fetch' || pageData.source === 'worker-proxy')) {
+      autoFill('sec-003', 'good', 'TLS 1.2+ wordt gebruikt (moderne HTTPS verbinding succesvol)');
+      filled++;
+    }
+  } catch(e) {}
+
+  // ── sec-004: Mixed content (HTTP resources on HTTPS page) ──
+  try {
+    const isHttps = url.startsWith('https://');
+    if (isHttps) {
+      const httpResources = [];
+      doc.querySelectorAll('script[src^="http://"], link[href^="http://"], img[src^="http://"], iframe[src^="http://"]').forEach(el => {
+        const src = el.getAttribute('src') || el.getAttribute('href') || '';
+        if (src.startsWith('http://')) httpResources.push(src.substring(0, 60));
+      });
+      if (httpResources.length === 0) {
+        autoFill('sec-004', 'good', 'Geen mixed content gevonden — alle resources laden via HTTPS');
+      } else {
+        autoFill('sec-004', 'bad', `${httpResources.length} resource(s) laden via HTTP: ${httpResources.slice(0, 3).join(', ')}${httpResources.length > 3 ? '…' : ''}`);
+      }
+      filled++;
+    }
+  } catch(e) {}
+
+  // ── sec-005: Security headers (Content-Security-Policy via meta tag) ──
+  try {
+    const csp = doc.querySelector('meta[http-equiv="Content-Security-Policy"]');
+    const xfo = doc.querySelector('meta[http-equiv="X-Frame-Options"]');
+    const headers = [];
+    if (csp) headers.push('CSP');
+    if (xfo) headers.push('X-Frame-Options');
+    if (headers.length > 0) {
+      autoFill('sec-005', 'good', `Security headers via meta tags: ${headers.join(', ')}`);
+    } else {
+      autoFill('sec-005', 'ok', 'Geen security headers in meta tags (kan via server headers ingesteld zijn)');
+    }
+    filled++;
+  } catch(e) {}
+
+  // ── sec-006: X-Content-Type-Options / MIME sniffing (meta check) ──
+  try {
+    const xContent = doc.querySelector('meta[http-equiv="X-Content-Type-Options"]');
+    if (xContent) {
+      autoFill('sec-006', 'good', 'X-Content-Type-Options meta tag aanwezig');
+      filled++;
+    }
+  } catch(e) {}
+
+  // ── sec-009: Subresource Integrity (SRI) on external scripts ──
+  try {
+    const externalScripts = Array.from(doc.querySelectorAll('script[src]')).filter(s => {
+      const src = s.getAttribute('src') || '';
+      return src.startsWith('http') && !src.includes(new URL(url).hostname);
+    });
+    if (externalScripts.length > 0) {
+      const withSri = externalScripts.filter(s => s.getAttribute('integrity'));
+      if (withSri.length === externalScripts.length) {
+        autoFill('sec-009', 'good', `Alle ${externalScripts.length} externe scripts hebben SRI (integrity)`);
+      } else if (withSri.length > 0) {
+        autoFill('sec-009', 'ok', `${withSri.length} van ${externalScripts.length} externe scripts hebben SRI`);
+      } else {
+        autoFill('sec-009', 'bad', `${externalScripts.length} externe scripts zonder SRI (integrity attribuut)`);
+      }
+      filled++;
+    }
+  } catch(e) {}
+
+  // ══════════════════════════════════════════════════════════════
+  // TECHNICAL SEO (tseo-*) — DOM-based checks
+  // ══════════════════════════════════════════════════════════════
+
+  // ── tseo-019 + tseo-020: Meta robots tags ──
+  try {
+    const robotsMeta = doc.querySelector('meta[name="robots"]');
+    const content = robotsMeta ? (robotsMeta.getAttribute('content') || '').toLowerCase() : '';
+    if (robotsMeta) {
+      const hasNoindex = content.includes('noindex');
+      const hasNofollow = content.includes('nofollow');
+      autoFill('tseo-019', !hasNoindex && !hasNofollow ? 'good' : 'ok',
+        `Meta robots: "${content}" ${hasNoindex ? '⚠ noindex actief' : ''}${hasNofollow ? '⚠ nofollow actief' : ''}`);
+      autoFill('tseo-020', hasNoindex ? 'bad' : 'good',
+        hasNoindex ? 'Pagina is noindex — wordt niet geïndexeerd!' : 'Geen accidentele noindex gevonden');
+      filled += 2;
+    } else {
+      autoFill('tseo-019', 'good', 'Geen restrictieve meta robots tag — standaard index,follow');
+      autoFill('tseo-020', 'good', 'Geen noindex gevonden');
+      filled += 2;
+    }
+  } catch(e) {}
+
+  // ── tseo-021/022/023: Canonical tags ──
+  try {
+    const canonicals = Array.from(doc.querySelectorAll('link[rel="canonical"]'));
+    if (canonicals.length === 1) {
+      const href = canonicals[0].getAttribute('href') || '';
+      const isSelf = href === url || href === url.replace(/\/$/, '') || url.startsWith(href);
+      autoFill('tseo-021', 'good', `Canonical tag aanwezig: ${href.substring(0, 80)}`);
+      autoFill('tseo-022', isSelf ? 'good' : 'ok',
+        isSelf ? 'Canonical is self-referencing (correct)' : `Canonical wijst naar andere URL: ${href.substring(0, 60)}`);
+      autoFill('tseo-023', 'good', 'Geen conflicterende canonical tags (1 gevonden)');
+      filled += 3;
+    } else if (canonicals.length > 1) {
+      autoFill('tseo-021', 'ok', `${canonicals.length} canonical tags gevonden — er mag er maar 1 zijn`);
+      autoFill('tseo-022', 'ok', 'Meerdere canonicals — kan niet bepalen of self-referencing');
+      autoFill('tseo-023', 'bad', `${canonicals.length} conflicterende canonical tags!`);
+      filled += 3;
+    } else {
+      autoFill('tseo-021', 'bad', 'Geen canonical tag gevonden');
+      autoFill('tseo-022', 'bad', 'Geen canonical tag aanwezig');
+      autoFill('tseo-023', 'good', 'Geen conflict (geen canonical)');
+      filled += 3;
+    }
+  } catch(e) {}
+
+  // ── tseo-024: X-Robots-Tag (meta http-equiv check) ──
+  try {
+    const xRobots = doc.querySelector('meta[http-equiv="X-Robots-Tag"]');
+    if (xRobots) {
+      const val = xRobots.getAttribute('content') || '';
+      autoFill('tseo-024', val.includes('noindex') ? 'bad' : 'good', `X-Robots-Tag meta: "${val}"`);
+    } else {
+      autoFill('tseo-024', 'good', 'Geen restrictieve X-Robots-Tag meta gevonden');
+    }
+    filled++;
+  } catch(e) {}
+
+  // ── tseo-035-044: URL structure checks ──
+  try {
+    const pageUrl = url;
+    const urlPath = new URL(pageUrl).pathname;
+    // tseo-035: Clean URLs
+    const isClean = !/[?&].*=/.test(urlPath) && !urlPath.includes('index.php') && !urlPath.includes('index.html');
+    autoFill('tseo-035', isClean ? 'good' : 'ok', isClean ? 'URL is schoon en leesbaar' : 'URL bevat query parameters of index-bestanden');
+    filled++;
+    // tseo-036: No uppercase
+    const hasUpper = /[A-Z]/.test(urlPath);
+    autoFill('tseo-036', hasUpper ? 'ok' : 'good', hasUpper ? 'URL bevat hoofdletters — gebruik alleen kleine letters' : 'URL gebruikt alleen kleine letters');
+    filled++;
+    // tseo-037: No special characters
+    const hasSpecial = /[^a-zA-Z0-9\-_\/\.]/.test(urlPath);
+    autoFill('tseo-037', hasSpecial ? 'ok' : 'good', hasSpecial ? 'URL bevat speciale tekens' : 'URL bevat geen speciale tekens');
+    filled++;
+    // tseo-038: URL length
+    autoFill('tseo-038', pageUrl.length < 100 ? 'good' : pageUrl.length < 150 ? 'ok' : 'bad',
+      `URL lengte: ${pageUrl.length} tekens ${pageUrl.length >= 100 ? '(beter < 100)' : '(goed)'}`);
+    filled++;
+    // tseo-039: Trailing slash consistency
+    const hasTrailing = urlPath.endsWith('/') && urlPath !== '/';
+    autoFill('tseo-039', 'ok', `URL ${hasTrailing ? 'heeft' : 'heeft geen'} trailing slash — zorg voor consistentie`);
+    filled++;
+    // tseo-040: No session IDs in URL
+    const hasSession = /[?&](session|sid|phpsessid|jsessionid)=/i.test(pageUrl);
+    autoFill('tseo-040', hasSession ? 'bad' : 'good',
+      hasSession ? 'Session ID in URL gedetecteerd — slecht voor SEO' : 'Geen session IDs in URL');
+    filled++;
+    // tseo-041: HTTPS
+    autoFill('tseo-041', pageUrl.startsWith('https://') ? 'good' : 'bad',
+      pageUrl.startsWith('https://') ? 'URL gebruikt HTTPS' : 'URL gebruikt geen HTTPS!');
+    filled++;
+  } catch(e) {}
+
+  // ── tseo-054: Descriptive anchor text ──
+  try {
+    const links = Array.from(doc.querySelectorAll('a[href]'));
+    if (links.length > 0) {
+      const genericText = ['klik hier', 'lees meer', 'hier', 'click here', 'read more', 'more', 'link', 'meer'];
+      const generic = links.filter(a => {
+        const text = (a.textContent || '').trim().toLowerCase();
+        return genericText.includes(text);
+      });
+      if (generic.length === 0) {
+        autoFill('tseo-054', 'good', `Alle ${links.length} links hebben beschrijvende anchortekst`);
+      } else {
+        autoFill('tseo-054', generic.length > 5 ? 'bad' : 'ok',
+          `${generic.length} van ${links.length} links hebben generieke tekst (bijv. "klik hier", "lees meer")`);
+      }
+      filled++;
+    }
+  } catch(e) {}
+
+  // ── tseo-055: External links have rel=noopener ──
+  try {
+    const hostname = new URL(url).hostname;
+    const extLinks = Array.from(doc.querySelectorAll('a[href^="http"]')).filter(a => {
+      try { return new URL(a.getAttribute('href')).hostname !== hostname; } catch(e) { return false; }
+    });
+    if (extLinks.length > 0) {
+      const withNoopener = extLinks.filter(a => {
+        const rel = (a.getAttribute('rel') || '').toLowerCase();
+        return rel.includes('noopener') || rel.includes('noreferrer');
+      });
+      if (withNoopener.length === extLinks.length) {
+        autoFill('tseo-055', 'good', `Alle ${extLinks.length} externe links hebben rel="noopener"`);
+      } else {
+        autoFill('tseo-055', 'ok', `${withNoopener.length} van ${extLinks.length} externe links hebben rel="noopener"`);
+      }
+      filled++;
+    }
+  } catch(e) {}
+
+  // ── tseo-056: Link count per page ──
+  try {
+    const allLinks = doc.querySelectorAll('a[href]').length;
+    autoFill('tseo-056', allLinks < 100 ? 'good' : allLinks < 200 ? 'ok' : 'bad',
+      `${allLinks} links op pagina ${allLinks >= 200 ? '— te veel, beperk tot <100' : allLinks >= 100 ? '— veel, overweeg reductie' : '— goed aantal'}`);
+    filled++;
+  } catch(e) {}
+
+  // ── tseo-067-071: Structured data / JSON-LD ──
+  try {
+    const jsonLdScripts = Array.from(doc.querySelectorAll('script[type="application/ld+json"]'));
+    if (jsonLdScripts.length > 0) {
+      autoFill('tseo-067', 'good', `${jsonLdScripts.length} JSON-LD blok(ken) gevonden`);
+      filled++;
+      // tseo-068: Valid JSON-LD
+      let validCount = 0;
+      let schemas = [];
+      jsonLdScripts.forEach(s => {
+        try {
+          const data = JSON.parse(s.textContent);
+          validCount++;
+          const type = data['@type'] || (Array.isArray(data['@graph']) ? 'Graph' : 'onbekend');
+          schemas.push(type);
+        } catch(e) {}
+      });
+      autoFill('tseo-068', validCount === jsonLdScripts.length ? 'good' : 'bad',
+        validCount === jsonLdScripts.length
+          ? `Alle JSON-LD is valide syntax. Types: ${schemas.join(', ')}`
+          : `${jsonLdScripts.length - validCount} JSON-LD blokken hebben ongeldige syntax`);
+      filled++;
+      // tseo-069: Organization schema
+      const hasOrg = schemas.some(s => s === 'Organization' || s === 'LocalBusiness' || s === 'Corporation');
+      autoFill('tseo-069', hasOrg ? 'good' : 'ok',
+        hasOrg ? 'Organization/LocalBusiness schema aanwezig' : 'Geen Organization schema — overweeg toe te voegen');
+      filled++;
+      // tseo-070: Breadcrumb schema
+      const hasBreadcrumb = schemas.some(s => s === 'BreadcrumbList');
+      autoFill('tseo-070', hasBreadcrumb ? 'good' : 'ok',
+        hasBreadcrumb ? 'BreadcrumbList schema aanwezig' : 'Geen Breadcrumb schema gevonden');
+      filled++;
+      // tseo-071: Rich results eligible
+      const richTypes = ['Product', 'Article', 'FAQPage', 'HowTo', 'Recipe', 'Event', 'JobPosting', 'Review'];
+      const hasRich = schemas.some(s => richTypes.includes(s));
+      autoFill('tseo-071', hasRich ? 'good' : 'ok',
+        hasRich ? `Rich result eligible: ${schemas.filter(s => richTypes.includes(s)).join(', ')}` : 'Geen rich-result eligible schema gevonden');
+      filled++;
+    } else {
+      autoFill('tseo-067', 'bad', 'Geen JSON-LD structured data gevonden');
+      autoFill('tseo-068', 'bad', 'Geen JSON-LD aanwezig om te valideren');
+      autoFill('tseo-069', 'bad', 'Geen Organization schema');
+      autoFill('tseo-070', 'bad', 'Geen Breadcrumb schema');
+      autoFill('tseo-071', 'bad', 'Geen structured data voor rich results');
+      filled += 5;
+    }
+  } catch(e) {}
+
+  // ── tseo-082-086: hreflang tags ──
+  try {
+    const hreflangs = Array.from(doc.querySelectorAll('link[rel="alternate"][hreflang]'));
+    if (hreflangs.length > 0) {
+      const langs = hreflangs.map(h => h.getAttribute('hreflang'));
+      autoFill('tseo-082', 'good', `${hreflangs.length} hreflang tags: ${langs.join(', ')}`);
+      filled++;
+      // tseo-083: Return links
+      autoFill('tseo-083', 'ok', `${hreflangs.length} hreflang tags gevonden — controleer return links handmatig`);
+      filled++;
+      // tseo-084: Valid language codes
+      const validPattern = /^[a-z]{2}(-[A-Z]{2})?$|^x-default$/;
+      const invalid = langs.filter(l => !validPattern.test(l));
+      autoFill('tseo-084', invalid.length === 0 ? 'good' : 'bad',
+        invalid.length === 0 ? 'Alle hreflang taalcodes zijn geldig' : `Ongeldige taalcodes: ${invalid.join(', ')}`);
+      filled++;
+      // tseo-085: x-default
+      const hasXDefault = langs.includes('x-default');
+      autoFill('tseo-085', hasXDefault ? 'good' : 'ok',
+        hasXDefault ? 'x-default hreflang aanwezig' : 'Geen x-default hreflang — voeg toe als fallback');
+      filled++;
+      // tseo-086: hreflang/canonical conflict
+      const canonical = doc.querySelector('link[rel="canonical"]');
+      autoFill('tseo-086', canonical ? 'ok' : 'good',
+        canonical ? 'Canonical en hreflang beide aanwezig — controleer dat ze niet conflicteren' : 'Geen canonical/hreflang conflict');
+      filled++;
+    } else {
+      // Only fill if page seems multilingual
+      const htmlLang = doc.querySelector('html')?.getAttribute('lang') || '';
+      autoFill('tseo-082', 'ok', `Geen hreflang tags — ${htmlLang ? 'pagina taal: ' + htmlLang : 'n.v.t. als single-language site'}`);
+      autoFill('tseo-083', 'ok', 'N.v.t. — geen hreflang tags');
+      autoFill('tseo-084', 'ok', 'N.v.t. — geen hreflang tags');
+      autoFill('tseo-085', 'ok', 'N.v.t. — geen hreflang tags');
+      autoFill('tseo-086', 'good', 'Geen hreflang/canonical conflict');
+      filled += 5;
+    }
+  } catch(e) {}
+
+  // ══════════════════════════════════════════════════════════════
+  // ON-PAGE SEO (opseo-*) — extra checks
+  // ══════════════════════════════════════════════════════════════
+
+  // ── opseo-006: Title length 50-60 chars ──
+  try {
+    const title = doc.querySelector('title');
+    const titleText = title ? title.textContent.trim() : '';
+    if (titleText) {
+      autoFill('opseo-006', titleText.length >= 50 && titleText.length <= 60 ? 'good' :
+        titleText.length >= 30 && titleText.length <= 70 ? 'ok' : 'bad',
+        `Title lengte: ${titleText.length} tekens ${titleText.length < 50 ? '(te kort, min 50)' : titleText.length > 60 ? '(te lang, max 60)' : '(ideaal)'}`);
+    } else {
+      autoFill('opseo-006', 'bad', 'Geen title tag gevonden');
+    }
+    filled++;
+  } catch(e) {}
+
+  // ── opseo-007: Meta description length 150-160 chars ──
+  try {
+    const meta = doc.querySelector('meta[name="description"]');
+    const desc = meta ? (meta.getAttribute('content') || '').trim() : '';
+    if (desc) {
+      autoFill('opseo-007', desc.length >= 150 && desc.length <= 160 ? 'good' :
+        desc.length >= 120 && desc.length <= 170 ? 'ok' : 'bad',
+        `Meta description lengte: ${desc.length} tekens ${desc.length < 150 ? '(te kort)' : desc.length > 160 ? '(te lang)' : '(ideaal)'}`);
+    } else {
+      autoFill('opseo-007', 'bad', 'Geen meta description gevonden');
+    }
+    filled++;
+  } catch(e) {}
+
+  // ── opseo-011: Only one H1 ──
+  try {
+    const h1s = doc.querySelectorAll('h1');
+    autoFill('opseo-011', h1s.length === 1 ? 'good' : h1s.length === 0 ? 'bad' : 'ok',
+      h1s.length === 1 ? 'Precies één H1 tag op de pagina' :
+      h1s.length === 0 ? 'Geen H1 tag gevonden!' : `${h1s.length} H1 tags — er mag er maar 1 zijn`);
+    filled++;
+  } catch(e) {}
+
+  // ── opseo-012: Heading hierarchy correct ──
+  try {
+    const headings = Array.from(doc.querySelectorAll('h1,h2,h3,h4,h5,h6'));
+    if (headings.length > 0) {
+      const levels = headings.map(h => parseInt(h.tagName[1]));
+      let skipFound = false;
+      for (let i = 1; i < levels.length; i++) { if (levels[i] - levels[i-1] > 1) { skipFound = true; break; } }
+      autoFill('opseo-012', !skipFound ? 'good' : 'ok',
+        !skipFound ? `Heading hiërarchie correct (${headings.length} headings)` : 'Heading niveaus worden overgeslagen');
+      filled++;
+    }
+  } catch(e) {}
+
+  // ── opseo-013: H1 present on page ──
+  try {
+    const h1 = doc.querySelector('h1');
+    const h1Text = h1 ? h1.textContent.trim() : '';
+    autoFill('opseo-013', h1 ? 'good' : 'bad',
+      h1 ? `H1 aanwezig: "${h1Text.substring(0, 60)}${h1Text.length > 60 ? '…' : ''}"` : 'Geen H1 tag gevonden op de pagina!');
+    filled++;
+  } catch(e) {}
+
+  // ── opseo-018: Word count 300+ ──
+  try {
+    const bodyText = (doc.body?.innerText || doc.body?.textContent || '').trim();
+    const wordCount = bodyText.split(/\s+/).filter(w => w.length > 0).length;
+    autoFill('opseo-018', wordCount >= 300 ? 'good' : wordCount >= 150 ? 'ok' : 'bad',
+      `Woordenaantal: ${wordCount} ${wordCount < 300 ? '(minimum 300 aanbevolen)' : '(voldoende)'}`);
+    filled++;
+  } catch(e) {}
+
+  // ── opseo-028/029/030/031: Open Graph + Twitter Card ──
+  try {
+    const ogTitle = doc.querySelector('meta[property="og:title"]');
+    const ogDesc = doc.querySelector('meta[property="og:description"]');
+    const ogImg = doc.querySelector('meta[property="og:image"]');
+    const twCard = doc.querySelector('meta[name="twitter:card"]');
+    autoFill('opseo-028', ogTitle ? 'good' : 'bad',
+      ogTitle ? `OG title: "${(ogTitle.getAttribute('content') || '').substring(0, 50)}"` : 'Geen og:title meta tag');
+    autoFill('opseo-029', ogDesc ? 'good' : 'bad',
+      ogDesc ? `OG description aanwezig (${(ogDesc.getAttribute('content') || '').length} tekens)` : 'Geen og:description meta tag');
+    autoFill('opseo-030', ogImg ? 'good' : 'bad',
+      ogImg ? `OG image: ${(ogImg.getAttribute('content') || '').substring(0, 60)}` : 'Geen og:image meta tag');
+    autoFill('opseo-031', twCard ? 'good' : 'ok',
+      twCard ? `Twitter Card: ${twCard.getAttribute('content')}` : 'Geen Twitter Card meta tags');
+    filled += 4;
+  } catch(e) {}
+
+  // ── opseo-034: Descriptive image filenames ──
+  try {
+    const imgs = Array.from(doc.querySelectorAll('img[src]'));
+    if (imgs.length > 0) {
+      const badNames = imgs.filter(img => {
+        const src = img.getAttribute('src') || '';
+        const filename = src.split('/').pop().split('?')[0].toLowerCase();
+        return /^(img|image|photo|pic|screenshot|untitled|dsc|img_?\d+|\d+)\.(jpg|jpeg|png|gif|webp|avif|svg)$/i.test(filename);
+      });
+      autoFill('opseo-034', badNames.length === 0 ? 'good' : badNames.length > 3 ? 'bad' : 'ok',
+        badNames.length === 0 ? `Alle ${imgs.length} afbeeldingen hebben beschrijvende bestandsnamen` :
+        `${badNames.length} afbeeldingen met generieke bestandsnamen (bijv. img001.jpg)`);
+      filled++;
+    }
+  } catch(e) {}
+
+  // ── opseo-035: Images have width/height attributes ──
+  try {
+    const imgs = Array.from(doc.querySelectorAll('img'));
+    if (imgs.length > 0) {
+      const withDims = imgs.filter(img => img.getAttribute('width') && img.getAttribute('height'));
+      autoFill('opseo-035', withDims.length === imgs.length ? 'good' : withDims.length > 0 ? 'ok' : 'bad',
+        `${withDims.length} van ${imgs.length} afbeeldingen hebben width/height attributen ${withDims.length < imgs.length ? '— voorkomt CLS' : ''}`);
+      filled++;
+    }
+  } catch(e) {}
+
+  // ── opseo-019: Target keyword in first paragraph ──
+  try {
+    const firstPara = doc.querySelector('main p, article p, .content p, p');
+    if (firstPara) {
+      const text = firstPara.textContent.trim();
+      autoFill('opseo-019', text.length > 30 ? 'ok' : 'bad',
+        text.length > 30 ? `Eerste alinea: "${text.substring(0, 80)}…" — controleer of doelsleutelwoord aanwezig is` :
+        'Eerste alinea te kort of leeg');
+    } else {
+      autoFill('opseo-019', 'bad', 'Geen eerste alinea gevonden');
+    }
+    filled++;
+  } catch(e) {}
+
+  // ── opseo-038: Viewport meta tag ──
+  try {
+    const viewport = doc.querySelector('meta[name="viewport"]');
+    if (viewport) {
+      const content = viewport.getAttribute('content') || '';
+      autoFill('opseo-038', content.includes('width=device-width') ? 'good' : 'ok',
+        `Viewport meta: "${content.substring(0, 60)}"`);
+    } else {
+      autoFill('opseo-038', 'bad', 'Geen viewport meta tag — niet mobielvriendelijk');
+    }
+    filled++;
+  } catch(e) {}
+
+  // ══════════════════════════════════════════════════════════════
+  // ACCESSIBILITY (a11y-*) — extra checks
+  // ══════════════════════════════════════════════════════════════
+
+  // ── a11y-001: Contrast ratio (CSS only) ──
+  if (canCSS) {
+    try {
+      const body = doc.body;
+      const cs = doc.defaultView.getComputedStyle(body);
+      const color = cs.color;
+      const bg = cs.backgroundColor;
+      autoFill('a11y-001', 'ok', `Body tekstkleur: ${color}, achtergrond: ${bg} — controleer contrast handmatig of via DevTools`);
+      filled++;
+    } catch(e) {}
+  }
+
+  // ── a11y-046: All images have alt text ──
+  try {
+    const imgs = Array.from(doc.querySelectorAll('img'));
+    if (imgs.length > 0) {
+      const missingAlt = imgs.filter(img => {
+        if (img.getAttribute('role') === 'presentation' || img.getAttribute('aria-hidden') === 'true') return false;
+        return !img.hasAttribute('alt');
+      });
+      autoFill('a11y-046', missingAlt.length === 0 ? 'good' : missingAlt.length > 3 ? 'bad' : 'ok',
+        missingAlt.length === 0 ? `Alle ${imgs.length} afbeeldingen hebben alt-tekst` :
+        `${missingAlt.length} van ${imgs.length} afbeeldingen missen alt-tekst`);
+      filled++;
+    }
+  } catch(e) {}
+
+  // ── a11y-047: Links have descriptive text ──
+  try {
+    const links = Array.from(doc.querySelectorAll('a[href]'));
+    if (links.length > 0) {
+      const noText = links.filter(a => {
+        const text = (a.textContent || '').trim();
+        const ariaLabel = a.getAttribute('aria-label');
+        const title = a.getAttribute('title');
+        const img = a.querySelector('img[alt]');
+        return !text && !ariaLabel && !title && !img;
+      });
+      autoFill('a11y-047', noText.length === 0 ? 'good' : noText.length > 3 ? 'bad' : 'ok',
+        noText.length === 0 ? `Alle ${links.length} links hebben beschrijvende tekst` :
+        `${noText.length} links zonder toegankelijke tekst`);
+      filled++;
+    }
+  } catch(e) {}
+
+  // ── a11y-048: Correct tabindex usage ──
+  try {
+    const posTabindex = Array.from(doc.querySelectorAll('[tabindex]')).filter(el => parseInt(el.getAttribute('tabindex')) > 0);
+    autoFill('a11y-048', posTabindex.length === 0 ? 'good' : 'bad',
+      posTabindex.length === 0 ? 'Correct tabindex gebruik (geen positieve waarden)' :
+      `${posTabindex.length} elementen met positieve tabindex — verstoort tab-volgorde`);
+    filled++;
+  } catch(e) {}
+
+  // ── a11y-049: Unique accesskeys ──
+  try {
+    const accesskeys = Array.from(doc.querySelectorAll('[accesskey]')).map(el => el.getAttribute('accesskey'));
+    if (accesskeys.length > 0) {
+      const unique = new Set(accesskeys);
+      autoFill('a11y-049', unique.size === accesskeys.length ? 'good' : 'bad',
+        unique.size === accesskeys.length ? `${accesskeys.length} unieke accesskeys` :
+        `Dubbele accesskeys gevonden! ${accesskeys.length} totaal, ${unique.size} uniek`);
+    } else {
+      autoFill('a11y-049', 'ok', 'Geen accesskeys gedefinieerd');
+    }
+    filled++;
+  } catch(e) {}
+
+  // ── a11y-053: Videos have captions ──
+  try {
+    const videos = Array.from(doc.querySelectorAll('video'));
+    if (videos.length > 0) {
+      const withCaptions = videos.filter(v => v.querySelector('track[kind="captions"], track[kind="subtitles"]'));
+      autoFill('a11y-053', withCaptions.length === videos.length ? 'good' : withCaptions.length > 0 ? 'ok' : 'bad',
+        `${withCaptions.length} van ${videos.length} video's hebben ondertiteling`);
+      filled++;
+    }
+  } catch(e) {}
+
+  // ── a11y-054: Audio elements have captions ──
+  try {
+    const audios = Array.from(doc.querySelectorAll('audio'));
+    if (audios.length > 0) {
+      const withTrack = audios.filter(a => a.querySelector('track'));
+      autoFill('a11y-054', withTrack.length === audios.length ? 'good' : 'bad',
+        `${withTrack.length} van ${audios.length} audio-elementen hebben een transcript/track`);
+      filled++;
+    }
+  } catch(e) {}
+
+  // ── a11y-057: Form fields have name attributes ──
+  try {
+    const formFields = Array.from(doc.querySelectorAll('input:not([type="hidden"]):not([type="submit"]):not([type="button"]), select, textarea'));
+    if (formFields.length > 0) {
+      const noName = formFields.filter(f => !f.getAttribute('name') && !f.getAttribute('id'));
+      autoFill('a11y-057', noName.length === 0 ? 'good' : 'bad',
+        noName.length === 0 ? `Alle ${formFields.length} formuliervelden hebben name/id` :
+        `${noName.length} velden zonder name of id attribuut`);
+      filled++;
+    }
+  } catch(e) {}
+
+  // ── a11y-058: Valid lang attribute ──
+  try {
+    const htmlEl = doc.querySelector('html');
+    const lang = htmlEl ? htmlEl.getAttribute('lang') : null;
+    if (lang) {
+      const validLang = /^[a-z]{2,3}(-[A-Za-z]{2,4})?$/.test(lang);
+      autoFill('a11y-058', validLang ? 'good' : 'bad',
+        validLang ? `Geldig lang-attribuut: "${lang}"` : `Ongeldig lang-attribuut: "${lang}"`);
+    } else {
+      autoFill('a11y-058', 'bad', 'Geen lang-attribuut op html-element');
+    }
+    filled++;
+  } catch(e) {}
+
+  // ── a11y-062: Page has main landmark ──
+  try {
+    const mainEl = doc.querySelector('main, [role="main"]');
+    autoFill('a11y-062', mainEl ? 'good' : 'bad',
+      mainEl ? 'Main landmark aanwezig' : 'Geen <main> of role="main" gevonden');
+    filled++;
+  } catch(e) {}
+
+  // ── a11y-063: Content regions marked with landmarks ──
+  try {
+    const landmarks = doc.querySelectorAll('header, nav, main, aside, footer, [role="banner"], [role="navigation"], [role="main"], [role="complementary"], [role="contentinfo"]');
+    autoFill('a11y-063', landmarks.length >= 3 ? 'good' : landmarks.length >= 1 ? 'ok' : 'bad',
+      `${landmarks.length} landmark regio's gevonden ${landmarks.length < 3 ? '— voeg meer toe (header, nav, main, footer)' : ''}`);
+    filled++;
+  } catch(e) {}
+
+  // ── a11y-064: Lists semantically marked ──
+  try {
+    const lists = doc.querySelectorAll('ul, ol, dl');
+    if (lists.length > 0) {
+      autoFill('a11y-064', 'good', `${lists.length} semantische lijsten gevonden (ul/ol/dl)`);
+    } else {
+      autoFill('a11y-064', 'ok', 'Geen semantische lijsten gevonden — controleer of lijstachtige content correct gemarkeerd is');
+    }
+    filled++;
+  } catch(e) {}
+
+  // ── a11y-065: List items only inside lists ──
+  try {
+    const orphanLi = Array.from(doc.querySelectorAll('li')).filter(li => {
+      const parent = li.parentElement;
+      return parent && !['UL', 'OL', 'MENU'].includes(parent.tagName);
+    });
+    autoFill('a11y-065', orphanLi.length === 0 ? 'good' : 'bad',
+      orphanLi.length === 0 ? 'Alle list items staan correct in ul/ol' :
+      `${orphanLi.length} li-elementen buiten een ul/ol — ongeldige structuur`);
+    filled++;
+  } catch(e) {}
+
+  // ── a11y-066: Iframes have titles ──
+  try {
+    const iframes = Array.from(doc.querySelectorAll('iframe'));
+    if (iframes.length > 0) {
+      const noTitle = iframes.filter(f => !f.getAttribute('title') && !f.getAttribute('aria-label'));
+      autoFill('a11y-066', noTitle.length === 0 ? 'good' : 'bad',
+        noTitle.length === 0 ? `Alle ${iframes.length} iframes hebben een title` :
+        `${noTitle.length} van ${iframes.length} iframes missen een title attribuut`);
+      filled++;
+    }
+  } catch(e) {}
+
+  // ── a11y-067: No duplicate IDs ──
+  try {
+    const allIds = Array.from(doc.querySelectorAll('[id]')).map(el => el.id).filter(id => id);
+    const seen = new Set();
+    const dupes = [];
+    allIds.forEach(id => { if (seen.has(id)) dupes.push(id); seen.add(id); });
+    if (allIds.length > 0) {
+      autoFill('a11y-067', dupes.length === 0 ? 'good' : 'bad',
+        dupes.length === 0 ? `Alle ${allIds.length} IDs zijn uniek` :
+        `${dupes.length} dubbele IDs gevonden: ${dupes.slice(0, 5).join(', ')}${dupes.length > 5 ? '…' : ''}`);
+      filled++;
+    }
+  } catch(e) {}
+
+  // ══════════════════════════════════════════════════════════════
+  // ANALYTICS (anl-*)
+  // ══════════════════════════════════════════════════════════════
+
+  // ── anl-001/002: Google Analytics 4 ──
+  try {
+    const gaScripts = Array.from(doc.querySelectorAll('script[src*="googletagmanager.com/gtag"], script[src*="google-analytics.com"], script[src*="gtag/js"]'));
+    const inlineGA = Array.from(doc.querySelectorAll('script')).filter(s => (s.textContent || '').includes('gtag('));
+    const gaFound = gaScripts.length > 0 || inlineGA.length > 0;
+    autoFill('anl-001', gaFound ? 'good' : 'bad',
+      gaFound ? 'Google Analytics (GA4/gtag) gedetecteerd' : 'Geen Google Analytics gevonden');
+    filled++;
+    // anl-002: GA4 ID valid format
+    if (gaFound) {
+      const allScriptContent = [...gaScripts.map(s => s.getAttribute('src') || ''), ...inlineGA.map(s => s.textContent || '')].join(' ');
+      const ga4Match = allScriptContent.match(/G-[A-Z0-9]{6,}/);
+      const uaMatch = allScriptContent.match(/UA-\d+-\d+/);
+      if (ga4Match) {
+        autoFill('anl-002', 'good', `GA4 Measurement ID: ${ga4Match[0]}`);
+      } else if (uaMatch) {
+        autoFill('anl-002', 'ok', `Oude Universal Analytics ID: ${uaMatch[0]} — migreer naar GA4`);
+      } else {
+        autoFill('anl-002', 'ok', 'Analytics script gevonden maar geen GA4 ID (G-XXXXXX) herkend');
+      }
+      filled++;
+    } else {
+      autoFill('anl-002', 'bad', 'Geen GA4 ID — analytics niet geïnstalleerd');
+      filled++;
+    }
+  } catch(e) {}
+
+  // ── anl-007/008: Google Tag Manager ──
+  try {
+    const gtmScripts = Array.from(doc.querySelectorAll('script[src*="googletagmanager.com/gtm"]'));
+    const gtmNoscript = doc.querySelector('noscript iframe[src*="googletagmanager.com"]');
+    const inlineGTM = Array.from(doc.querySelectorAll('script')).filter(s => (s.textContent || '').includes('GTM-'));
+    const gtmFound = gtmScripts.length > 0 || gtmNoscript || inlineGTM.length > 0;
+    autoFill('anl-007', gtmFound ? 'good' : 'ok',
+      gtmFound ? 'Google Tag Manager gedetecteerd' : 'Geen Google Tag Manager gevonden');
+    filled++;
+    if (gtmFound) {
+      const allContent = [...gtmScripts.map(s => s.getAttribute('src') || ''), ...inlineGTM.map(s => s.textContent || '')].join(' ');
+      const gtmMatch = allContent.match(/GTM-[A-Z0-9]+/);
+      autoFill('anl-008', gtmMatch ? 'good' : 'ok',
+        gtmMatch ? `GTM Container ID: ${gtmMatch[0]}` : 'GTM gevonden maar geen container ID herkend');
+    } else {
+      autoFill('anl-008', 'ok', 'N.v.t. — geen GTM');
+    }
+    filled++;
+  } catch(e) {}
+
+  // ── anl-012: Consent Mode v2 ──
+  try {
+    const scripts = Array.from(doc.querySelectorAll('script')).map(s => s.textContent || '').join(' ');
+    const hasConsentMode = scripts.includes('consent') && (scripts.includes('granted') || scripts.includes('denied'));
+    const hasGtagConsent = scripts.includes('gtag') && scripts.includes('consent');
+    autoFill('anl-012', hasConsentMode || hasGtagConsent ? 'good' : 'ok',
+      hasConsentMode || hasGtagConsent ? 'Consent Mode configuratie gedetecteerd' :
+      'Geen Consent Mode v2 gevonden — vereist voor EU compliance');
+    filled++;
+  } catch(e) {}
+
+  // ══════════════════════════════════════════════════════════════
+  // LEGAL / PRIVACY (legal-*)
+  // ══════════════════════════════════════════════════════════════
+
+  // ── legal-001/002: Privacy policy ──
+  try {
+    const privacyLink = doc.querySelector('a[href*="privacy"], a[href*="privacybeleid"], a[href*="privacyverklaring"]');
+    const footerPrivacy = doc.querySelector('footer a[href*="privacy"], footer a[href*="privacybeleid"]');
+    autoFill('legal-001', privacyLink ? 'good' : 'bad',
+      privacyLink ? `Privacybeleid link gevonden: ${(privacyLink.getAttribute('href') || '').substring(0, 60)}` :
+      'Geen link naar privacybeleid gevonden');
+    autoFill('legal-002', footerPrivacy ? 'good' : privacyLink ? 'ok' : 'bad',
+      footerPrivacy ? 'Privacybeleid gelinkt in footer' :
+      privacyLink ? 'Privacybeleid gevonden maar niet in footer' : 'Geen privacybeleid link in footer');
+    filled += 2;
+  } catch(e) {}
+
+  // ── legal-008/009: Cookie banner ──
+  try {
+    const cookieBanner = doc.querySelector(
+      '[id*="cookie" i], [class*="cookie-banner" i], [class*="cookie-consent" i], [class*="cookie-notice" i], ' +
+      '[id*="consent" i][class*="banner" i], [class*="cc-banner"], [class*="gdpr" i], ' +
+      '[id*="cookieConsent" i], [class*="cookieConsent" i], [id*="CookieConsent" i], ' +
+      '[class*="onetrust" i], [id*="onetrust" i], [class*="cookiebot" i], [id*="CybotCookiebotDialog"]'
+    );
+    autoFill('legal-008', cookieBanner ? 'good' : 'bad',
+      cookieBanner ? 'Cookie banner/consent gedetecteerd' : 'Geen cookie banner gevonden — vereist voor GDPR');
+    filled++;
+    if (cookieBanner) {
+      const rejectBtn = cookieBanner.querySelector(
+        'button[class*="reject" i], button[class*="decline" i], button[class*="weiger" i], ' +
+        'a[class*="reject" i], [class*="deny" i], button[class*="refuse" i]'
+      );
+      const allBtns = cookieBanner.querySelectorAll('button, a[role="button"]');
+      const hasReject = rejectBtn || Array.from(allBtns).some(b => {
+        const text = (b.textContent || '').toLowerCase();
+        return text.includes('weiger') || text.includes('reject') || text.includes('decline') || text.includes('alleen noodzakelijk');
+      });
+      autoFill('legal-009', hasReject ? 'good' : 'bad',
+        hasReject ? 'Cookie banner heeft een weiger/reject optie' :
+        'Geen weiger-optie gevonden in cookie banner — vereist voor GDPR');
+      filled++;
+    } else {
+      autoFill('legal-009', 'bad', 'N.v.t. — geen cookie banner');
+      filled++;
+    }
+  } catch(e) {}
+
+  // ── legal-010: No cookies before consent (limited DOM check) ──
+  try {
+    const scripts = Array.from(doc.querySelectorAll('script')).map(s => s.textContent || '').join(' ');
+    const setsDocCookie = scripts.includes('document.cookie');
+    const hasConsentCheck = scripts.includes('consent') || scripts.includes('cookie_consent') || scripts.includes('cookieConsent');
+    autoFill('legal-010', !setsDocCookie ? 'good' : hasConsentCheck ? 'ok' : 'bad',
+      !setsDocCookie ? 'Geen directe cookie-setting in inline scripts gevonden' :
+      hasConsentCheck ? 'Cookie-setting met consent check gedetecteerd' :
+      'Scripts zetten cookies zonder duidelijke consent check');
+    filled++;
+  } catch(e) {}
+
+  // ── legal-015: HTTPS on form pages ──
+  try {
+    const forms = doc.querySelectorAll('form[action]');
+    if (forms.length > 0) {
+      const httpForms = Array.from(forms).filter(f => {
+        const action = f.getAttribute('action') || '';
+        return action.startsWith('http://');
+      });
+      autoFill('legal-015', httpForms.length === 0 ? 'good' : 'bad',
+        httpForms.length === 0 ? `Alle ${forms.length} formulieren gebruiken HTTPS` :
+        `${httpForms.length} formulieren sturen data via HTTP — onveilig!`);
+    } else {
+      autoFill('legal-015', 'ok', 'Geen formulieren met action attribuut gevonden');
+    }
+    filled++;
+  } catch(e) {}
+
+  // ── legal-026/027: Terms & conditions ──
+  try {
+    const termsLink = doc.querySelector('a[href*="terms"], a[href*="voorwaarden"], a[href*="algemene-voorwaarden"], a[href*="conditions"]');
+    const footerTerms = doc.querySelector('footer a[href*="terms"], footer a[href*="voorwaarden"], footer a[href*="conditions"]');
+    autoFill('legal-026', termsLink ? 'good' : 'ok',
+      termsLink ? `Algemene voorwaarden link gevonden` : 'Geen link naar algemene voorwaarden gevonden');
+    autoFill('legal-027', footerTerms ? 'good' : termsLink ? 'ok' : 'ok',
+      footerTerms ? 'Voorwaarden gelinkt in footer' :
+      termsLink ? 'Voorwaarden gevonden maar niet in footer' : 'Geen voorwaarden link in footer');
+    filled += 2;
+  } catch(e) {}
+
+  // ══════════════════════════════════════════════════════════════
+  // TRUST & CREDIBILITY (trust-*)
+  // ══════════════════════════════════════════════════════════════
+
+  // ── trust-008: Contact page exists & linked ──
+  try {
+    const contactLink = doc.querySelector('a[href*="contact"], a[href*="kontakt"]');
+    autoFill('trust-008', contactLink ? 'good' : 'bad',
+      contactLink ? 'Contactpagina link gevonden' : 'Geen link naar contactpagina gevonden');
+    filled++;
+  } catch(e) {}
+
+  // ── trust-009: Phone number clickable (tel link) ──
+  try {
+    const telLink = doc.querySelector('a[href^="tel:"]');
+    autoFill('trust-009', telLink ? 'good' : 'ok',
+      telLink ? `Klikbaar telefoonnummer: ${telLink.getAttribute('href')}` : 'Geen klikbaar telefoonnummer (tel: link) gevonden');
+    filled++;
+  } catch(e) {}
+
+  // ── trust-010: Email address present ──
+  try {
+    const mailLink = doc.querySelector('a[href^="mailto:"]');
+    const bodyText = (doc.body?.textContent || '');
+    const emailInText = bodyText.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
+    autoFill('trust-010', mailLink ? 'good' : emailInText ? 'ok' : 'bad',
+      mailLink ? `E-mailadres gevonden: ${mailLink.getAttribute('href').replace('mailto:', '')}` :
+      emailInText ? `E-mailadres in tekst: ${emailInText[0]} (maak een mailto: link)` :
+      'Geen e-mailadres gevonden op de pagina');
+    filled++;
+  } catch(e) {}
+
+  // ══════════════════════════════════════════════════════════════
+  // CONTENT QUALITY (cont-*)
+  // ══════════════════════════════════════════════════════════════
+
+  // ── cont-001/002/003: Readability metrics ──
+  try {
+    const bodyText = (doc.body?.innerText || doc.body?.textContent || '').trim();
+    const sentences = bodyText.split(/[.!?]+/).filter(s => s.trim().length > 10);
+    const words = bodyText.split(/\s+/).filter(w => w.length > 0);
+    const paragraphs = Array.from(doc.querySelectorAll('p')).filter(p => p.textContent.trim().length > 20);
+
+    if (sentences.length > 3 && words.length > 50) {
+      // cont-001: Readability (simplified Flesch-Kincaid estimate)
+      const avgWordsPerSentence = words.length / sentences.length;
+      const avgSyllables = words.reduce((sum, w) => sum + Math.max(1, w.replace(/[^aeiouyAEIOUY]/g, '').length), 0) / words.length;
+      const fkScore = 206.835 - (1.015 * avgWordsPerSentence) - (84.6 * avgSyllables);
+      autoFill('cont-001', fkScore >= 60 ? 'good' : fkScore >= 30 ? 'ok' : 'bad',
+        `Leesbaarheid (Flesch): ~${Math.round(fkScore)}/100 (${fkScore >= 60 ? 'goed leesbaar' : fkScore >= 30 ? 'matig' : 'moeilijk'}) — gem. ${avgWordsPerSentence.toFixed(1)} woorden/zin`);
+      filled++;
+
+      // cont-002: Average sentence length
+      autoFill('cont-002', avgWordsPerSentence <= 20 ? 'good' : avgWordsPerSentence <= 25 ? 'ok' : 'bad',
+        `Gemiddelde zinslengte: ${avgWordsPerSentence.toFixed(1)} woorden ${avgWordsPerSentence > 20 ? '(streef naar <20)' : '(goed)'}`);
+      filled++;
+
+      // cont-003: Paragraph length
+      if (paragraphs.length > 0) {
+        const avgParaWords = paragraphs.reduce((sum, p) => sum + p.textContent.split(/\s+/).length, 0) / paragraphs.length;
+        autoFill('cont-003', avgParaWords <= 80 ? 'good' : avgParaWords <= 150 ? 'ok' : 'bad',
+          `Gemiddelde alinea: ~${Math.round(avgParaWords)} woorden (${paragraphs.length} alinea's) ${avgParaWords > 80 ? '— korter is beter voor online' : ''}`);
+        filled++;
+      }
+    }
+  } catch(e) {}
+
+  // ── cont-009: Word count meets requirements ──
+  try {
+    const bodyText = (doc.body?.innerText || doc.body?.textContent || '').trim();
+    const wordCount = bodyText.split(/\s+/).filter(w => w.length > 0).length;
+    autoFill('cont-009', wordCount >= 300 ? 'good' : wordCount >= 150 ? 'ok' : 'bad',
+      `Woordenaantal: ${wordCount} ${wordCount < 300 ? '(aanbevolen min. 300 voor SEO)' : '(voldoende)'}`);
+    filled++;
+  } catch(e) {}
+
+  // ── cont-024: Last modified date ──
+  try {
+    const lastMod = doc.querySelector('meta[name="last-modified"], meta[http-equiv="last-modified"], time[datetime]');
+    if (lastMod) {
+      const date = lastMod.getAttribute('content') || lastMod.getAttribute('datetime') || '';
+      autoFill('cont-024', 'ok', `Laatst bijgewerkt: ${date}`);
+    } else {
+      autoFill('cont-024', 'ok', 'Geen last-modified meta tag of time element gevonden');
+    }
+    filled++;
+  } catch(e) {}
+
+  // ── cont-030: Proper heading structure for content ──
+  try {
+    const headings = doc.querySelectorAll('h1,h2,h3,h4,h5,h6');
+    const paragraphs = doc.querySelectorAll('p');
+    if (paragraphs.length > 3) {
+      const ratio = headings.length / paragraphs.length;
+      autoFill('cont-030', headings.length >= 3 && ratio >= 0.1 ? 'good' :
+        headings.length >= 1 ? 'ok' : 'bad',
+        `${headings.length} headings voor ${paragraphs.length} alinea's ${ratio < 0.1 ? '— meer subkoppen toevoegen' : '— goed gestructureerd'}`);
+      filled++;
+    }
+  } catch(e) {}
+
+  // ══════════════════════════════════════════════════════════════
+  // BRAND (brand-*)
+  // ══════════════════════════════════════════════════════════════
+
+  // ── brand-001: Logo present ──
+  try {
+    const logo = doc.querySelector(
+      'img[class*="logo" i], img[id*="logo" i], img[alt*="logo" i], ' +
+      'a[class*="logo" i] img, .logo img, #logo img, ' +
+      'svg[class*="logo" i], header img:first-of-type, ' +
+      '[class*="brand" i] img, a[aria-label*="logo" i]'
+    );
+    autoFill('brand-001', logo ? 'good' : 'ok',
+      logo ? 'Logo gedetecteerd op de pagina' : 'Geen duidelijk logo-element gevonden (controleer handmatig)');
+    filled++;
+  } catch(e) {}
+
+  // ── brand-009: Max 3 font families ──
+  if (canCSS) {
+    try {
+      const allElements = doc.querySelectorAll('body, body *');
+      const fonts = new Set();
+      allElements.forEach(el => {
+        try {
+          const ff = doc.defaultView.getComputedStyle(el).fontFamily;
+          if (ff) {
+            const primary = ff.split(',')[0].trim().replace(/['"]/g, '');
+            if (primary && !['inherit', 'initial', 'unset'].includes(primary)) fonts.add(primary);
+          }
+        } catch(e) {}
+      });
+      autoFill('brand-009', fonts.size <= 3 ? 'good' : fonts.size <= 5 ? 'ok' : 'bad',
+        `${fonts.size} font families: ${Array.from(fonts).slice(0, 5).join(', ')}${fonts.size > 5 ? '…' : ''} ${fonts.size > 3 ? '(max 3 aanbevolen)' : ''}`);
+      filled++;
+    } catch(e) {}
+  }
+
+  // ══════════════════════════════════════════════════════════════
+  // SECURITY extras (sec-*)
+  // ══════════════════════════════════════════════════════════════
+
+  // ── sec-007: X-Frame-Options ──
+  try {
+    const xfo = doc.querySelector('meta[http-equiv="X-Frame-Options"]');
+    autoFill('sec-007', xfo ? 'good' : 'ok',
+      xfo ? `X-Frame-Options via meta: ${xfo.getAttribute('content')}` :
+      'Geen X-Frame-Options meta tag (kan via server headers ingesteld zijn)');
+    filled++;
+  } catch(e) {}
+
+  // ── sec-008: X-Content-Type-Options ──
+  try {
+    const xcto = doc.querySelector('meta[http-equiv="X-Content-Type-Options"]');
+    autoFill('sec-008', xcto ? 'good' : 'ok',
+      xcto ? `X-Content-Type-Options: ${xcto.getAttribute('content')}` :
+      'Geen X-Content-Type-Options meta (kan via server headers)');
+    filled++;
+  } catch(e) {}
+
+  // ── sec-010: Permissions-Policy ──
+  try {
+    const pp = doc.querySelector('meta[http-equiv="Permissions-Policy"], meta[http-equiv="Feature-Policy"]');
+    autoFill('sec-010', pp ? 'good' : 'ok',
+      pp ? 'Permissions-Policy meta tag aanwezig' :
+      'Geen Permissions-Policy meta tag (kan via server headers)');
+    filled++;
+  } catch(e) {}
+
+  // ── sec-011: HSTS header ──
+  try {
+    const hsts = doc.querySelector('meta[http-equiv="Strict-Transport-Security"]');
+    autoFill('sec-011', hsts ? 'good' : 'ok',
+      hsts ? `HSTS via meta: ${hsts.getAttribute('content')}` :
+      'Geen HSTS meta tag (wordt normaal via server header ingesteld)');
+    filled++;
+  } catch(e) {}
+
+  // ── sec-012: X-XSS-Protection ──
+  try {
+    const xxss = doc.querySelector('meta[http-equiv="X-XSS-Protection"]');
+    autoFill('sec-012', xxss ? 'good' : 'ok',
+      xxss ? `X-XSS-Protection: ${xxss.getAttribute('content')}` :
+      'Geen X-XSS-Protection meta (verouderd, CSP is beter)');
+    filled++;
+  } catch(e) {}
+
+  // ── sec-014: Vulnerable JS libraries (check known old versions) ──
+  try {
+    const scripts = Array.from(doc.querySelectorAll('script[src]'));
+    const vulnPatterns = [
+      { pattern: /jquery[.-]1\./i, lib: 'jQuery 1.x' },
+      { pattern: /jquery[.-]2\./i, lib: 'jQuery 2.x' },
+      { pattern: /angular[.-]1\.[0-5]/i, lib: 'AngularJS 1.x (oud)' },
+      { pattern: /bootstrap[.-][23]\./i, lib: 'Bootstrap 2/3 (oud)' },
+      { pattern: /moment[.-]2\.[0-9]\./i, lib: 'Moment.js (oud)' },
+    ];
+    const found = [];
+    scripts.forEach(s => {
+      const src = s.getAttribute('src') || '';
+      vulnPatterns.forEach(v => { if (v.pattern.test(src)) found.push(v.lib); });
+    });
+    autoFill('sec-014', found.length === 0 ? 'good' : 'bad',
+      found.length === 0 ? 'Geen bekende verouderde JS bibliotheken gedetecteerd' :
+      `Verouderde bibliotheken: ${found.join(', ')} — update naar nieuwste versie`);
+    filled++;
+  } catch(e) {}
+
+  // ── sec-015: Google Safe Browsing (can only infer) ──
+  try {
+    autoFill('sec-015', 'ok', 'Google Safe Browsing status kan niet automatisch gecontroleerd worden — check via Google Search Console');
+    filled++;
+  } catch(e) {}
+
+  // ══════════════════════════════════════════════════════════════
+  // PERFORMANCE DOM checks (perf-*)
+  // ══════════════════════════════════════════════════════════════
+
+  // ── perf-016: DOM size ──
+  try {
+    const allElements = doc.querySelectorAll('*').length;
+    autoFill('perf-016', allElements < 1500 ? 'good' : allElements < 3000 ? 'ok' : 'bad',
+      `DOM grootte: ${allElements} elementen ${allElements >= 1500 ? '(streef naar <1500)' : '(goed)'}`);
+    filled++;
+  } catch(e) {}
+
+  // ── perf-019/020: Image optimization + modern formats ──
+  try {
+    const imgs = Array.from(doc.querySelectorAll('img[src]'));
+    if (imgs.length > 0) {
+      const formats = {};
+      imgs.forEach(img => {
+        const src = (img.getAttribute('src') || '').toLowerCase();
+        const ext = src.split('.').pop().split('?')[0];
+        formats[ext] = (formats[ext] || 0) + 1;
+      });
+      const modernCount = (formats['webp'] || 0) + (formats['avif'] || 0);
+      const oldCount = (formats['jpg'] || 0) + (formats['jpeg'] || 0) + (formats['png'] || 0) + (formats['gif'] || 0);
+      const formatList = Object.entries(formats).map(([k,v]) => `${v}× .${k}`).join(', ');
+      autoFill('perf-019', oldCount === 0 || modernCount > 0 ? 'good' : 'ok',
+        `Afbeeldingsformaten: ${formatList} ${oldCount > 0 && modernCount === 0 ? '— gebruik WebP/AVIF' : ''}`);
+      autoFill('perf-020', modernCount > 0 ? 'good' : 'bad',
+        modernCount > 0 ? `${modernCount} afbeeldingen in modern formaat (WebP/AVIF)` :
+        'Geen moderne afbeeldingsformaten (WebP/AVIF) — comprimeer 25-50% beter');
+      filled += 2;
+    }
+  } catch(e) {}
+
+  // ── perf-025: Font display strategy ──
+  try {
+    const fontFaces = Array.from(doc.querySelectorAll('style')).map(s => s.textContent || '').join(' ');
+    const linkFonts = Array.from(doc.querySelectorAll('link[href*="fonts"]'));
+    const hasFontDisplay = fontFaces.includes('font-display');
+    const hasSwap = fontFaces.includes('font-display: swap') || fontFaces.includes('font-display:swap');
+    const googleFonts = linkFonts.filter(l => (l.getAttribute('href') || '').includes('fonts.googleapis.com'));
+    const gfWithDisplay = googleFonts.filter(l => (l.getAttribute('href') || '').includes('display=swap'));
+    if (googleFonts.length > 0 || hasFontDisplay) {
+      autoFill('perf-025', (hasSwap || gfWithDisplay.length === googleFonts.length) ? 'good' : 'ok',
+        (hasSwap || gfWithDisplay.length > 0) ? 'font-display: swap geconfigureerd' :
+        'Font-display strategie niet optimaal — voeg display=swap toe');
+      filled++;
+    }
+  } catch(e) {}
+
+  // ── perf-026: Preload hints ──
+  try {
+    const preloads = doc.querySelectorAll('link[rel="preload"]');
+    autoFill('perf-026', preloads.length > 0 ? 'good' : 'ok',
+      preloads.length > 0 ? `${preloads.length} preload hints gevonden (kritieke resources)` :
+      'Geen preload hints — overweeg kritieke fonts/scripts te preloaden');
+    filled++;
+  } catch(e) {}
+
+  // ── perf-027: Preconnect hints ──
+  try {
+    const preconnects = doc.querySelectorAll('link[rel="preconnect"], link[rel="dns-prefetch"]');
+    autoFill('perf-027', preconnects.length > 0 ? 'good' : 'ok',
+      preconnects.length > 0 ? `${preconnects.length} preconnect/dns-prefetch hints` :
+      'Geen preconnect hints — voeg toe voor externe domeinen');
+    filled++;
+  } catch(e) {}
+
+  // ── perf-028: Lazy loading on images ──
+  try {
+    const imgs = Array.from(doc.querySelectorAll('img'));
+    if (imgs.length > 3) {
+      const lazyImgs = imgs.filter(img => img.getAttribute('loading') === 'lazy' || img.getAttribute('data-src') || img.classList.contains('lazyload'));
+      autoFill('perf-028', lazyImgs.length > 0 ? 'good' : 'bad',
+        lazyImgs.length > 0 ? `${lazyImgs.length} van ${imgs.length} afbeeldingen hebben lazy loading` :
+        `${imgs.length} afbeeldingen zonder lazy loading — voeg loading="lazy" toe`);
+      filled++;
+    }
+  } catch(e) {}
+
+  // ── perf-011: Render-blocking resources ──
+  try {
+    const blockingCSS = Array.from(doc.querySelectorAll('link[rel="stylesheet"]')).filter(l => !l.getAttribute('media') || l.getAttribute('media') === 'all');
+    const blockingJS = Array.from(doc.querySelectorAll('script[src]')).filter(s => !s.hasAttribute('async') && !s.hasAttribute('defer') && !s.getAttribute('type')?.includes('module'));
+    const headBlockingJS = blockingJS.filter(s => s.closest('head'));
+    autoFill('perf-011', headBlockingJS.length === 0 ? 'good' : headBlockingJS.length <= 3 ? 'ok' : 'bad',
+      `${blockingCSS.length} CSS + ${headBlockingJS.length} render-blocking JS in <head> ${headBlockingJS.length > 0 ? '— voeg async/defer toe' : ''}`);
+    filled++;
+  } catch(e) {}
+
+  // ── perf-023: CSS minified (check inline styles size) ──
+  try {
+    const styles = Array.from(doc.querySelectorAll('style'));
+    if (styles.length > 0) {
+      const totalCSS = styles.reduce((sum, s) => sum + (s.textContent || '').length, 0);
+      const hasNewlines = styles.some(s => (s.textContent || '').split('\n').length > 10);
+      autoFill('perf-023', !hasNewlines ? 'good' : 'ok',
+        !hasNewlines ? `Inline CSS lijkt geminified (${(totalCSS/1024).toFixed(1)}KB)` :
+        `Inline CSS niet geminified (${(totalCSS/1024).toFixed(1)}KB, ${styles.length} blokken)`);
+      filled++;
+    }
+  } catch(e) {}
+
+  // ── perf-024: JavaScript minified ──
+  try {
+    const inlineScripts = Array.from(doc.querySelectorAll('script:not([src])')).filter(s => (s.textContent || '').length > 200);
+    if (inlineScripts.length > 0) {
+      const totalJS = inlineScripts.reduce((sum, s) => sum + (s.textContent || '').length, 0);
+      const hasComments = inlineScripts.some(s => (s.textContent || '').includes('//') || (s.textContent || '').includes('/*'));
+      autoFill('perf-024', !hasComments ? 'good' : 'ok',
+        !hasComments ? `Inline JS lijkt geminified (${(totalJS/1024).toFixed(1)}KB)` :
+        `Inline JS bevat comments — niet volledig geminified (${(totalJS/1024).toFixed(1)}KB)`);
+      filled++;
+    }
+  } catch(e) {}
+
+  // ══════════════════════════════════════════════════════════════
+  // MOBILE extras (mob-*)
+  // ══════════════════════════════════════════════════════════════
+
+  // ── mob-006: Content properly sized to viewport ──
+  try {
+    const viewport = doc.querySelector('meta[name="viewport"]');
+    if (viewport) {
+      const content = viewport.getAttribute('content') || '';
+      const hasWidth = content.includes('width=device-width');
+      const hasInitScale = content.includes('initial-scale=1');
+      autoFill('mob-006', hasWidth && hasInitScale ? 'good' : hasWidth ? 'ok' : 'bad',
+        `Viewport: ${content.substring(0, 60)} ${!hasWidth ? '— width=device-width ontbreekt' : ''}`);
+    } else {
+      autoFill('mob-006', 'bad', 'Geen viewport meta — content past zich niet aan schermgrootte aan');
+    }
+    filled++;
+  } catch(e) {}
+
+  // ── mob-007: No horizontal scrolling (check for fixed-width elements) ──
+  try {
+    const fixedWidth = doc.querySelectorAll('[style*="width:"][style*="px"]');
+    const tables = doc.querySelectorAll('table:not([class*="responsive"])');
+    const issues = [];
+    if (fixedWidth.length > 3) issues.push(`${fixedWidth.length} elementen met vaste pixel-breedte`);
+    if (tables.length > 0) issues.push(`${tables.length} tabellen (mogelijk niet responsive)`);
+    autoFill('mob-007', issues.length === 0 ? 'good' : 'ok',
+      issues.length === 0 ? 'Geen duidelijke oorzaken voor horizontaal scrollen' :
+      `Mogelijke problemen: ${issues.join(', ')}`);
+    filled++;
+  } catch(e) {}
+
+  // ── mob-011: Touch target spacing (limited DOM check) ──
+  try {
+    const clickables = doc.querySelectorAll('a, button, input, select, textarea, [role="button"]');
+    autoFill('mob-011', 'ok', `${clickables.length} interactieve elementen — controleer spacing visueel (min. 8px tussen targets)`);
+    filled++;
+  } catch(e) {}
+
+  // ── mob-021: Critical CSS inlined ──
+  try {
+    const inlineStyles = doc.querySelectorAll('head style');
+    const externalCSS = doc.querySelectorAll('link[rel="stylesheet"]');
+    autoFill('mob-021', inlineStyles.length > 0 ? 'good' : externalCSS.length <= 2 ? 'ok' : 'bad',
+      inlineStyles.length > 0 ? `${inlineStyles.length} inline style blokken (critical CSS)` :
+      `${externalCSS.length} externe stylesheets zonder inline critical CSS`);
+    filled++;
+  } catch(e) {}
+
+  // ══════════════════════════════════════════════════════════════
+  // TSEO crawlability checks (tseo-001 through tseo-011) — fetch-based
+  // These need separate fetches for robots.txt and sitemap
+  // ══════════════════════════════════════════════════════════════
+  try {
+    const origin = new URL(url).origin;
+
+    // tseo-001/002/005: robots.txt
+    try {
+      const workerProxy = typeof getAiProxyUrl === 'function' ? getAiProxyUrl() : '';
+      let robotsTxt = '';
+      if (workerProxy) {
+        const proxyBase = workerProxy.replace(/\/$/, '');
+        const rResp = await fetch(`${proxyBase}/fetch?url=${encodeURIComponent(origin + '/robots.txt')}`);
+        if (rResp.ok) robotsTxt = await rResp.text();
+      }
+      if (robotsTxt && robotsTxt.toLowerCase().includes('user-agent')) {
+        autoFill('tseo-001', 'good', 'robots.txt gevonden en toegankelijk');
+        filled++;
+        const blocksImportant = robotsTxt.toLowerCase().includes('disallow: /');
+        autoFill('tseo-002', !blocksImportant ? 'good' : 'ok',
+          !blocksImportant ? 'robots.txt blokkeert geen belangrijke paden' :
+          'robots.txt bevat Disallow regels — controleer dat belangrijke pagina\'s niet geblokkeerd worden');
+        filled++;
+        const hasSitemap = robotsTxt.toLowerCase().includes('sitemap:');
+        autoFill('tseo-005', hasSitemap ? 'good' : 'bad',
+          hasSitemap ? 'Sitemap vermeldt in robots.txt' : 'Geen sitemap referentie in robots.txt');
+        filled++;
+      } else {
+        autoFill('tseo-001', 'bad', 'Geen robots.txt gevonden of niet toegankelijk');
+        autoFill('tseo-002', 'ok', 'Kan niet controleren — geen robots.txt');
+        autoFill('tseo-005', 'bad', 'Geen robots.txt met sitemap referentie');
+        filled += 3;
+      }
+    } catch(e) {
+      autoFill('tseo-001', 'ok', 'robots.txt kon niet gecontroleerd worden');
+      autoFill('tseo-002', 'ok', 'robots.txt kon niet gecontroleerd worden');
+      autoFill('tseo-005', 'ok', 'robots.txt kon niet gecontroleerd worden');
+      filled += 3;
+    }
+
+    // tseo-003/004: XML sitemap
+    try {
+      const workerProxy = typeof getAiProxyUrl === 'function' ? getAiProxyUrl() : '';
+      let sitemapContent = '';
+      if (workerProxy) {
+        const proxyBase = workerProxy.replace(/\/$/, '');
+        const sResp = await fetch(`${proxyBase}/fetch?url=${encodeURIComponent(origin + '/sitemap.xml')}`);
+        if (sResp.ok) sitemapContent = await sResp.text();
+      }
+      if (sitemapContent && (sitemapContent.includes('<urlset') || sitemapContent.includes('<sitemapindex'))) {
+        autoFill('tseo-003', 'good', 'XML sitemap gevonden');
+        filled++;
+        const urlCount = (sitemapContent.match(/<loc>/g) || []).length;
+        autoFill('tseo-004', urlCount > 0 ? 'good' : 'ok',
+          `Sitemap bevat ${urlCount} URLs ${urlCount === 0 ? '— lijkt leeg' : ''}`);
+        filled++;
+        // tseo-006: Coverage
+        autoFill('tseo-006', urlCount >= 5 ? 'good' : 'ok',
+          `Sitemap heeft ${urlCount} URLs — controleer of alle belangrijke pagina's zijn opgenomen`);
+        filled++;
+      } else {
+        autoFill('tseo-003', 'bad', 'Geen XML sitemap gevonden op /sitemap.xml');
+        autoFill('tseo-004', 'bad', 'Geen sitemap om te valideren');
+        autoFill('tseo-006', 'bad', 'Geen sitemap');
+        filled += 3;
+      }
+    } catch(e) {
+      autoFill('tseo-003', 'ok', 'Sitemap kon niet gecontroleerd worden');
+      autoFill('tseo-004', 'ok', 'Sitemap kon niet gecontroleerd worden');
+      autoFill('tseo-006', 'ok', 'Sitemap kon niet gecontroleerd worden');
+      filled += 3;
+    }
+  } catch(e) {}
+
+  // ── tseo-007: No 5xx server errors (if page loaded, no 5xx) ──
+  try {
+    autoFill('tseo-007', 'good', 'Pagina laadde succesvol — geen server errors');
+    filled++;
+  } catch(e) {}
+
+  // ── tseo-008: Page renders without JS errors (limited check) ──
+  try {
+    const noscript = doc.querySelectorAll('noscript');
+    autoFill('tseo-008', 'ok', `Pagina geladen ${noscript.length > 0 ? '— bevat noscript fallback' : '— JS errors niet detecteerbaar via DOM scan'}`);
+    filled++;
+  } catch(e) {}
+
+  // ── tseo-009: Crawl depth (infer from breadcrumbs) ──
+  try {
+    const breadcrumbs = doc.querySelectorAll('[class*="breadcrumb"] li, [class*="breadcrumb"] a, nav[aria-label*="breadcrumb" i] a');
+    if (breadcrumbs.length > 0) {
+      autoFill('tseo-009', breadcrumbs.length <= 4 ? 'good' : 'ok',
+        `Kruimelpad diepte: ${breadcrumbs.length} niveaus ${breadcrumbs.length > 4 ? '(streef naar max 3 klikken)' : ''}`);
+    } else {
+      autoFill('tseo-009', 'ok', 'Geen breadcrumbs — crawl depth niet te bepalen');
+    }
+    filled++;
+  } catch(e) {}
+
+  // ── tseo-010: Orphan pages (limited check) ──
+  try {
+    const internalLinks = Array.from(doc.querySelectorAll('a[href]')).filter(a => {
+      const href = a.getAttribute('href') || '';
+      return href.startsWith('/') || href.startsWith(new URL(url).origin);
+    });
+    autoFill('tseo-010', internalLinks.length >= 5 ? 'good' : internalLinks.length >= 1 ? 'ok' : 'bad',
+      `${internalLinks.length} interne links — ${internalLinks.length < 5 ? 'weinig interne links, risico op orphan pages' : 'goed verbonden'}`);
+    filled++;
+  } catch(e) {}
+
+  // ── tseo-011: Server response (if loaded = acceptable) ──
+  try {
+    autoFill('tseo-011', 'ok', 'Server response tijd niet meetbaar via DOM scan — gebruik Chrome DevTools of PSI');
+    filled++;
+  } catch(e) {}
+
+  // ── tseo-025/026/027: Duplicate content checks (single page) ──
+  try {
+    autoFill('tseo-025', 'ok', 'Duplicate content kan alleen over meerdere pagina\'s gecontroleerd worden');
+    autoFill('tseo-026', 'ok', 'Duplicate titles vereist crawl van meerdere pagina\'s');
+    autoFill('tseo-027', 'ok', 'Duplicate descriptions vereist crawl van meerdere pagina\'s');
+    filled += 3;
+  } catch(e) {}
+
+  // ── tseo-042/043/044: Redirects (can't fully check from DOM) ──
+  try {
+    autoFill('tseo-042', 'ok', 'Redirect chains niet detecteerbaar via DOM scan — controleer via server logs');
+    autoFill('tseo-043', 'ok', 'Redirect loops niet detecteerbaar via DOM scan');
+    autoFill('tseo-044', 'ok', '301 redirects niet detecteerbaar via DOM scan');
+    filled += 3;
+  } catch(e) {}
+
+  // ── tseo-049/050/051/053: Links checks ──
+  try {
+    const links = Array.from(doc.querySelectorAll('a[href]'));
+    const emptyLinks = links.filter(a => {
+      const href = (a.getAttribute('href') || '').trim();
+      return href === '' || href === '#' || href === 'javascript:void(0)' || href === 'javascript:;';
+    });
+    if (links.length > 0) {
+      autoFill('tseo-049', emptyLinks.length === 0 ? 'good' : 'ok',
+        emptyLinks.length === 0 ? `${links.length} interne links, geen lege hrefs` :
+        `${emptyLinks.length} links met lege/placeholder hrefs — potentieel broken`);
+      filled++;
+    }
+    // tseo-050: Broken external links (needs crawl, DOM limited)
+    const hostname = new URL(url).hostname;
+    const extLinks = links.filter(a => { try { return new URL(a.getAttribute('href') || '', url).hostname !== hostname; } catch(e) { return false; } });
+    autoFill('tseo-050', 'ok', `${extLinks.length} externe links gevonden — broken link check vereist crawl, controleer handmatig of via tool`);
+    filled++;
+    // tseo-051: Broken image links
+    const imgSrcs = Array.from(doc.querySelectorAll('img[src]'));
+    const emptyImgs = imgSrcs.filter(img => { const s = (img.getAttribute('src') || '').trim(); return !s || s === '#'; });
+    autoFill('tseo-051', emptyImgs.length === 0 ? 'good' : 'bad',
+      emptyImgs.length === 0 ? `${imgSrcs.length} afbeeldingen met geldige src` :
+      `${emptyImgs.length} afbeeldingen met lege/ongeldige src`);
+    filled++;
+    // tseo-053: Links to redirected pages (can't detect from DOM)
+    autoFill('tseo-053', 'ok', 'Redirect-links niet detecteerbaar via DOM scan — gebruik redirectchecker.com of Screaming Frog');
+    filled++;
+  } catch(e) {}
+
+  // ── tseo-052: Link consistency ──
+  try {
+    const links = Array.from(doc.querySelectorAll('a[href]'));
+    const absolute = links.filter(a => (a.getAttribute('href') || '').startsWith('http')).length;
+    const relative = links.filter(a => (a.getAttribute('href') || '').startsWith('/')).length;
+    if (links.length > 0) {
+      autoFill('tseo-052', 'ok',
+        `${absolute} absolute links, ${relative} relatieve links — ${Math.abs(absolute - relative) > links.length * 0.5 ? 'overwegend consistent' : 'mix van stijlen'}`);
+      filled++;
+    }
   } catch(e) {}
 
   return filled;
@@ -5813,41 +7427,38 @@ function copyExport() {
 
 function closeExport() { document.getElementById('exportModal').classList.add('hidden'); }
 
-// ═══════════════ AI ACTIEPLAN (Claude API) ═══════════════
-// API key is loaded from Firestore (admin-configured), never hardcoded in source
-let _cachedAiKey = null;
+// ═══════════════ AI ACTIEPLAN (Cloudflare Worker Proxy) ═══════════════
+// Proxy URL is loaded from Firestore (admin-configured). API key stays on the server, never in the browser.
+let _aiProxyUrl = null;
 
-async function loadAiKeyFromFirestore() {
+async function loadAiConfig() {
   try {
     const doc = await db.collection('config').doc('ai').get();
-    if (doc.exists && doc.data().apiKey) {
-      _cachedAiKey = doc.data().apiKey;
+    if (doc.exists && doc.data().proxyUrl) {
+      _aiProxyUrl = doc.data().proxyUrl;
     }
   } catch(e) {
     console.warn('[AI] Could not load AI config:', e.message);
   }
 }
 
-async function saveAiKeyToFirestore(key) {
+async function saveAiConfig(proxyUrl) {
   if (!isAdmin) return;
   try {
-    await db.collection('config').doc('ai').set({ apiKey: key, updatedAt: new Date().toISOString() });
-    _cachedAiKey = key;
-    showScanToast('success', 'API Key opgeslagen', 'AI Actieplan is nu beschikbaar.', 3000);
+    await db.collection('config').doc('ai').set({ proxyUrl: proxyUrl, updatedAt: new Date().toISOString() });
+    _aiProxyUrl = proxyUrl;
+    showScanToast('success', 'Proxy URL opgeslagen', 'AI Actieplan is nu beschikbaar.', 3000);
+    renderAdminConfig();
   } catch(e) {
     showScanToast('error', 'Opslaan mislukt', e.message, 4000);
   }
 }
 
-function getClaudeKey() {
-  // Load from Firestore cache (set during auth) or localStorage fallback
-  if (_cachedAiKey) return _cachedAiKey;
-  try { return localStorage.getItem('bold700_claude_key') || ''; } catch(e) { return ''; }
-}
+function getAiProxyUrl() { return _aiProxyUrl || ''; }
 
 function isAiAvailable() {
   const project = getActiveProject();
-  return project && project.mode === 'professional' && !!getClaudeKey();
+  return project && project.mode === 'professional' && !!getAiProxyUrl();
 }
 
 function upgradeForAi() {
@@ -5900,8 +7511,8 @@ async function generateAiPlan() {
   const project = getActiveProject();
   if (!project || project.mode === 'self-service') { upgradeForAi(); return; }
 
-  const apiKey = getClaudeKey();
-  if (!apiKey) { alert('AI Actieplan is momenteel niet beschikbaar. Neem contact op met BOLD700.'); return; }
+  const proxyUrl = getAiProxyUrl();
+  if (!proxyUrl) { alert('AI Actieplan is momenteel niet beschikbaar. Neem contact op met BOLD700.'); return; }
 
   const data = buildAiPromptData();
   if (!data || data.issues.length === 0) {
@@ -5964,14 +7575,9 @@ Regels:
 - Gebruik Markdown formatting`;
 
   try {
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    const resp = await fetch(proxyUrl, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true'
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
         max_tokens: 2000,
@@ -6241,7 +7847,7 @@ auth.onAuthStateChanged(async (user) => {
   }
 
   await loadState();
-  await loadAiKeyFromFirestore(); // Load AI API key from Firestore (not in source code)
+  await loadAiConfig(); // Load AI API key from Firestore (not in source code)
   document.body.style.cursor = '';
 
   // Hide auth screen
