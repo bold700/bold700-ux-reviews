@@ -221,11 +221,143 @@
 
   .dash-hero p { color: var(--text-muted); font-size: 16px; letter-spacing: 0.02em; }
 
+  /* ── Dashboard Tabs ── */
+  .dash-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-bottom: 24px;
+    border-bottom: 2px solid var(--border);
+    padding-bottom: 0;
+  }
+  .dash-tab {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-muted);
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: color 0.2s, border-color 0.2s;
+  }
+  .dash-tab:hover { color: var(--text); }
+  .dash-tab.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
+  .dash-tab .tab-badge {
+    background: var(--accent);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 1px 6px;
+    border-radius: 10px;
+    min-width: 18px;
+    text-align: center;
+  }
+  .dash-tab-content { display: none; }
+  .dash-tab-content.active { display: block; }
+
+  /* ── Domain Group Cards ── */
+  .domain-group { border-left: 3px solid var(--accent); }
+  .domain-group:hover { border-color: var(--text); }
+  .domain-group-stats {
+    display: flex;
+    gap: 16px;
+    margin: 12px 0 8px;
+    padding: 10px 0;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+  .dg-stat { display: flex; flex-direction: column; align-items: center; }
+  .review-count-badge {
+    background: var(--accent);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 2px 10px;
+    border-radius: 12px;
+    min-width: 28px;
+    text-align: center;
+  }
+
+  /* ── Domain Review Modal ── */
+  .domain-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  .domain-modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    width: 100%;
+    max-width: 900px;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+  }
+  .domain-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border);
+  }
+  .domain-modal-body {
+    overflow-y: auto;
+    padding: 0;
+  }
+  .domain-reviews-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .domain-reviews-table th {
+    text-align: left;
+    padding: 10px 16px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border);
+    background: var(--surface2);
+    position: sticky;
+    top: 0;
+  }
+  .domain-reviews-table td {
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+  .domain-review-row.clickable { cursor: pointer; }
+  .domain-review-row.clickable:hover { background: var(--surface2); }
+  .btn-icon-sm {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+  }
+  .btn-icon-sm:hover { color: var(--text); background: var(--surface2); }
+
   .dash-stats {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 12px;
-    margin-bottom: 32px;
+    margin-bottom: 24px;
   }
 
   .stat-card {
@@ -1305,6 +1437,9 @@
     .topbar-title { font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .topbar-row { padding: 6px 8px; gap: 4px; }
     .dash-stats { grid-template-columns: repeat(2, 1fr); }
+    .dash-tabs { gap: 2px; }
+    .dash-tab { padding: 8px 10px; font-size: 12px; gap: 4px; }
+    .dash-tab i[data-lucide] { display: none; }
     /* Buttons: icon-only on small screens */
     .btn-label { display: none; }
     .btn-open-ext { padding: 0 10px; }
@@ -1410,11 +1545,58 @@
 
     <div class="dash-stats" id="dashStats"></div>
 
-    <div class="dash-section-header">
-      <h2>Projecten</h2>
+    <!-- Admin/Auditor Tab Navigation -->
+    <div class="dash-tabs" id="dashTabs" style="display:none">
+      <button class="dash-tab active" data-tab="projects" onclick="switchDashTab('projects')">
+        <i data-lucide="folder" style="width:14px;height:14px"></i> Projecten
+      </button>
+      <button class="dash-tab" data-tab="auditQueue" onclick="switchDashTab('auditQueue')" id="tabAuditQueue" style="display:none">
+        <i data-lucide="clipboard-list" style="width:14px;height:14px"></i> Audit Queue
+      </button>
+      <button class="dash-tab" data-tab="auditorApps" onclick="switchDashTab('auditorApps')" id="tabAuditorApps" style="display:none">
+        <i data-lucide="user-plus" style="width:14px;height:14px"></i> Aanvragen
+      </button>
+      <button class="dash-tab" data-tab="users" onclick="switchDashTab('users')" id="tabUsers" style="display:none">
+        <i data-lucide="users" style="width:14px;height:14px"></i> Gebruikers
+      </button>
+      <button class="dash-tab" data-tab="settings" onclick="switchDashTab('settings')" id="tabSettings" style="display:none">
+        <i data-lucide="settings" style="width:14px;height:14px"></i> Instellingen
+      </button>
     </div>
 
-    <div class="projects-grid" id="projectsGrid"></div>
+    <!-- Tab: Projects (default) -->
+    <div class="dash-tab-content active" id="tabContentProjects" data-tab="projects">
+      <div class="dash-section-header">
+        <h2>Projecten</h2>
+      </div>
+      <div class="projects-grid" id="projectsGrid"></div>
+      <div id="projectsLoadMore" style="display:none;text-align:center;padding:16px">
+        <button class="btn btn-outline" onclick="loadMoreProjects()" id="loadMoreBtn">Meer laden…</button>
+      </div>
+    </div>
+
+    <!-- Tab: Audit Queue (admin only) -->
+    <div class="dash-tab-content" id="tabContentAuditQueue" data-tab="auditQueue" style="display:none">
+      <div id="auditQueueSection"></div>
+    </div>
+
+    <!-- Tab: Auditor Applications (admin only) -->
+    <div class="dash-tab-content" id="tabContentAuditorApps" data-tab="auditorApps" style="display:none">
+      <div id="auditorApplicationsSection"></div>
+    </div>
+
+    <!-- Tab: Users (admin only) -->
+    <div class="dash-tab-content" id="tabContentUsers" data-tab="users" style="display:none">
+      <div id="userManagementSection"></div>
+    </div>
+
+    <!-- Tab: Settings (admin only) -->
+    <div class="dash-tab-content" id="tabContentSettings" data-tab="settings" style="display:none">
+      <div id="adminConfigSection"></div>
+    </div>
+
+    <!-- Non-admin sections (no tabs) -->
+    <div id="auditorApplySection" style="display:none"></div>
   </div>
 </div>
 
@@ -2335,48 +2517,206 @@ function showDashboard() {
   renderDashboard();
 }
 
-function renderDashboard() {
-  const statsEl = document.getElementById('dashStats');
-  const gridEl = document.getElementById('projectsGrid');
+// ═══════════════ DASHBOARD TAB SYSTEM ═══════════════
+let _activeTab = 'projects';
+const PROJECTS_PER_PAGE = 20;
+let _projectsShown = PROJECTS_PER_PAGE;
 
-  // Filter: non-admin/auditor users only see their own projects
+function switchDashTab(tabName) {
+  _activeTab = tabName;
+  // Update tab buttons
+  document.querySelectorAll('.dash-tab').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.tab === tabName);
+  });
+  // Update tab content panels
+  document.querySelectorAll('.dash-tab-content').forEach(panel => {
+    panel.classList.toggle('active', panel.dataset.tab === tabName);
+    panel.style.display = panel.dataset.tab === tabName ? 'block' : 'none';
+  });
+  // Lazy render: only render content when tab is first activated
+  if (tabName === 'auditQueue') renderAuditQueue();
+  if (tabName === 'auditorApps') renderAuditorApplicationsAdmin();
+  if (tabName === 'users') renderUserManagement();
+  if (tabName === 'settings') renderAdminConfig();
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+function loadMoreProjects() {
+  _projectsShown += PROJECTS_PER_PAGE;
+  renderProjectCards();
+}
+
+function renderProjectCard(p) {
+  const score = calcProjectScore(p) || { answered: 0, total: 1, avg: 0, nvt: 0 };
+  const pct = Math.round((score.answered / score.total) * 100);
+  const scoreClass = score.avg >= 7.5 ? 'good' : score.avg >= 5 ? 'ok' : score.avg > 0 ? 'bad' : 'na';
+  const pkgLabels = { quick: 'Quick Scan', deep: 'Deep Review', full: 'Full Audit' };
+  const isProfessional = p.mode === 'professional';
+  const auditSt = p.auditStatus || (isProfessional ? 'pending' : null);
+
+  let status, statusLabel;
+  if (isProfessional && !isAdmin) {
+    status = auditSt || 'pending';
+    const auditLabels = { pending: 'In afwachting', assigned: 'Toegewezen', in_progress: 'Audit loopt', completed: 'Afgerond' };
+    statusLabel = auditLabels[status] || 'In afwachting';
+  } else {
+    status = pct === 100 ? 'completed' : pct > 0 ? 'in-progress' : 'not-started';
+    statusLabel = pct === 100 ? 'Afgerond' : pct > 0 ? `${pct}% klaar` : 'Niet gestart';
+  }
+
+  const adminInfo = isAdmin && p.leadEmail ? `<div style="font-size:11px;color:var(--green);margin-top:4px"><i data-lucide="mail" style="width:12px;height:12px"></i> ${p.leadEmail}</div>` : '';
+  const shareLink = isAdmin ? `<button class="pc-share-btn" onclick="event.stopPropagation();copyShareLink('${p.id}')" title="Kopieer deelbare link" style="position:absolute;top:8px;right:32px;background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:14px;padding:4px"><i data-lucide="link" style="width:14px;height:14px"></i></button>` : '';
+
+  let auditStatusHtml = '';
+  if (isProfessional && !isAdmin) {
+    const msgs = {
+      pending: 'Je aanvraag is ontvangen. Een auditor wordt binnenkort toegewezen.',
+      assigned: `Toegewezen aan ${p.assignedToName || 'een auditor'} op ${p.assignedAt ? new Date(p.assignedAt).toLocaleDateString('nl-NL') : '—'}`,
+      in_progress: `Audit is gestart${p.startedAt ? ' op ' + new Date(p.startedAt).toLocaleDateString('nl-NL') : ''}. Je ontvangt binnenkort resultaten.`,
+      completed: 'Je audit is afgerond! Klik om het rapport te bekijken.'
+    };
+    auditStatusHtml = `<div class="audit-status-msg status-${auditSt}"><i data-lucide="${auditSt === 'completed' ? 'check-circle' : auditSt === 'in_progress' ? 'loader' : auditSt === 'assigned' ? 'user-check' : 'clock'}" style="width:12px;height:12px"></i> ${msgs[auditSt] || msgs.pending}</div>`;
+  }
+
+  const canOpen = !isProfessional || isAdmin || auditSt === 'completed';
+  const clickAction = canOpen ? `openProject('${p.id}')` : '';
+  const cardClass = `project-card${isProfessional ? ' professional' : ''}${!canOpen ? ' locked' : ''}`;
+
+  return `
+    <div class="${cardClass}" ${canOpen ? `onclick="${clickAction}"` : ''} style="position:relative">
+      ${shareLink}
+      <button class="pc-delete" onclick="event.stopPropagation();deleteProject('${p.id}')" title="Verwijder project">×</button>
+      <div class="pc-header">
+        <div>
+          <div class="pc-name">${p.name}</div>
+          ${p.client ? `<div class="pc-client">${p.client}</div>` : ''}
+        </div>
+        ${isProfessional ? `<span class="audit-badge ${auditSt}">${statusLabel}</span>` : `<span class="pc-badge ${status}">${statusLabel}</span>`}
+      </div>
+      <div class="pc-url">${p.url}</div>
+      ${adminInfo}
+      ${auditStatusHtml}
+      ${!isProfessional || auditSt === 'completed' ? `
+      <div class="pc-score-bar">
+        <div class="bar-track"><div class="bar-fill ${scoreClass}" style="width:${score.avg > 0 ? score.avg * 10 : 0}%"></div></div>
+        <div class="pc-score-num ${scoreClass}">${score.avg > 0 ? score.avg.toFixed(1) : '—'}</div>
+      </div>` : ''}
+      <div class="pc-footer">
+        <span class="pc-package">${isProfessional ? pkgLabels[p.package] || 'Professional' : 'Self-Service'}</span>
+        <span>${new Date(p.createdAt).toLocaleDateString('nl-NL')}</span>
+      </div>
+    </div>
+  `;
+}
+
+function getDomain(url) {
+  try {
+    return new URL(url.startsWith('http') ? url : 'https://' + url).hostname.replace(/^www\./, '');
+  } catch(e) { return url || 'onbekend'; }
+}
+
+function getUserEmail(userId) {
+  if (!userId) return '—';
+  const u = allUsers.find(u => u.uid === userId);
+  return u ? (u.email || '—') : userId.substring(0, 8) + '…';
+}
+
+function showDomainReviews(domain) {
   const visibleProjects = (isAdmin || isAuditor)
     ? projects
     : projects.filter(p => p.userId === currentUser?.uid);
 
-  const totalProjects = visibleProjects.length;
-  const selfServiceProjects = visibleProjects.filter(p => p.mode !== 'professional');
-  const completedProjects = visibleProjects.filter(p => {
-    const s = calcProjectScore(p);
-    return s && (s.answered + (s.nvt||0)) === s.total;
-  }).length;
-  const needsHelp = visibleProjects.filter(p => { const s = calcProjectScore(p); return s && s.avg > 0 && s.avg < 7; }).length;
+  const domainProjects = visibleProjects
+    .filter(p => getDomain(p.url) === domain)
+    .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+
+  const overlay = document.createElement('div');
+  overlay.className = 'domain-modal-overlay';
+  overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+
+  let rows = '';
+  domainProjects.forEach(p => {
+    const score = calcProjectScore(p) || { answered: 0, total: 1, avg: 0, nvt: 0 };
+    const pct = Math.round((score.answered / score.total) * 100);
+    const scoreClass = score.avg >= 7.5 ? 'good' : score.avg >= 5 ? 'ok' : score.avg > 0 ? 'bad' : 'na';
+    const isPro = p.mode === 'professional';
+    const auditSt = p.auditStatus || (isPro ? 'pending' : null);
+    const canOpen = !isPro || isAdmin || auditSt === 'completed';
+    const status = pct === 100 ? 'Afgerond' : pct > 0 ? `${pct}%` : 'Niet gestart';
+    const pkgLabels = { quick: 'Quick', deep: 'Deep', full: 'Full' };
+    const userEmail = isAdmin ? getUserEmail(p.userId) : '';
+
+    rows += `
+      <tr class="domain-review-row ${canOpen ? 'clickable' : ''}" ${canOpen ? `onclick="document.querySelector('.domain-modal-overlay').remove();openProject('${p.id}')"` : ''}>
+        <td><strong>${p.name}</strong>${p.client ? `<br><span style="color:var(--text-muted);font-size:11px">${p.client}</span>` : ''}</td>
+        ${isAdmin ? `<td style="font-size:11px">${userEmail}</td>` : ''}
+        <td><span class="pc-badge ${pct === 100 ? 'completed' : pct > 0 ? 'in-progress' : 'not-started'}" style="font-size:11px">${isPro ? (auditSt || 'pending') : status}</span></td>
+        <td><span class="pc-score-num ${scoreClass}" style="font-size:13px;font-weight:700">${score.avg > 0 ? score.avg.toFixed(1) : '—'}</span></td>
+        <td style="font-size:11px;color:var(--text-muted)">${isPro ? pkgLabels[p.package] || 'Pro' : 'Self'}</td>
+        <td style="font-size:11px;color:var(--text-muted)">${new Date(p.createdAt).toLocaleDateString('nl-NL')}</td>
+        <td>
+          <button class="btn-icon-sm" onclick="event.stopPropagation();document.querySelector('.domain-modal-overlay').remove();deleteProject('${p.id}')" title="Verwijder">
+            <i data-lucide="trash-2" style="width:13px;height:13px"></i>
+          </button>
+          ${isAdmin ? `<button class="btn-icon-sm" onclick="event.stopPropagation();copyShareLink('${p.id}')" title="Kopieer link">
+            <i data-lucide="link" style="width:13px;height:13px"></i>
+          </button>` : ''}
+        </td>
+      </tr>`;
+  });
+
+  overlay.innerHTML = `
+    <div class="domain-modal">
+      <div class="domain-modal-header">
+        <div>
+          <h2 style="font-size:18px;font-weight:700;margin:0;display:flex;align-items:center;gap:8px">
+            <i data-lucide="globe" style="width:18px;height:18px;color:var(--accent)"></i> ${domain}
+          </h2>
+          <p style="margin:4px 0 0;font-size:12px;color:var(--text-muted)">${domainProjects.length} review${domainProjects.length !== 1 ? 's' : ''}</p>
+        </div>
+        <button onclick="this.closest('.domain-modal-overlay').remove()" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:20px;padding:4px 8px">✕</button>
+      </div>
+      <div class="domain-modal-body">
+        <table class="domain-reviews-table">
+          <thead>
+            <tr>
+              <th>Project</th>
+              ${isAdmin ? '<th>Gebruiker</th>' : ''}
+              <th>Status</th>
+              <th>Score</th>
+              <th>Type</th>
+              <th>Datum</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    </div>`;
+
+  document.body.appendChild(overlay);
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+function renderProjectCards() {
+  const gridEl = document.getElementById('projectsGrid');
+  const loadMoreEl = document.getElementById('projectsLoadMore');
+  if (!gridEl) return;
+
+  const visibleProjects = (isAdmin || isAuditor)
+    ? projects
+    : projects.filter(p => p.userId === currentUser?.uid);
+
+  // Sort newest first
+  const sorted = visibleProjects.slice().sort((a, b) =>
+    new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
+  );
+
   const isFree = !isAdmin && !(userProfile && userProfile.plan === 'pro');
-  // Free limit only counts self-service reviews, not professional audit requests
+  const selfServiceProjects = visibleProjects.filter(p => p.mode !== 'professional');
   const remaining = FREE_PROJECT_LIMIT - selfServiceProjects.length;
-
-  // Stats row — admin sees audit queue, users see their limit
-  if (isAdmin) {
-    const pendingAudits = auditRequests.filter(r => !r.auditStatus || r.auditStatus === 'pending').length;
-    const activeAudits = auditRequests.filter(r => r.auditStatus === 'assigned' || r.auditStatus === 'in_progress').length;
-    statsEl.innerHTML = `
-      <div class="stat-card"><div class="stat-num accent">${totalProjects}</div><div class="stat-label">Projecten</div></div>
-      <div class="stat-card"><div class="stat-num green">${completedProjects}</div><div class="stat-label">Afgerond</div></div>
-      <div class="stat-card"><div class="stat-num ${pendingAudits > 0 ? 'yellow' : ''}">${pendingAudits}</div><div class="stat-label">Open Aanvragen</div></div>
-      <div class="stat-card"><div class="stat-num blue">${activeAudits}</div><div class="stat-label">Actieve Audits</div></div>
-    `;
-  } else {
-    statsEl.innerHTML = `
-      <div class="stat-card"><div class="stat-num accent">${totalProjects}</div><div class="stat-label">Projecten</div></div>
-      <div class="stat-card"><div class="stat-num green">${completedProjects}</div><div class="stat-label">Afgerond</div></div>
-      <div class="stat-card"><div class="stat-num red">${needsHelp}</div><div class="stat-label">Hulp Nodig</div></div>
-      ${isFree ? `<div class="stat-card"><div class="stat-num ${remaining > 0 ? 'yellow' : 'red'}">${remaining > 0 ? remaining : 0}</div><div class="stat-label">Reviews over</div></div>` :
-      `<div class="stat-card"><div class="stat-num green">∞</div><div class="stat-label">Onbeperkt</div></div>`}
-    `;
-  }
-
-  // New project card — check free limit
   const canCreate = isAdmin || !isFree || remaining > 0;
+
   let cards = '';
   if (canCreate) {
     cards += `
@@ -2394,133 +2734,178 @@ function renderDashboard() {
     `;
   }
 
-  visibleProjects.slice().reverse().forEach(p => {
-    const score = calcProjectScore(p) || { answered: 0, total: 1, avg: 0, nvt: 0 };
-    const pct = Math.round((score.answered / score.total) * 100);
-    const scoreClass = score.avg >= 7.5 ? 'good' : score.avg >= 5 ? 'ok' : score.avg > 0 ? 'bad' : 'na';
-    const pkgLabels = { quick: 'Quick Scan', deep: 'Deep Review', full: 'Full Audit' };
-    const isProfessional = p.mode === 'professional';
-    const auditSt = p.auditStatus || (isProfessional ? 'pending' : null);
+  // ── Admin/Auditor: Group by domain ──
+  if (isAdmin || isAuditor) {
+    const domainMap = new Map();
+    sorted.forEach(p => {
+      const domain = getDomain(p.url);
+      if (!domainMap.has(domain)) domainMap.set(domain, []);
+      domainMap.get(domain).push(p);
+    });
 
-    // Status for self-service: progress based; professional: audit workflow based
-    let status, statusLabel;
-    if (isProfessional && !isAdmin) {
-      status = auditSt || 'pending';
-      const auditLabels = { pending: 'In afwachting', assigned: 'Toegewezen', in_progress: 'Audit loopt', completed: 'Afgerond' };
-      statusLabel = auditLabels[status] || 'In afwachting';
-    } else {
-      status = pct === 100 ? 'completed' : pct > 0 ? 'in-progress' : 'not-started';
-      statusLabel = pct === 100 ? 'Afgerond' : pct > 0 ? `${pct}% klaar` : 'Niet gestart';
-    }
+    // Sort domains: most reviews first, then most recent
+    const domainEntries = Array.from(domainMap.entries()).sort((a, b) => {
+      if (b[1].length !== a[1].length) return b[1].length - a[1].length;
+      return new Date(b[1][0].createdAt || 0) - new Date(a[1][0].createdAt || 0);
+    });
 
-    // Admin: show extra info (lead email, share link)
-    const adminInfo = isAdmin && p.leadEmail ? `<div style="font-size:11px;color:var(--green);margin-top:4px"><i data-lucide="mail" style="width:12px;height:12px"></i> ${p.leadEmail}</div>` : '';
-    const shareLink = isAdmin ? `<button class="pc-share-btn" onclick="event.stopPropagation();copyShareLink('${p.id}')" title="Kopieer deelbare link" style="position:absolute;top:8px;right:32px;background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:14px;padding:4px"><i data-lucide="link" style="width:14px;height:14px"></i></button>` : '';
+    // Lazy load domains
+    const visibleDomains = domainEntries.slice(0, _projectsShown);
+    const hasMore = domainEntries.length > _projectsShown;
 
-    // Professional project: show audit status message for clients
-    let auditStatusHtml = '';
-    if (isProfessional && !isAdmin) {
-      const msgs = {
-        pending: 'Je aanvraag is ontvangen. Een auditor wordt binnenkort toegewezen.',
-        assigned: `Toegewezen aan ${p.assignedToName || 'een auditor'} op ${p.assignedAt ? new Date(p.assignedAt).toLocaleDateString('nl-NL') : '—'}`,
-        in_progress: `Audit is gestart${p.startedAt ? ' op ' + new Date(p.startedAt).toLocaleDateString('nl-NL') : ''}. Je ontvangt binnenkort resultaten.`,
-        completed: 'Je audit is afgerond! Klik om het rapport te bekijken.'
-      };
-      auditStatusHtml = `<div class="audit-status-msg status-${auditSt}"><i data-lucide="${auditSt === 'completed' ? 'check-circle' : auditSt === 'in_progress' ? 'loader' : auditSt === 'assigned' ? 'user-check' : 'clock'}" style="width:12px;height:12px"></i> ${msgs[auditSt] || msgs.pending}</div>`;
-    }
+    visibleDomains.forEach(([domain, domainProjects]) => {
+      const totalReviews = domainProjects.length;
+      const scores = domainProjects.map(p => calcProjectScore(p)).filter(s => s && s.avg > 0);
+      const avgScore = scores.length > 0 ? scores.reduce((sum, s) => sum + s.avg, 0) / scores.length : 0;
+      const scoreClass = avgScore >= 7.5 ? 'good' : avgScore >= 5 ? 'ok' : avgScore > 0 ? 'bad' : 'na';
+      const completedCount = domainProjects.filter(p => {
+        const s = calcProjectScore(p);
+        return s && (s.answered + (s.nvt||0)) === s.total;
+      }).length;
+      const latestDate = new Date(domainProjects[0].createdAt).toLocaleDateString('nl-NL');
+      const uniqueUsers = new Set(domainProjects.map(p => p.userId)).size;
 
-    // Client can only open completed professional audits (or admin can open any)
-    const canOpen = !isProfessional || isAdmin || auditSt === 'completed';
-    const clickAction = canOpen ? `openProject('${p.id}')` : '';
-    const cardClass = `project-card${isProfessional ? ' professional' : ''}${!canOpen ? ' locked' : ''}`;
+      // If only 1 review for this domain, show it directly as a card
+      if (totalReviews === 1) {
+        cards += renderProjectCard(domainProjects[0]);
+        return;
+      }
 
-    cards += `
-      <div class="${cardClass}" ${canOpen ? `onclick="${clickAction}"` : ''} style="position:relative">
-        ${shareLink}
-        <button class="pc-delete" onclick="event.stopPropagation();deleteProject('${p.id}')" title="Verwijder project">×</button>
-        <div class="pc-header">
-          <div>
-            <div class="pc-name">${p.name}</div>
-            ${p.client ? `<div class="pc-client">${p.client}</div>` : ''}
+      cards += `
+        <div class="project-card domain-group" onclick="showDomainReviews('${domain}')" style="cursor:pointer;position:relative">
+          <div class="pc-header">
+            <div>
+              <div class="pc-name" style="display:flex;align-items:center;gap:6px">
+                <i data-lucide="globe" style="width:14px;height:14px;color:var(--accent)"></i> ${domain}
+              </div>
+              <div class="pc-client" style="font-size:11px">${totalReviews} reviews · ${uniqueUsers} gebruiker${uniqueUsers !== 1 ? 's' : ''}</div>
+            </div>
+            <span class="review-count-badge">${totalReviews}</span>
           </div>
-          ${isProfessional ? `<span class="audit-badge ${auditSt}">${statusLabel}</span>` : `<span class="pc-badge ${status}">${statusLabel}</span>`}
+          <div class="domain-group-stats">
+            <div class="dg-stat">
+              <span class="pc-score-num ${scoreClass}" style="font-size:16px;font-weight:700">${avgScore > 0 ? avgScore.toFixed(1) : '—'}</span>
+              <span style="font-size:10px;color:var(--text-muted)">gem. score</span>
+            </div>
+            <div class="dg-stat">
+              <span style="font-size:16px;font-weight:700;color:var(--green)">${completedCount}</span>
+              <span style="font-size:10px;color:var(--text-muted)">afgerond</span>
+            </div>
+            <div class="dg-stat">
+              <span style="font-size:16px;font-weight:700">${totalReviews - completedCount}</span>
+              <span style="font-size:10px;color:var(--text-muted)">actief</span>
+            </div>
+          </div>
+          <div class="pc-footer">
+            <span style="font-size:11px;color:var(--text-muted)">Laatste: ${latestDate}</span>
+            <span style="font-size:11px;color:var(--accent);font-weight:600">Bekijk reviews →</span>
+          </div>
         </div>
-        <div class="pc-url">${p.url}</div>
-        ${adminInfo}
-        ${auditStatusHtml}
-        ${!isProfessional || auditSt === 'completed' ? `
-        <div class="pc-score-bar">
-          <div class="bar-track"><div class="bar-fill ${scoreClass}" style="width:${score.avg > 0 ? score.avg * 10 : 0}%"></div></div>
-          <div class="pc-score-num ${scoreClass}">${score.avg > 0 ? score.avg.toFixed(1) : '—'}</div>
-        </div>` : ''}
-        <div class="pc-footer">
-          <span class="pc-package">${isProfessional ? pkgLabels[p.package] || 'Professional' : 'Self-Service'}</span>
-          <span>${new Date(p.createdAt).toLocaleDateString('nl-NL')}</span>
-        </div>
-      </div>
-    `;
-  });
+      `;
+    });
+
+    // Show/hide load more
+    if (loadMoreEl) {
+      loadMoreEl.style.display = hasMore ? 'block' : 'none';
+      const rem = domainEntries.length - _projectsShown;
+      const btn = document.getElementById('loadMoreBtn');
+      if (btn && rem > 0) btn.textContent = `Meer laden (${rem} resterend)`;
+    }
+
+  } else {
+    // ── Regular users: flat list (no grouping) ──
+    const visible = sorted.slice(0, _projectsShown);
+    const hasMore = sorted.length > _projectsShown;
+    visible.forEach(p => { cards += renderProjectCard(p); });
+    if (loadMoreEl) {
+      loadMoreEl.style.display = hasMore ? 'block' : 'none';
+      const rem = sorted.length - _projectsShown;
+      const btn = document.getElementById('loadMoreBtn');
+      if (btn && rem > 0) btn.textContent = `Meer laden (${rem} resterend)`;
+    }
+  }
 
   gridEl.innerHTML = cards;
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+}
 
-  // Clean up role-specific sections
-  const existingQueue = document.getElementById('auditQueueSection');
-  const existingUserMgmt = document.getElementById('userManagementSection');
-  const existingApps = document.getElementById('auditorApplicationsSection');
-  const existingApply = document.getElementById('auditorApplySection');
-  const existingConfig = document.getElementById('adminConfigSection');
+function renderDashboard() {
+  const statsEl = document.getElementById('dashStats');
+  const tabsEl = document.getElementById('dashTabs');
 
-  if (!isAdmin) {
-    if (existingQueue) existingQueue.remove();
-    if (existingUserMgmt) existingUserMgmt.remove();
-    if (existingApps) existingApps.remove();
-    if (existingConfig) existingConfig.remove();
+  // Filter: non-admin/auditor users only see their own projects
+  const visibleProjects = (isAdmin || isAuditor)
+    ? projects
+    : projects.filter(p => p.userId === currentUser?.uid);
 
-    // Regular users: show auditor application card
-    if (!isAuditor) {
-      renderAuditorApplySection();
-    } else {
-      if (existingApply) existingApply.remove();
-    }
+  const totalProjects = visibleProjects.length;
+  const selfServiceProjects = visibleProjects.filter(p => p.mode !== 'professional');
+  const completedProjects = visibleProjects.filter(p => {
+    const s = calcProjectScore(p);
+    return s && (s.answered + (s.nvt||0)) === s.total;
+  }).length;
+  const needsHelp = visibleProjects.filter(p => { const s = calcProjectScore(p); return s && s.avg > 0 && s.avg < 7; }).length;
+  const isFree = !isAdmin && !(userProfile && userProfile.plan === 'pro');
+  const remaining = FREE_PROJECT_LIMIT - selfServiceProjects.length;
+
+  // Stats row
+  if (isAdmin) {
+    const pendingAudits = auditRequests.filter(r => !r.auditStatus || r.auditStatus === 'pending').length;
+    const activeAudits = auditRequests.filter(r => r.auditStatus === 'assigned' || r.auditStatus === 'in_progress').length;
+    const pendingApps = (typeof auditorApplications !== 'undefined') ? auditorApplications.filter(a => a.status === 'pending').length : 0;
+    statsEl.innerHTML = `
+      <div class="stat-card"><div class="stat-num accent">${totalProjects}</div><div class="stat-label">Projecten</div></div>
+      <div class="stat-card"><div class="stat-num green">${completedProjects}</div><div class="stat-label">Afgerond</div></div>
+      <div class="stat-card"><div class="stat-num ${pendingAudits > 0 ? 'yellow' : ''}">${pendingAudits}</div><div class="stat-label">Open Aanvragen</div></div>
+      <div class="stat-card"><div class="stat-num blue">${activeAudits}</div><div class="stat-label">Actieve Audits</div></div>
+    `;
   } else {
-    // Admin: clean up user-only sections
-    if (existingApply) existingApply.remove();
+    statsEl.innerHTML = `
+      <div class="stat-card"><div class="stat-num accent">${totalProjects}</div><div class="stat-label">Projecten</div></div>
+      <div class="stat-card"><div class="stat-num green">${completedProjects}</div><div class="stat-label">Afgerond</div></div>
+      <div class="stat-card"><div class="stat-num red">${needsHelp}</div><div class="stat-label">Hulp Nodig</div></div>
+      ${isFree ? `<div class="stat-card"><div class="stat-num ${remaining > 0 ? 'yellow' : 'red'}">${remaining > 0 ? remaining : 0}</div><div class="stat-label">Reviews over</div></div>` :
+      `<div class="stat-card"><div class="stat-num green">∞</div><div class="stat-label">Onbeperkt</div></div>`}
+    `;
+  }
 
-    // Admin: render audit queue
-    let queueEl = existingQueue;
-    if (!queueEl) {
-      queueEl = document.createElement('div');
-      queueEl.id = 'auditQueueSection';
-      gridEl.parentElement.appendChild(queueEl);
+  // Show/hide tabs based on role
+  if (tabsEl) {
+    if (isAdmin) {
+      tabsEl.style.display = 'flex';
+      document.getElementById('tabAuditQueue').style.display = '';
+      document.getElementById('tabAuditorApps').style.display = '';
+      document.getElementById('tabUsers').style.display = '';
+      document.getElementById('tabSettings').style.display = '';
+      // Add badge counts to tabs
+      const pendingAudits = auditRequests.filter(r => !r.auditStatus || r.auditStatus === 'pending').length;
+      const pendingApps = (typeof auditorApplications !== 'undefined') ? auditorApplications.filter(a => a.status === 'pending').length : 0;
+      const queueTab = document.getElementById('tabAuditQueue');
+      const appsTab = document.getElementById('tabAuditorApps');
+      if (queueTab && pendingAudits > 0) queueTab.innerHTML = `<i data-lucide="clipboard-list" style="width:14px;height:14px"></i> Audit Queue <span class="tab-badge">${pendingAudits}</span>`;
+      if (appsTab && pendingApps > 0) appsTab.innerHTML = `<i data-lucide="user-plus" style="width:14px;height:14px"></i> Aanvragen <span class="tab-badge">${pendingApps}</span>`;
+    } else {
+      tabsEl.style.display = 'none';
     }
-    renderAuditQueue();
+  }
 
-    // Admin: render auditor applications
-    let appsEl = existingApps;
-    if (!appsEl) {
-      appsEl = document.createElement('div');
-      appsEl.id = 'auditorApplicationsSection';
-      gridEl.parentElement.appendChild(appsEl);
-    }
-    renderAuditorApplicationsAdmin();
+  // Render project cards with lazy loading
+  _projectsShown = PROJECTS_PER_PAGE;
+  renderProjectCards();
 
-    // Admin: render user management
-    let userMgmtEl = existingUserMgmt;
-    if (!userMgmtEl) {
-      userMgmtEl = document.createElement('div');
-      userMgmtEl.id = 'userManagementSection';
-      gridEl.parentElement.appendChild(userMgmtEl);
-    }
-    renderUserManagement();
+  // Admin: render active tab content
+  if (isAdmin) {
+    // Ensure the sections exist
+    switchDashTab(_activeTab);
+  }
 
-    // Admin: render platform settings
-    let configEl = document.getElementById('adminConfigSection');
-    if (!configEl) {
-      configEl = document.createElement('div');
-      configEl.id = 'adminConfigSection';
-      gridEl.parentElement.appendChild(configEl);
-    }
-    renderAdminConfig();
+  // Non-admin sections
+  const applyEl = document.getElementById('auditorApplySection');
+  if (!isAdmin && !isAuditor && applyEl) {
+    applyEl.style.display = '';
+    renderAuditorApplySection();
+  } else if (applyEl) {
+    applyEl.style.display = 'none';
   }
 
   if (typeof lucide !== 'undefined') lucide.createIcons();
