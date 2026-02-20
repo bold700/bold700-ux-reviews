@@ -690,7 +690,21 @@
   .scan-url-input:focus { border-color: var(--accent); }
   .main.review-mode ~ .topbar .scan-url-input,
   .review-mode .scan-url-input { display: block; }
-  /* Show scan URL input when url toolbar is hidden (review-mode) */
+  /* Figma source choice + frame picker */
+  .source-choice { display: flex; gap: 10px; margin-bottom: 12px; }
+  .source-option { flex: 1; padding: 14px; border: 2px solid var(--border); border-radius: var(--radius); cursor: pointer; transition: all 0.2s; text-align: center; }
+  .source-option:hover { border-color: #555; }
+  .source-option.selected { border-color: var(--accent); background: var(--accent-glow); }
+  .source-option .source-icon { margin-bottom: 4px; color: var(--text-muted); }
+  .source-option.selected .source-icon { color: var(--accent); }
+  .source-option .source-name { font-size: 13px; font-weight: 700; }
+  .source-option .source-desc { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+  .figma-frame-chip { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px; cursor: pointer; transition: all 0.15s; font-size: 12px; background: var(--surface2); }
+  .figma-frame-chip:hover { border-color: #555; }
+  .figma-frame-chip.selected { border-color: var(--accent); background: var(--accent-glow); }
+  .figma-frame-chip input { display: none; }
+  .chip-name { font-weight: 600; color: var(--text); }
+  .chip-size { font-size: 10px; color: var(--text-muted); }
 
   .lucide, i[data-lucide] { width: 1em; height: 1em; display: inline-block; vertical-align: -0.125em; stroke-width: 2; }
   .icon-inline { display: inline-flex; align-items: center; gap: 4px; }
@@ -1766,10 +1780,25 @@
       </div>
     </div>
 
-    <!-- ═══ STEP 2: Type ═══ -->
+    <!-- ═══ STEP 2: Bron + Type ═══ -->
     <div data-np-step="2">
-      <div class="np-step-title">Wat wil je scannen?</div>
-      <div class="np-step-desc">Kies een pagina-type voor een gerichte quick scan, of start een volledige audit.</div>
+      <div class="np-step-title">Wat wil je reviewen?</div>
+      <div class="np-step-desc">Kies de bron en het type scan.</div>
+      <div class="form-group" style="margin-bottom:16px">
+        <label>Bron</label>
+        <div class="source-choice" id="sourceChoice">
+          <div class="source-option selected" onclick="selectSource('url', this)">
+            <div class="source-icon"><i data-lucide="globe" style="width:20px;height:20px"></i></div>
+            <div class="source-name">Website URL</div>
+            <div class="source-desc">Live website reviewen</div>
+          </div>
+          <div class="source-option" onclick="selectSource('figma', this)">
+            <div class="source-icon"><i data-lucide="figma" style="width:20px;height:20px"></i></div>
+            <div class="source-name">Figma Design</div>
+            <div class="source-desc">Design file reviewen</div>
+          </div>
+        </div>
+      </div>
       <div class="template-grid" id="templateGrid"></div>
       <div id="autoDetectRow" style="display:none;margin-top:6px">
         <button class="btn-detect" id="btnDetectType" onclick="detectPageType()">
@@ -1782,10 +1811,15 @@
     <!-- ═══ STEP 3: Details ═══ -->
     <div data-np-step="3">
       <div class="np-step-title">Project details</div>
-      <div class="np-step-desc">Vul de URL en projectnaam in om te starten.</div>
-      <div class="form-group">
+      <div class="np-step-desc">Vul de details in om te starten.</div>
+      <div class="form-group" id="npUrlGroup">
         <label>Website URL *</label>
         <input type="url" id="npUrl" class="form-input" placeholder="https://jouwwebsite.nl" oninput="onNpUrlChange()">
+      </div>
+      <div class="form-group hidden" id="npFigmaGroup">
+        <label>Figma URL *</label>
+        <input type="url" id="npFigmaUrl" class="form-input" placeholder="https://www.figma.com/design/ABC123/..." oninput="onFigmaUrlChange()">
+        <div id="figmaFramePicker" class="hidden" style="margin-top:12px"></div>
       </div>
       <div class="form-group">
         <label>Projectnaam *</label>
@@ -1833,7 +1867,7 @@
       <input type="url" id="urlInput" placeholder="Voer URL in..." onkeydown="if(event.key==='Enter')loadUrl()">
     </div>
     <button class="btn-go" onclick="loadUrl()">Laden</button>
-    <button class="btn-go btn-open-ext" id="btnOpenExt" onclick="toggleSiteWindow()" title="Open site in apart venster"><i data-lucide="external-link" style="width:13px;height:13px"></i><span class="btn-label"> Open in venster</span></button>
+    <button class="btn-go btn-open-ext" id="btnOpenExt" onclick="toggleSiteWindow()" title="Open site in nieuw tabblad"><i data-lucide="external-link" style="width:13px;height:13px"></i><span class="btn-label"> Open in tabblad</span></button>
   </div>
 
   <!-- Navigation topbar -->
@@ -1849,7 +1883,7 @@
           <div id="deviceBarReview">
             <span class="topbar-sep">·</span>
             <span class="dot-live"></span>
-            <span>Site in apart venster</span>
+            <span>Site in ander tabblad</span>
             <span class="topbar-sep">·</span>
             <a href="#" onclick="event.preventDefault();toggleSiteWindow()" style="color:var(--accent);text-decoration:none;font-weight:600">Terug naar preview</a>
           </div>
@@ -2828,6 +2862,14 @@ function getDomain(url) {
   } catch(e) { return url || 'onbekend'; }
 }
 
+function getProjectGroup(project) {
+  // Figma projects: group by file name or client, not "figma.com"
+  if (project.sourceType === 'figma') {
+    return project.client || project.figmaFileName || project.name || 'Figma Design';
+  }
+  return getDomain(project.url);
+}
+
 function getUserEmail(userId) {
   if (!userId) return '—';
   const u = allUsers.find(u => u.uid === userId);
@@ -2840,7 +2882,7 @@ function showDomainReviews(domain) {
     : projects.filter(p => p.userId === currentUser?.uid);
 
   const domainProjects = visibleProjects
-    .filter(p => getDomain(p.url) === domain)
+    .filter(p => getProjectGroup(p) === domain)
     .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
 
   const overlay = document.createElement('div');
@@ -2926,7 +2968,7 @@ function showDomainReviews(domain) {
 // Add a new scan to an existing domain — opens wizard at step 2 with URL/client pre-filled
 function addScanToDomain(domain) {
   // Find an existing project for this domain to copy URL/client info
-  const existing = projects.find(p => getDomain(p.url) === domain);
+  const existing = projects.find(p => getProjectGroup(p) === domain);
   const baseUrl = existing ? existing.url : domain;
   const client = existing ? (existing.client || '') : '';
   const mode = existing ? existing.mode : 'self-service';
@@ -2988,7 +3030,7 @@ function renderProjectCards() {
   if (isAdmin || isAuditor) {
     const domainMap = new Map();
     sorted.forEach(p => {
-      const domain = getDomain(p.url);
+      const domain = getProjectGroup(p);
       if (!domainMap.has(domain)) domainMap.set(domain, []);
       domainMap.get(domain).push(p);
     });
@@ -3026,7 +3068,7 @@ function renderProjectCards() {
           <div class="pc-header">
             <div>
               <div class="pc-name" style="display:flex;align-items:center;gap:6px">
-                <i data-lucide="globe" style="width:14px;height:14px;color:var(--accent)"></i> ${esc(domain)}
+                <i data-lucide="${domainProjects[0].sourceType === 'figma' ? 'figma' : 'globe'}" style="width:14px;height:14px;color:${domainProjects[0].sourceType === 'figma' ? '#a259ff' : 'var(--accent)'}"></i> ${esc(domain)}
               </div>
               <div class="pc-client" style="font-size:11px">${totalReviews} reviews · ${uniqueUsers} gebruiker${uniqueUsers !== 1 ? 's' : ''}</div>
             </div>
@@ -3980,12 +4022,24 @@ function showNewProject() {
   newProjectMode = 'self-service';
   selectedTemplate = null;
   npStep = 1;
+  // Reset source choice to URL
+  projectSource = 'url';
+  selectedFigmaFrames = [];
+  figmaFileData = null;
   // Reset mode selection visual
   document.querySelectorAll('.mode-option').forEach((e, i) => e.classList.toggle('selected', i === 0));
+  // Reset source choice visual
+  document.querySelectorAll('.source-option').forEach((e, i) => e.classList.toggle('selected', i === 0));
+  const npUrlGroup = document.getElementById('npUrlGroup');
+  const npFigmaGroup = document.getElementById('npFigmaGroup');
+  if (npUrlGroup) { npUrlGroup.classList.remove('hidden'); npUrlGroup.style.display = ''; }
+  if (npFigmaGroup) { npFigmaGroup.classList.add('hidden'); npFigmaGroup.style.display = ''; }
   // Reset form fields
   const npUrl = document.getElementById('npUrl'); if (npUrl) npUrl.value = '';
   const npName = document.getElementById('npName'); if (npName) npName.value = '';
   const npClient = document.getElementById('npClient'); if (npClient) npClient.value = '';
+  const npFigmaUrl = document.getElementById('npFigmaUrl'); if (npFigmaUrl) npFigmaUrl.value = '';
+  const framePicker = document.getElementById('figmaFramePicker'); if (framePicker) framePicker.innerHTML = '';
   renderTemplateSelector();
   showNpStep(1);
 }
@@ -4045,7 +4099,13 @@ function npPrev() {
 function renderTemplateSelector() {
   const grid = document.getElementById('templateGrid');
   if (!grid || typeof MODULE_REGISTRY === 'undefined') return;
-  const bundles = Object.entries(MODULE_REGISTRY.bundles).filter(([id, b]) => b.is_quick_scan);
+  // Filter bundles by source type: Figma bundles only when source is figma, URL bundles otherwise
+  const currentSource = projectSource || 'url';
+  const bundles = Object.entries(MODULE_REGISTRY.bundles).filter(([id, b]) => {
+    if (!b.is_quick_scan) return false;
+    const bundleSource = b.source_type || 'url';
+    return bundleSource === currentSource;
+  });
 
   let html = `<div class="template-card ${!selectedTemplate ? 'selected' : ''}" onclick="selectTemplate(null)">
     <div class="template-card-icon"><i data-lucide="layout-grid" style="width:20px;height:20px"></i></div>
@@ -4080,6 +4140,339 @@ function onNpUrlChange() {
   const url = document.getElementById('npUrl').value.trim();
   const row = document.getElementById('autoDetectRow');
   if (row) row.style.display = url.length > 5 ? 'flex' : 'none';
+}
+
+// ═══════════════ FIGMA INTEGRATION ═══════════════
+let projectSource = 'url'; // 'url' or 'figma'
+let figmaFileData = null;
+let selectedFigmaFrames = [];
+const FIGMA_PROXY = ''; // Set to proxy URL if needed for CORS, e.g. 'https://figma-proxy.bold700.workers.dev/figma'
+
+function selectSource(source, el) {
+  projectSource = source;
+  document.querySelectorAll('.source-option').forEach(e => e.classList.remove('selected'));
+  el.classList.add('selected');
+  const urlGroup = document.getElementById('npUrlGroup');
+  const figmaGroup = document.getElementById('npFigmaGroup');
+  if (source === 'figma') {
+    urlGroup.classList.add('hidden');
+    figmaGroup.classList.remove('hidden');
+    figmaGroup.style.display = '';
+    selectedTemplate = 'qs-figma-general';
+  } else {
+    urlGroup.classList.remove('hidden');
+    figmaGroup.classList.add('hidden');
+    selectedTemplate = null;
+  }
+  renderTemplateSelector();
+}
+
+function parseFigmaUrl(url) {
+  const match = url.match(/figma\.com\/(design|file|proto)\/([a-zA-Z0-9]+)/);
+  if (!match) return null;
+  const fileKey = match[2];
+  const nodeIdMatch = url.match(/node-id=([0-9]+(?:[:-][0-9]+)?)/);
+  const nodeId = nodeIdMatch ? nodeIdMatch[1].replace('-', ':') : null;
+  return { fileKey, nodeId };
+}
+
+function figmaApiUrl(path) {
+  return FIGMA_PROXY ? FIGMA_PROXY + path : 'https://api.figma.com' + path;
+}
+
+async function onFigmaUrlChange() {
+  const url = document.getElementById('npFigmaUrl').value.trim();
+  const parsed = parseFigmaUrl(url);
+  const picker = document.getElementById('figmaFramePicker');
+  if (!parsed) { picker.classList.add('hidden'); return; }
+
+  const token = userProfile?.figmaToken;
+  if (!token) {
+    picker.classList.remove('hidden');
+    picker.innerHTML = `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px;text-align:center">
+      <p style="font-size:13px;color:var(--text-muted);margin-bottom:12px">Koppel eerst je Figma account om designs te reviewen.</p>
+      <button class="btn btn-primary btn-sm" onclick="showFigmaTokenModal()">Figma koppelen</button>
+    </div>`;
+    return;
+  }
+
+  picker.classList.remove('hidden');
+  picker.innerHTML = '<div style="text-align:center;padding:12px;color:var(--text-muted);font-size:12px"><div class="static-preview-spinner" style="width:20px;height:20px;margin:0 auto 8px"></div>Figma file laden...</div>';
+
+  try {
+    const resp = await fetch(figmaApiUrl(`/v1/files/${parsed.fileKey}?depth=2`), {
+      headers: { 'X-Figma-Token': token }
+    });
+    if (!resp.ok) {
+      if (resp.status === 403) throw new Error('403: Geen toegang. Je token heeft geen rechten voor dit bestand, of het bestand is niet met je gedeeld.');
+      if (resp.status === 404) throw new Error('404: Bestand niet gevonden. Controleer de Figma URL.');
+      throw new Error(`Figma API error (${resp.status})`);
+    }
+    figmaFileData = await resp.json();
+    const pages = figmaFileData.document.children || [];
+    const nameInput = document.getElementById('npName');
+    if (!nameInput.value) nameInput.value = figmaFileData.name + ' — Design Review';
+    if (parsed.nodeId) selectedFigmaFrames = [parsed.nodeId];
+    renderFramePicker(pages, parsed.nodeId);
+  } catch(e) {
+    console.error('[Figma]', e);
+    picker.innerHTML = `<div style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:var(--radius-sm);padding:12px;font-size:13px;color:var(--red)">
+      <div style="margin-bottom:10px">${esc(e.message)}</div>
+      <button class="btn btn-secondary btn-sm" onclick="showFigmaTokenModal()" style="font-size:12px">Token wijzigen</button>
+    </div>`;
+  }
+}
+
+function renderFramePicker(pages, preselectedNodeId) {
+  const picker = document.getElementById('figmaFramePicker');
+  let html = '<div style="font-size:12px;font-weight:600;margin-bottom:8px;color:var(--text)">Selecteer frames om te reviewen:</div>';
+  pages.forEach(page => {
+    const frames = (page.children || []).filter(c => c.type === 'FRAME' || c.type === 'COMPONENT' || c.type === 'COMPONENT_SET');
+    if (frames.length === 0) return;
+    html += `<div style="margin-bottom:12px">
+      <div style="font-size:11px;color:var(--text-muted);font-weight:600;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em">${esc(page.name)}</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px">
+        ${frames.map(frame => {
+          const isSelected = selectedFigmaFrames.includes(frame.id) || frame.id === preselectedNodeId;
+          if (isSelected && !selectedFigmaFrames.includes(frame.id)) selectedFigmaFrames.push(frame.id);
+          const w = Math.round(frame.absoluteBoundingBox?.width || 0);
+          const h = Math.round(frame.absoluteBoundingBox?.height || 0);
+          return `<label class="figma-frame-chip ${isSelected ? 'selected' : ''}">
+            <input type="checkbox" ${isSelected ? 'checked' : ''} onchange="toggleFigmaFrame('${frame.id}', this.checked, this.closest('.figma-frame-chip'))">
+            <span class="chip-name">${esc(frame.name)}</span>
+            <span class="chip-size">${w}×${h}</span>
+          </label>`;
+        }).join('')}
+      </div>
+    </div>`;
+  });
+  html += `<div style="font-size:11px;color:var(--text-muted);margin-top:8px">${selectedFigmaFrames.length} frame(s) geselecteerd</div>`;
+  picker.innerHTML = html;
+}
+
+function toggleFigmaFrame(frameId, checked, chipEl) {
+  if (checked) {
+    if (!selectedFigmaFrames.includes(frameId)) selectedFigmaFrames.push(frameId);
+    chipEl?.classList.add('selected');
+  } else {
+    selectedFigmaFrames = selectedFigmaFrames.filter(id => id !== frameId);
+    chipEl?.classList.remove('selected');
+  }
+}
+
+// ── Figma Token Management ──
+function showFigmaTokenModal() {
+  const existing = userProfile?.figmaToken ? '••••••••' + userProfile.figmaToken.slice(-4) : '';
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+  overlay.innerHTML = `
+    <div class="modal-box" style="max-width:480px">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--border)">
+        <h3 style="margin:0;font-size:16px;font-weight:700">Figma Koppeling</h3>
+        <button onclick="this.closest('.modal-overlay').remove()" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:20px">×</button>
+      </div>
+      <div style="padding:20px">
+        <p style="font-size:13px;color:var(--text-muted);line-height:1.6;margin-bottom:16px">Om Figma designs te reviewen heb je een Personal Access Token nodig.</p>
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;margin-bottom:16px;font-size:12px;line-height:1.6">
+          <strong>Token aanmaken:</strong><br>
+          1. Ga naar <a href="https://www.figma.com/settings" target="_blank" style="color:var(--accent)">figma.com/settings</a><br>
+          2. Scroll naar "Personal access tokens"<br>
+          3. Klik "Generate new token"<br>
+          4. Scope: <code>file_content:read</code><br>
+          5. Plak het token hieronder
+        </div>
+        ${existing ? `<div style="font-size:12px;color:var(--green);margin-bottom:8px">✓ Token opgeslagen: ${existing}</div>` : ''}
+        <div class="form-group" style="margin-bottom:16px">
+          <label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px">Figma Personal Access Token</label>
+          <input type="password" id="figmaTokenInput" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:var(--surface);color:var(--text)" placeholder="figd_xxxxxxxxxxxxxxxx">
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-primary" style="flex:1" onclick="saveFigmaToken()">Opslaan</button>
+          ${existing ? `<button class="btn btn-secondary" onclick="removeFigmaToken()">Verwijder</button>` : ''}
+        </div>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+}
+
+async function saveFigmaToken() {
+  const token = document.getElementById('figmaTokenInput').value.trim();
+  if (!token || token.length < 10) { showScanToast('error', 'Ongeldig token', 'Plak je Figma Personal Access Token', 3000); return; }
+  try {
+    // Step 1: validate token identity
+    const resp = await fetch(figmaApiUrl('/v1/me'), { headers: { 'X-Figma-Token': token } });
+    if (!resp.ok) throw new Error('Token ongeldig — controleer of het token correct is gekopieerd.');
+    const me = await resp.json();
+
+    // Step 2: test file_content:read scope by trying to list user's files
+    const figmaUrl = document.getElementById('npFigmaUrl')?.value?.trim();
+    const parsed = figmaUrl ? parseFigmaUrl(figmaUrl) : null;
+    if (parsed) {
+      const fileResp = await fetch(figmaApiUrl(`/v1/files/${parsed.fileKey}?depth=1`), { headers: { 'X-Figma-Token': token } });
+      if (fileResp.status === 403) {
+        showScanToast('error', 'Token mist rechten', 'Je token heeft geen "file_content:read" scope. Maak een nieuwe token aan met die scope aangevinkt.', 6000);
+        return;
+      }
+    }
+
+    userProfile.figmaToken = token;
+    await db.collection('users').doc(currentUser.uid).update({ figmaToken: token });
+    document.querySelector('.modal-overlay')?.remove();
+    showScanToast('success', 'Figma gekoppeld', `Ingelogd als ${me.handle || me.email}`, 3000);
+    // Re-trigger URL parsing now that we have a token
+    onFigmaUrlChange();
+  } catch(e) {
+    showScanToast('error', 'Token werkt niet', e.message || 'Controleer of het token correct is', 4000);
+  }
+}
+
+async function removeFigmaToken() {
+  userProfile.figmaToken = null;
+  await db.collection('users').doc(currentUser.uid).update({ figmaToken: firebase.firestore.FieldValue.delete() });
+  document.querySelector('.modal-overlay')?.remove();
+  showScanToast('info', 'Token verwijderd', '', 2000);
+}
+
+// ── Figma Design Checks Engine ──
+async function runFigmaDesignChecks(project, autoFill) {
+  const token = userProfile?.figmaToken;
+  if (!token) { showScanToast('error', 'Geen Figma token', 'Koppel eerst je Figma account', 3000); return 0; }
+  const fileKey = project.figmaFileKey;
+  const frameIds = project.figmaFrameIds || [];
+  if (!fileKey || frameIds.length === 0) return 0;
+
+  let filled = 0;
+  const idsParam = frameIds.join(',');
+  const resp = await fetch(figmaApiUrl(`/v1/files/${fileKey}/nodes?ids=${encodeURIComponent(idsParam)}`), { headers: { 'X-Figma-Token': token } });
+  if (!resp.ok) throw new Error(`Figma API error: ${resp.status}`);
+  const data = await resp.json();
+
+  const allNodes = [], textNodes = [], frameNodes = [], imageNodes = [], componentInstances = [];
+  function walkNodes(node, depth) {
+    if (!node) return;
+    allNodes.push({ ...node, _depth: depth });
+    if (node.type === 'TEXT') textNodes.push(node);
+    if (node.type === 'FRAME' || node.type === 'GROUP') frameNodes.push(node);
+    if (node.type === 'INSTANCE') componentInstances.push(node);
+    if (node.fills?.some(f => f.type === 'IMAGE')) imageNodes.push(node);
+    if (node.children) node.children.forEach(child => walkNodes(child, depth + 1));
+  }
+  for (const [nodeId, nodeData] of Object.entries(data.nodes || {})) {
+    if (nodeData?.document) walkNodes(nodeData.document, 0);
+  }
+
+  // CHECK 1: Kleurconsistentie
+  const uniqueColors = new Set();
+  allNodes.forEach(n => { (n.fills || []).forEach(f => { if (f.type === 'SOLID' && f.color) { const c = f.color; uniqueColors.add(`${Math.round(c.r*20)/20},${Math.round(c.g*20)/20},${Math.round(c.b*20)/20}`); } }); });
+  autoFill('fig-color-consistency', uniqueColors.size <= 8 ? 'good' : uniqueColors.size <= 15 ? 'ok' : 'bad', `${uniqueColors.size} unieke kleuren gevonden.`); filled++;
+
+  // CHECK 2: Font consistency
+  const uniqueFonts = new Set(); const fontSizes = [];
+  textNodes.forEach(n => { if (n.style?.fontFamily) uniqueFonts.add(n.style.fontFamily); if (n.style?.fontSize) fontSizes.push(n.style.fontSize); });
+  autoFill('fig-font-consistency', uniqueFonts.size <= 2 ? 'good' : uniqueFonts.size <= 3 ? 'ok' : 'bad', `${uniqueFonts.size} font families: ${[...uniqueFonts].join(', ')}`); filled++;
+
+  // CHECK 3: Type scale
+  const uniqueSizes = [...new Set(fontSizes)].sort((a, b) => a - b);
+  autoFill('fig-type-scale', uniqueSizes.length <= 6 ? 'good' : uniqueSizes.length <= 10 ? 'ok' : 'bad', `${uniqueSizes.length} unieke font sizes: ${uniqueSizes.map(s => s + 'px').join(', ')}`); filled++;
+
+  // CHECK 4: Minimale tekstgrootte
+  const tinyText = textNodes.filter(n => n.style?.fontSize && n.style.fontSize < 12);
+  const smallBody = textNodes.filter(n => n.style?.fontSize && n.style.fontSize < 14 && (n.characters || '').length > 20);
+  autoFill('fig-min-text-size', tinyText.length === 0 && smallBody.length === 0 ? 'good' : tinyText.length > 0 ? 'bad' : 'ok', tinyText.length > 0 ? `${tinyText.length} element(en) kleiner dan 12px.` : smallBody.length > 0 ? `${smallBody.length} bodytekst < 14px.` : 'Alle tekst ≥12px, body ≥14px.'); filled++;
+
+  // CHECK 5: Contrast
+  let contrastIssues = 0, contrastChecked = 0;
+  textNodes.forEach(node => {
+    const textFill = (node.fills || []).find(f => f.type === 'SOLID' && f.visible !== false);
+    if (!textFill) return;
+    const parentNode = allNodes.find(n => n.children?.some(c => c.id === node.id) && n.fills?.some(f => f.type === 'SOLID' && f.visible !== false));
+    if (!parentNode) return;
+    const bgFill = parentNode.fills.find(f => f.type === 'SOLID' && f.visible !== false);
+    if (!bgFill) return;
+    contrastChecked++;
+    const ratio = calcContrastFromFigmaRgb(textFill.color, bgFill.color);
+    const isLarge = (node.style?.fontSize || 16) >= 18 || ((node.style?.fontSize || 16) >= 14 && (node.style?.fontWeight || 400) >= 700);
+    if (ratio < (isLarge ? 3 : 4.5)) contrastIssues++;
+  });
+  if (contrastChecked > 0) { autoFill('fig-contrast', contrastIssues === 0 ? 'good' : contrastIssues <= 2 ? 'ok' : 'bad', `${contrastIssues} van ${contrastChecked} combinaties voldoen niet aan WCAG AA.`); filled++; }
+
+  // CHECK 6: Touch targets
+  const interactiveNodes = allNodes.filter(n => { const nm = (n.name || '').toLowerCase(); return nm.includes('button') || nm.includes('btn') || nm.includes('cta') || nm.includes('link') || nm.includes('tab') || n.type === 'INSTANCE'; });
+  const tooSmall = interactiveNodes.filter(n => n.absoluteBoundingBox && (n.absoluteBoundingBox.width < 44 || n.absoluteBoundingBox.height < 44));
+  if (interactiveNodes.length > 0) { autoFill('fig-touch-targets', tooSmall.length === 0 ? 'good' : tooSmall.length <= 3 ? 'ok' : 'bad', `${tooSmall.length} van ${interactiveNodes.length} elementen < 44×44px.`); filled++; }
+
+  // CHECK 7: Spacing grid
+  const spacings = new Set();
+  frameNodes.forEach(n => { [n.paddingLeft, n.paddingRight, n.paddingTop, n.paddingBottom, n.itemSpacing].forEach(v => { if (v !== undefined) spacings.add(Math.round(v)); }); });
+  const on4Grid = [...spacings].filter(v => v % 4 === 0).length;
+  const gridPct = spacings.size > 0 ? Math.round((on4Grid / spacings.size) * 100) : 100;
+  autoFill('fig-spacing-grid', gridPct >= 90 ? 'good' : gridPct >= 70 ? 'ok' : 'bad', `${spacings.size} spacing-waarden, ${gridPct}% op 4px grid.`); filled++;
+
+  // CHECK 8: Component hergebruik
+  const instancePct = allNodes.length > 0 ? Math.round((componentInstances.length / allNodes.length) * 100) : 0;
+  autoFill('fig-component-reuse', instancePct >= 30 ? 'good' : instancePct >= 15 ? 'ok' : 'bad', `${componentInstances.length}/${allNodes.length} elementen zijn instances (${instancePct}%).`); filled++;
+
+  // CHECK 9: Auto-layout
+  const autoLayoutFrames = frameNodes.filter(n => n.layoutMode === 'HORIZONTAL' || n.layoutMode === 'VERTICAL');
+  const alPct = frameNodes.length > 0 ? Math.round((autoLayoutFrames.length / frameNodes.length) * 100) : 0;
+  autoFill('fig-auto-layout', alPct >= 60 ? 'good' : alPct >= 30 ? 'ok' : 'bad', `${autoLayoutFrames.length}/${frameNodes.length} frames met auto-layout (${alPct}%).`); filled++;
+
+  // CHECK 10: Line height
+  const bodyTextNodes = textNodes.filter(n => (n.characters || '').length > 20);
+  const tightLH = bodyTextNodes.filter(n => { const fs = n.style?.fontSize || 16; const lh = n.style?.lineHeightPx || fs * 1.2; return lh / fs < 1.4; });
+  if (bodyTextNodes.length > 0) { autoFill('fig-line-height', tightLH.length === 0 ? 'good' : tightLH.length <= 2 ? 'ok' : 'bad', tightLH.length === 0 ? 'Regelafstand OK.' : `${tightLH.length} element(en) met te krappe regelafstand.`); filled++; }
+
+  // CHECK 11: Text alignment
+  const aligns = {}; textNodes.forEach(n => { const a = n.style?.textAlignHorizontal || 'LEFT'; aligns[a] = (aligns[a] || 0) + 1; });
+  autoFill('fig-text-alignment', Object.keys(aligns).length <= 2 && !aligns['JUSTIFIED'] ? 'good' : Object.keys(aligns).length <= 3 ? 'ok' : 'bad', `Alignment: ${Object.entries(aligns).map(([k,v]) => `${k}: ${v}×`).join(', ')}`); filled++;
+
+  // CHECK 12: Afbeeldingen
+  autoFill('fig-images', imageNodes.length >= 2 ? 'good' : imageNodes.length === 1 ? 'ok' : 'bad', imageNodes.length === 0 ? 'Geen afbeeldingen — gebruik echte content.' : `${imageNodes.length} afbeelding(en).`); filled++;
+
+  return filled;
+}
+
+function calcContrastFromFigmaRgb(fg, bg) {
+  function lum(c) { const [r, g, b] = [c.r, c.g, c.b].map(v => v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4)); return 0.2126 * r + 0.7152 * g + 0.0722 * b; }
+  const l1 = lum(fg), l2 = lum(bg);
+  return (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
+}
+
+// ── Figma Preview in Review Interface ──
+async function loadFigmaPreview(project) {
+  const token = userProfile?.figmaToken;
+  const frame = document.getElementById('previewFrame');
+  const empty = document.getElementById('previewEmpty');
+  frame.classList.add('hidden');
+  empty.classList.remove('hidden');
+
+  if (!token || !project.figmaFileKey) {
+    empty.innerHTML = `<div style="text-align:center;padding:24px"><i data-lucide="figma" style="width:48px;height:48px;color:#a259ff;opacity:0.5"></i><p style="margin-top:12px;color:var(--text-muted)">Figma preview niet beschikbaar</p><a href="${esc(project.url)}" target="_blank" class="btn btn-primary btn-sm" style="margin-top:12px">Open in Figma →</a></div>`;
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+    return;
+  }
+
+  empty.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text-muted);font-size:12px">Figma preview laden...</div>';
+  try {
+    const frameIds = (project.figmaFrameIds || []).join(',');
+    const resp = await fetch(figmaApiUrl(`/v1/images/${project.figmaFileKey}?ids=${encodeURIComponent(frameIds)}&format=png&scale=1`), { headers: { 'X-Figma-Token': token } });
+    if (!resp.ok) throw new Error('Kon thumbnails niet laden');
+    const imgData = await resp.json();
+    let html = `<div style="padding:12px;overflow-y:auto;height:100%;display:flex;flex-direction:column;gap:12px;align-items:center">
+      <div style="display:flex;align-items:center;gap:8px;padding:8px;width:100%">
+        <span style="font-size:12px;color:#a259ff;font-weight:600"><i data-lucide="figma" style="width:14px;height:14px"></i> ${esc(project.figmaFileName || 'Figma Design')}</span>
+        <a href="${esc(project.url)}" target="_blank" style="margin-left:auto;font-size:11px;color:var(--accent);text-decoration:none">Open in Figma ↗</a>
+      </div>`;
+    for (const [nId, imgUrl] of Object.entries(imgData.images || {})) {
+      if (imgUrl) html += `<img src="${imgUrl}" style="max-width:100%;border-radius:8px;border:1px solid var(--border);background:white" alt="Frame">`;
+    }
+    html += '</div>';
+    empty.innerHTML = html;
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+  } catch(e) {
+    empty.innerHTML = `<div style="text-align:center;padding:24px"><p style="color:var(--text-muted);font-size:13px">Preview laden mislukt</p><a href="${esc(project.url)}" target="_blank" class="btn btn-primary btn-sm" style="margin-top:12px">Open in Figma →</a></div>`;
+  }
 }
 
 async function detectPageType() {
@@ -4183,12 +4576,21 @@ function updateNewProjectForm() {
 }
 
 function createProject() {
-  const url = document.getElementById('npUrl').value.trim();
   const name = document.getElementById('npName').value.trim();
   const client = document.getElementById('npClient').value.trim();
   const pkg = document.getElementById('npPackage').value;
 
-  if (!url || !name) { alert('Vul minimaal een URL en projectnaam in.'); return; }
+  // Figma or URL source
+  let url;
+  if (projectSource === 'figma') {
+    url = document.getElementById('npFigmaUrl').value.trim();
+    if (!url || !name) { alert('Vul een Figma URL en projectnaam in.'); return; }
+    if (!parseFigmaUrl(url)) { alert('Ongeldige Figma URL.'); return; }
+    if (selectedFigmaFrames.length === 0) { alert('Selecteer minimaal één frame om te reviewen.'); return; }
+  } else {
+    url = document.getElementById('npUrl').value.trim();
+    if (!url || !name) { alert('Vul minimaal een URL en projectnaam in.'); return; }
+  }
 
   // Check free limit only for self-service mode (professional requests are always allowed)
   const isFreeUser = !isAdmin && !isAuditor && !(userProfile && userProfile.plan === 'pro');
@@ -4212,6 +4614,7 @@ function createProject() {
     name, url, client: newProjectMode === 'professional' ? client : '',
     package: newProjectMode === 'professional' ? pkg : 'self-service',
     mode: newProjectMode,
+    sourceType: projectSource || 'url',
     userId: currentUser ? currentUser.uid : null,
     leadEmail: currentUser ? currentUser.email : '',
     answers: {}, currentStep: 0, createdAt: new Date().toISOString(),
@@ -4220,6 +4623,14 @@ function createProject() {
       ? getBundleConfig(selectedTemplate)
       : (typeof getDefaultModuleConfig === 'function' ? getDefaultModuleConfig() : null)
   };
+
+  // Figma source → add Figma-specific fields
+  if (projectSource === 'figma') {
+    const parsed = parseFigmaUrl(url);
+    project.figmaFileKey = parsed.fileKey;
+    project.figmaFrameIds = [...selectedFigmaFrames];
+    project.figmaFileName = figmaFileData ? figmaFileData.name : '';
+  }
 
   // Professional mode → add audit workflow fields
   if (newProjectMode === 'professional') {
@@ -4406,7 +4817,13 @@ function openProject(id) {
 
   buildStepper();
   renderStep(currentStep);
-  loadUrl();
+
+  // Figma projects → load frame previews instead of URL iframe
+  if (project.sourceType === 'figma') {
+    loadFigmaPreview(project);
+  } else {
+    loadUrl();
+  }
 }
 
 function backToDashboard() {
@@ -4472,8 +4889,7 @@ function loadUrl() {
         <div class="static-preview-badge">
           <span class="badge-label"><span class="dot"></span> Statische preview — iframe geblokkeerd</span>
           <div class="static-preview-actions">
-            <button onclick="openSideBySide('${finalUrl}')" class="btn-open">↗ Open naast review</button>
-            <a href="${finalUrl}" target="_blank" class="btn-side">↗ Nieuw tabblad</a>
+            <a href="${finalUrl}" target="_blank" class="btn-open" onclick="enterReviewMode()">↗ Open in nieuw tabblad</a>
             <button onclick="refreshThumbnail('${finalUrl}')" class="btn-side">↻ Ververs</button>
           </div>
         </div>
@@ -4534,7 +4950,7 @@ function loadUrl() {
 
     const helpBtn = document.createElement('button');
     helpBtn.className = 'iframe-help-btn';
-    helpBtn.innerHTML = '<i data-lucide="shield-alert" style="width:14px;height:14px"></i> Site niet zichtbaar? <span style="text-decoration:underline">Open in venster</span>';
+    helpBtn.innerHTML = '<i data-lucide="shield-alert" style="width:14px;height:14px"></i> Site niet zichtbaar? <span style="text-decoration:underline">Open in tabblad</span>';
     helpBtn.onclick = () => { showBlocked(); openSideBySide(finalUrl); };
     wrapper.appendChild(helpBtn);
     if (typeof lucide !== 'undefined') lucide.createIcons({nodes:[helpBtn]});
@@ -4558,13 +4974,9 @@ function toggleSiteWindow() {
 }
 
 function openSideBySide(url) {
-  const w = Math.floor(screen.width / 2);
-  // Close previous window if still open
+  // Open in a new tab — user can use Chrome's split view (right-click tab → gesplitste weergave)
   if (siteWindow && !siteWindow.closed) siteWindow.close();
-  siteWindow = window.open(url, 'bold700_preview', `width=${w},height=${screen.height},left=${screen.width - w},top=0`);
-  // Resize our own window to the left half
-  try { window.resizeTo(w, screen.height); window.moveTo(0, 0); } catch(e) {}
-  // Activate review mode
+  siteWindow = window.open(url, '_blank');
   enterReviewMode();
 }
 
@@ -5269,6 +5681,36 @@ function hideScanToast() {
 async function runAutoScan() {
   const project = getActiveProject();
   if (!project) return;
+
+  // ── Figma projects → run Figma design checks instead ──
+  if (project.sourceType === 'figma') {
+    const btn = document.getElementById('btnAutoScan');
+    btn.classList.add('scanning');
+    btn.style.pointerEvents = 'none';
+    btn.style.opacity = '0.6';
+    try {
+      const autoFill = (qId, score, note) => {
+        const mappedId = (typeof LEGACY_ID_MAP !== 'undefined' && LEGACY_ID_MAP[qId]) ? LEGACY_ID_MAP[qId] : qId;
+        if (!project.answers[mappedId]) project.answers[mappedId] = {};
+        if (project.answers[mappedId].score && !project.answers[mappedId].autoScanned) return;
+        project.answers[mappedId].score = score;
+        project.answers[mappedId].notes = (project.answers[mappedId].notes ? project.answers[mappedId].notes + '\n' : '') + '[Auto-scan] ' + note;
+        project.answers[mappedId].autoScanned = true;
+      };
+      showScanToast('scanning', 'Figma design analyse…', 'Frames worden geanalyseerd');
+      const filled = await runFigmaDesignChecks(project, autoFill);
+      saveState();
+      renderStep(currentStep);
+      showScanToast('success', `Figma scan voltooid`, `${filled} checks automatisch ingevuld`, 4000);
+    } catch(e) {
+      console.error('[AutoScan] Figma error:', e);
+      showScanToast('error', 'Figma scan mislukt', e.message || 'Onbekende fout', 5000);
+    }
+    btn.classList.remove('scanning');
+    btn.style.pointerEvents = '';
+    btn.style.opacity = '';
+    return;
+  }
 
   // Use the current preview URL (what the user is actually looking at), fallback to project URL
   // Priority: scanUrlInput (review-mode) > urlInput (iframe-mode) > project.url

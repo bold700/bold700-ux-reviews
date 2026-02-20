@@ -14438,6 +14438,13 @@ const SUBCATEGORY_NAMES = {
     'freshness': { nl: 'Versheid & Actualiteit', en: 'Freshness & Currency' },
     'structure': { nl: 'Content Structuur', en: 'Content Structure' }
   },
+  'figma-design': {
+    'visual': { nl: 'Kleuren & Visueel', en: 'Colors & Visual' },
+    'typography': { nl: 'Typografie', en: 'Typography' },
+    'accessibility': { nl: 'Toegankelijkheid', en: 'Accessibility' },
+    'structure': { nl: 'Structuur & Components', en: 'Structure & Components' },
+    'responsive': { nl: 'Responsive & States', en: 'Responsive & States' }
+  },
   'security': {
     'ssl': { nl: 'SSL & HTTPS', en: 'SSL & HTTPS' },
     'headers': { nl: 'Security Headers', en: 'Security Headers' },
@@ -14495,22 +14502,43 @@ const SUBCATEGORY_NAMES = {
 function buildReviewSteps(moduleConfig) {
   const steps = [];
   let stepNum = 1;
-  
+
+  // Support include_checks filter from focused bundles
+  let activeModules = null;
+  let includeChecks = null;
+  if (moduleConfig && moduleConfig._modules) {
+    activeModules = moduleConfig._modules;
+    includeChecks = moduleConfig._includeChecks || null;
+    moduleConfig = null; // clear so the forEach logic below works
+  }
+
   MODULE_REGISTRY.modules.forEach(mod => {
-    const config = moduleConfig?.[mod.id];
-    if (config && !config.active) return;
-    if (!config && !mod.enabled_by_default) return;
-    
-    const checks = MODULE_CHECKS[mod.id] || [];
+    // If activeModules is set (from bundle), only show those modules
+    let config = null;
+    if (activeModules) {
+      if (!activeModules.includes(mod.id)) return;
+    } else {
+      config = moduleConfig?.[mod.id];
+      if (config && !config.active) return;
+      if (!config && !mod.enabled_by_default) return;
+    }
+
+    let checks = MODULE_CHECKS[mod.id] || [];
     if (checks.length === 0) return;
-    
+
+    // Filter to only included checks if specified
+    if (includeChecks) {
+      checks = checks.filter(c => includeChecks.includes(c.id));
+      if (checks.length === 0) return;
+    }
+
     const subcatGroups = {};
     checks.forEach(check => {
       const sc = check.subcategory;
       if (!subcatGroups[sc]) subcatGroups[sc] = [];
       subcatGroups[sc].push(check);
     });
-    
+
     let subcatOrder = mod.subcategories || Object.keys(subcatGroups);
     // Quick-scan: only show the subcategory matching the selected page type
     if (mod.id === 'quick-scan' && config?._pageType) {
@@ -14588,7 +14616,11 @@ function migrateLegacyAnswers(answers) {
 function getBundleConfig(bundleId) {
   const bundle = MODULE_REGISTRY.bundles[bundleId];
   if (!bundle) return getDefaultModuleConfig();
-  return bundle.modules;
+  // Always use _modules format so buildReviewSteps handles all bundle types consistently
+  return {
+    _modules: bundle.modules,
+    _includeChecks: bundle.include_checks || null
+  };
 }
 
 /**
@@ -14649,6 +14681,128 @@ function calculateOverallScore(moduleConfig, answers) {
   
   return totalWeight > 0 ? totalWeightedScore / totalWeight : 0;
 }
+
+// ═══════════════ FIGMA DESIGN MODULE ═══════════════
+MODULE_REGISTRY.modules.push({
+  id: 'figma-design',
+  name_nl: 'Design Systeem & Visueel',
+  name_en: 'Design System & Visual',
+  icon: 'figma',
+  color: '#a259ff',
+  enabled_by_default: false,
+  default_weight: 1.0,
+  subcategories: ['visual', 'typography', 'accessibility', 'structure', 'responsive']
+});
+
+MODULE_CHECKS['figma-design'] = [
+  // ── Subcategory: visual (Kleuren & Visueel) ──
+  { id: 'fig-color-consistency', module: 'figma-design', subcategory: 'visual', question_nl: 'Wordt er een beperkt, consistent kleurenpalet gebruikt?', question_en: 'Is a limited, consistent color palette used?', severity: 'high', type: 'auto', business_impact_nl: 'Inconsistente kleuren maken een onprofessionele indruk en verlagen vertrouwen.', fix_suggestion_nl: 'Definieer een kleurenpalet met max 6-8 kleuren en gebruik Figma color styles.', source: 'Design Systems best practices' },
+  { id: 'fig-images', module: 'figma-design', subcategory: 'visual', question_nl: 'Bevat het ontwerp echte afbeeldingen (geen placeholders)?', question_en: 'Does the design contain real images (not placeholders)?', severity: 'medium', type: 'auto', business_impact_nl: 'Designs met placeholders geven een onvolledig beeld van het eindresultaat.', fix_suggestion_nl: 'Gebruik echte content en afbeeldingen om een realistische beoordeling mogelijk te maken.', source: 'Content-first design' },
+  { id: 'fig-visual-hierarchy', module: 'figma-design', subcategory: 'visual', question_nl: 'Is er een duidelijke visuele hiërarchie? (heading > subheading > body)', question_en: 'Is there a clear visual hierarchy?', severity: 'critical', type: 'manual', business_impact_nl: 'Zonder hiërarchie weet de gebruiker niet waar te beginnen — conversie daalt.', fix_suggestion_nl: 'Maak het belangrijkste element het grootst/duidelijkst. Gebruik grootte, kleur en whitespace.', source: 'Gestalt principles' },
+  { id: 'fig-cta-clarity', module: 'figma-design', subcategory: 'visual', question_nl: 'Is de primaire CTA direct herkenbaar als klikbaar en opvallend?', question_en: 'Is the primary CTA clearly recognizable and prominent?', severity: 'critical', type: 'manual', business_impact_nl: 'Een onduidelijke CTA = gemiste conversies.', fix_suggestion_nl: 'Maak de CTA visueel dominant: contrasterende kleur, voldoende grootte, actiegericht label.', source: 'Conversion optimization' },
+  { id: 'fig-whitespace', module: 'figma-design', subcategory: 'visual', question_nl: 'Is er voldoende whitespace tussen secties en elementen?', question_en: 'Is there sufficient whitespace between sections and elements?', severity: 'high', type: 'manual', business_impact_nl: 'Te weinig whitespace maakt het ontwerp overweldigend en moeilijk te scannen.', fix_suggestion_nl: 'Gebruik minimaal 24px tussen gerelateerde elementen en 48-80px tussen secties.', source: 'Visual design principles' },
+  // ── Subcategory: typography (Typografie) ──
+  { id: 'fig-font-consistency', module: 'figma-design', subcategory: 'typography', question_nl: 'Worden er maximaal 2-3 font families gebruikt?', question_en: 'Are no more than 2-3 font families used?', severity: 'high', type: 'auto', business_impact_nl: 'Te veel fonts verlagen laadsnelheid en visuele coherentie.', fix_suggestion_nl: 'Kies 1 font voor headings en 1 voor body. Gebruik variaties in weight/size i.p.v. extra fonts.', source: 'Typography best practices' },
+  { id: 'fig-type-scale', module: 'figma-design', subcategory: 'typography', question_nl: 'Zijn font sizes gebaseerd op een consistent type scale systeem?', question_en: 'Are font sizes based on a consistent type scale system?', severity: 'medium', type: 'auto', business_impact_nl: 'Zonder type scale voelt het ontwerp rommelig en is het moeilijker te implementeren.', fix_suggestion_nl: 'Gebruik een type scale met 5-8 stappen, bijv. 12/14/16/20/24/32/48px.', source: 'Type Scale (typescale.com)' },
+  { id: 'fig-min-text-size', module: 'figma-design', subcategory: 'typography', question_nl: 'Is alle tekst minimaal 12px, en bodytekst minimaal 14px?', question_en: 'Is all text at least 12px, and body text at least 14px?', severity: 'critical', type: 'auto', business_impact_nl: 'Te kleine tekst is onleesbaar op mobiel en slecht voor accessibility.', fix_suggestion_nl: 'Minimaal 12px voor labels, 14-16px voor bodytekst. Test op echte devices.', source: 'WCAG 1.4.4' },
+  { id: 'fig-line-height', module: 'figma-design', subcategory: 'typography', question_nl: 'Heeft bodytekst voldoende regelafstand (≥1.4× font-size)?', question_en: 'Does body text have sufficient line-height (≥1.4× font-size)?', severity: 'high', type: 'auto', business_impact_nl: 'Krappe regelafstand maakt tekst moeilijk leesbaar, vooral op mobiel.', fix_suggestion_nl: 'Stel line-height in op 1.5× font-size voor bodytekst.', source: 'WCAG 1.4.12' },
+  { id: 'fig-text-alignment', module: 'figma-design', subcategory: 'typography', question_nl: 'Is text alignment consistent (max 2 types, geen justified)?', question_en: 'Is text alignment consistent (max 2 types, no justified)?', severity: 'medium', type: 'auto', business_impact_nl: 'Inconsistente alignment en justified tekst verlagen leesbaarheid.', fix_suggestion_nl: 'Gebruik max 2 alignment types (left + center). Vermijd justified.', source: 'Typography best practices' },
+  // ── Subcategory: accessibility (Toegankelijkheid) ──
+  { id: 'fig-contrast', module: 'figma-design', subcategory: 'accessibility', question_nl: 'Voldoen alle tekst-achtergrond combinaties aan WCAG AA contrast (4.5:1)?', question_en: 'Do all text-background combinations meet WCAG AA contrast (4.5:1)?', severity: 'critical', type: 'auto', business_impact_nl: 'Onvoldoende contrast maakt tekst onleesbaar voor 8% van mannen (kleurenblind) en ouderen.', fix_suggestion_nl: 'Gebruik de ingebouwde contrast checker. Minimaal 4.5:1 voor normaal tekst, 3:1 voor groot tekst.', source: 'WCAG 1.4.3' },
+  { id: 'fig-touch-targets', module: 'figma-design', subcategory: 'accessibility', question_nl: 'Zijn alle interactieve elementen minimaal 44×44px?', question_en: 'Are all interactive elements at least 44×44px?', severity: 'critical', type: 'auto', business_impact_nl: 'Te kleine touch targets leiden tot miskliks op mobiel — frustreert gebruikers.', fix_suggestion_nl: 'Maak alle knoppen, links en interactieve elementen minimaal 44×44px.', source: 'WCAG 2.5.5 / Apple HIG' },
+  { id: 'fig-interaction-states', module: 'figma-design', subcategory: 'accessibility', question_nl: 'Zijn hover, active, disabled en focus states uitgewerkt?', question_en: 'Are interaction states designed?', severity: 'high', type: 'manual', business_impact_nl: 'Ontbrekende states leiden tot inconsistente implementatie en slechte toegankelijkheid.', fix_suggestion_nl: 'Ontwerp minimaal: default, hover, active/pressed, disabled en focus state.', source: 'Interaction design / WCAG 2.4.7' },
+  // ── Subcategory: structure (Structuur & Components) ──
+  { id: 'fig-spacing-grid', module: 'figma-design', subcategory: 'structure', question_nl: 'Is spacing gebaseerd op een consistent grid (4px of 8px base)?', question_en: 'Is spacing based on a consistent grid (4px or 8px base)?', severity: 'medium', type: 'auto', business_impact_nl: 'Inconsistente spacing maakt het ontwerp rommelig en moeilijker te implementeren.', fix_suggestion_nl: 'Gebruik een 4px of 8px spacing grid. Definieer spacing tokens: 4/8/12/16/24/32/48px.', source: 'Design Systems best practices' },
+  { id: 'fig-component-reuse', module: 'figma-design', subcategory: 'structure', question_nl: 'Worden herbruikbare components (instances) voldoende gebruikt?', question_en: 'Are reusable components (instances) used sufficiently?', severity: 'high', type: 'auto', business_impact_nl: 'Zonder components is het ontwerp inconsistent en kostbaar om te onderhouden.', fix_suggestion_nl: 'Maak herhalende elementen tot Figma components. Streef naar >30% instance gebruik.', source: 'Figma best practices' },
+  { id: 'fig-auto-layout', module: 'figma-design', subcategory: 'structure', question_nl: 'Gebruiken de meeste frames auto-layout?', question_en: 'Do most frames use auto-layout?', severity: 'medium', type: 'auto', business_impact_nl: 'Zonder auto-layout is het design niet responsive en de developer handoff slechter.', fix_suggestion_nl: 'Gebruik auto-layout op alle frames die in development responsive moeten zijn.', source: 'Figma best practices' },
+  { id: 'fig-naming-layers', module: 'figma-design', subcategory: 'structure', question_nl: 'Zijn layers en frames duidelijk benoemd (geen "Frame 248")?', question_en: 'Are layers and frames clearly named?', severity: 'medium', type: 'manual', business_impact_nl: 'Slechte naamgeving maakt samenwerking met developers lastig.', fix_suggestion_nl: 'Geef alle top-level frames en key components beschrijvende namen.', source: 'Figma best practices' },
+  // ── Subcategory: responsive (Responsive & States) ──
+  { id: 'fig-responsive', module: 'figma-design', subcategory: 'responsive', question_nl: 'Is er een mobiel ontwerp aanwezig naast desktop?', question_en: 'Is there a mobile design alongside desktop?', severity: 'high', type: 'manual', business_impact_nl: '60%+ van het webverkeer is mobiel. Zonder mobiel ontwerp wordt dit overgeslagen.', fix_suggestion_nl: 'Ontwerp mobile-first of maak tenminste een responsive variant voor de belangrijkste schermen.', source: 'Responsive design' },
+  { id: 'fig-empty-states', module: 'figma-design', subcategory: 'responsive', question_nl: 'Zijn lege states en error states ontworpen?', question_en: 'Are empty states and error states designed?', severity: 'medium', type: 'manual', business_impact_nl: 'Lege states zijn vaak het eerste wat een nieuwe gebruiker ziet.', fix_suggestion_nl: 'Ontwerp: lege lijsten, geen zoekresultaten, formulierfouten, 404, offline state.', source: 'UX best practices' }
+];
+
+MODULE_REGISTRY.bundles['qs-figma-general'] = {
+  id: 'qs-figma-general',
+  name_nl: 'Figma Design Quick Scan',
+  name_en: 'Figma Design Quick Scan',
+  icon_lucide: 'figma',
+  is_quick_scan: true,
+  source_type: 'figma',
+  estimated_duration_nl: '10-15 min',
+  estimated_duration_en: '10-15 min',
+  modules: ['figma-design'],
+  description_nl: 'Automatische analyse van kleuren, typografie, spacing, components en accessibility in je Figma design.'
+};
+
+MODULE_REGISTRY.bundles['qs-figma-accessibility'] = {
+  id: 'qs-figma-accessibility',
+  name_nl: 'Figma Accessibility Scan',
+  name_en: 'Figma Accessibility Scan',
+  icon_lucide: 'eye',
+  is_quick_scan: true,
+  source_type: 'figma',
+  estimated_duration_nl: '8-12 min',
+  estimated_duration_en: '8-12 min',
+  modules: ['figma-design'],
+  include_checks: ['fig-contrast', 'fig-min-text-size', 'fig-touch-targets', 'fig-line-height', 'fig-visual-hierarchy', 'fig-interaction-states'],
+  description_nl: 'Focus op WCAG contrast, leesbaarheid, touch targets en interaction states.'
+};
+
+MODULE_REGISTRY.bundles['qs-figma-typography'] = {
+  id: 'qs-figma-typography',
+  name_nl: 'Figma Typografie Scan',
+  name_en: 'Figma Typography Scan',
+  icon_lucide: 'type',
+  is_quick_scan: true,
+  source_type: 'figma',
+  estimated_duration_nl: '5-10 min',
+  estimated_duration_en: '5-10 min',
+  modules: ['figma-design'],
+  include_checks: ['fig-font-consistency', 'fig-type-scale', 'fig-min-text-size', 'fig-line-height', 'fig-text-alignment', 'fig-visual-hierarchy'],
+  description_nl: 'Analyse van fonts, type scale, regelafstand, alignment en visuele hiërarchie.'
+};
+
+MODULE_REGISTRY.bundles['qs-figma-designsystem'] = {
+  id: 'qs-figma-designsystem',
+  name_nl: 'Figma Design System Scan',
+  name_en: 'Figma Design System Scan',
+  icon_lucide: 'layers',
+  is_quick_scan: true,
+  source_type: 'figma',
+  estimated_duration_nl: '8-12 min',
+  estimated_duration_en: '8-12 min',
+  modules: ['figma-design'],
+  include_checks: ['fig-color-consistency', 'fig-font-consistency', 'fig-spacing-grid', 'fig-component-reuse', 'fig-auto-layout', 'fig-naming-layers'],
+  description_nl: 'Check op kleurenpalet, components hergebruik, spacing grid, auto-layout en naamgeving.'
+};
+
+MODULE_REGISTRY.bundles['qs-figma-landing'] = {
+  id: 'qs-figma-landing',
+  name_nl: 'Figma Landing Page Scan',
+  name_en: 'Figma Landing Page Scan',
+  icon_lucide: 'layout-template',
+  is_quick_scan: true,
+  source_type: 'figma',
+  estimated_duration_nl: '10-15 min',
+  estimated_duration_en: '10-15 min',
+  modules: ['figma-design'],
+  include_checks: ['fig-visual-hierarchy', 'fig-cta-clarity', 'fig-whitespace', 'fig-contrast', 'fig-responsive', 'fig-color-consistency', 'fig-font-consistency', 'fig-touch-targets', 'fig-images'],
+  description_nl: 'Conversie-gerichte scan: CTA, hiërarchie, whitespace, responsive en visuele impact.'
+};
+
+MODULE_REGISTRY.bundles['qs-figma-mobile'] = {
+  id: 'qs-figma-mobile',
+  name_nl: 'Figma Mobile App Scan',
+  name_en: 'Figma Mobile App Scan',
+  icon_lucide: 'smartphone',
+  is_quick_scan: true,
+  source_type: 'figma',
+  estimated_duration_nl: '10-15 min',
+  estimated_duration_en: '10-15 min',
+  modules: ['figma-design'],
+  include_checks: ['fig-touch-targets', 'fig-min-text-size', 'fig-contrast', 'fig-spacing-grid', 'fig-component-reuse', 'fig-auto-layout', 'fig-interaction-states', 'fig-empty-states', 'fig-naming-layers'],
+  description_nl: 'Mobile-specifiek: touch targets, leesbare tekst, spacing, interaction states en empty states.'
+};
 
 // ═══════════════ EXPORT FOR NODE/COMMONJS ═══════════════
 if (typeof module !== 'undefined' && module.exports) {
