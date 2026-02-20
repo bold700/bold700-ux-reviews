@@ -527,6 +527,32 @@
 
   .np-card h2 { font-size: 22px; font-weight: 700; text-align: center; margin-bottom: 24px; }
 
+  /* Template grid for quick scan selection */
+  .template-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 8px; margin: 6px 0;
+  }
+  .template-card {
+    padding: 10px 6px; border: 2px solid var(--border);
+    border-radius: var(--radius); cursor: pointer;
+    text-align: center; transition: all 0.15s;
+    background: var(--surface2);
+  }
+  .template-card:hover { border-color: var(--accent); background: rgba(255,107,0,0.04); }
+  .template-card.selected { border-color: var(--accent); background: rgba(255,107,0,0.08); }
+  .template-card-icon { margin-bottom: 3px; color: var(--text-muted); }
+  .template-card.selected .template-card-icon { color: var(--accent); }
+  .template-card-name { font-size: 11px; font-weight: 600; line-height: 1.2; color: var(--text); }
+  .template-card-meta { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+  .template-card.selected .template-card-name { color: var(--accent); }
+  .btn-detect {
+    background: var(--surface2); border: 1px solid var(--border); color: var(--text-muted);
+    padding: 6px 12px; border-radius: var(--radius); font-size: 11px; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 4px; transition: all 0.15s;
+  }
+  .btn-detect:hover { border-color: var(--accent); color: var(--accent); }
+
   .form-group { text-align: left; margin-bottom: 16px; }
   .form-group label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--text-muted); }
 
@@ -1609,12 +1635,24 @@
 
     <div class="form-group">
       <label>Website URL *</label>
-      <input type="url" id="npUrl" class="form-input" placeholder="https://jouwwebsite.nl">
+      <input type="url" id="npUrl" class="form-input" placeholder="https://jouwwebsite.nl" oninput="onNpUrlChange()">
     </div>
 
     <div class="form-group">
       <label>Projectnaam *</label>
       <input type="text" id="npName" class="form-input" placeholder="bijv. Webshop Review">
+    </div>
+
+    <!-- Page-type template selection -->
+    <div class="form-group" id="npTemplateGroup">
+      <label>Pagina-type <span style="font-weight:400;color:var(--text-muted);font-size:11px">— kies een quick scan of start een volledige audit</span></label>
+      <div class="template-grid" id="templateGrid"></div>
+      <div id="autoDetectRow" style="display:none;margin-top:6px">
+        <button class="btn-detect" id="btnDetectType" onclick="detectPageType()">
+          <i data-lucide="search" style="width:12px;height:12px"></i> Auto-detecteer pagina-type
+        </button>
+        <span id="detectResult" style="font-size:11px;color:var(--text-muted);margin-left:8px"></span>
+      </div>
     </div>
 
     <!-- Mode selection: available to all users -->
@@ -2480,12 +2518,17 @@ async function getScreenshotFromStorage(projectId, questionId) {
 
 function calcProjectScore(project) {
   const ans = project.answers || {};
-  const totalQ = reviewSteps.reduce((s, st) => s + st.questions.length, 0);
-  const nvtCount = Object.values(ans).filter(a => a.score === 'nvt').length;
-  const scored = Object.values(ans).filter(a => a.score && a.score !== 'nvt');
+  // Build steps for this specific project's module config
+  const config = project.moduleConfig || (typeof getDefaultModuleConfig === 'function' ? getDefaultModuleConfig() : null);
+  const projSteps = (typeof buildReviewSteps === 'function' && config) ? buildReviewSteps(config) : reviewSteps;
+  const totalQ = projSteps.reduce((s, st) => s + st.questions.length, 0);
+  // Only count answers that belong to this project's steps
+  const stepQIds = new Set(projSteps.flatMap(s => s.questions.map(q => q.id)));
+  const relevantAns = Object.entries(ans).filter(([id]) => stepQIds.has(id)).map(([, a]) => a);
+  const nvtCount = relevantAns.filter(a => a.score === 'nvt').length;
+  const scored = relevantAns.filter(a => a.score && a.score !== 'nvt');
   const effectiveTotal = totalQ - nvtCount;
   if (effectiveTotal === 0) return { avg: 0, answered: 0, total: totalQ, effectiveTotal: 0, nvt: nvtCount };
-  // Unanswered questions count as 0 — only scored questions contribute points
   const sum = scored.reduce((s, a) => s + (a.score === 'good' ? 10 : a.score === 'ok' ? 6 : 3), 0);
   const avg = sum / effectiveTotal;
   return { avg, answered: scored.length, total: totalQ, effectiveTotal, nvt: nvtCount };
@@ -2548,7 +2591,7 @@ function loadMoreProjects() {
 
 function renderProjectCard(p) {
   const score = calcProjectScore(p) || { answered: 0, total: 1, avg: 0, nvt: 0 };
-  const pct = Math.round((score.answered / score.total) * 100);
+  const pct = Math.min(Math.round((score.answered / score.total) * 100), 100);
   const scoreClass = score.avg >= 7.5 ? 'good' : score.avg >= 5 ? 'ok' : score.avg > 0 ? 'bad' : 'na';
   const pkgLabels = { quick: 'Quick Scan', deep: 'Deep Review', full: 'Full Audit' };
   const isProfessional = p.mode === 'professional';
@@ -2602,7 +2645,12 @@ function renderProjectCard(p) {
         <div class="pc-score-num ${scoreClass}">${score.avg > 0 ? score.avg.toFixed(1) : '—'}</div>
       </div>` : ''}
       <div class="pc-footer">
-        <span class="pc-package">${isProfessional ? pkgLabels[p.package] || 'Professional' : 'Self-Service'}</span>
+        <span class="pc-package">${(() => {
+          const tpl = p.selectedTemplate;
+          const b = tpl && typeof MODULE_REGISTRY !== 'undefined' ? MODULE_REGISTRY.bundles[tpl] : null;
+          if (b) return `<i data-lucide="${b.icon_lucide}" style="width:11px;height:11px"></i> ${b.name_nl.replace(' Quick Scan','')}`;
+          return isProfessional ? pkgLabels[p.package] || 'Professional' : 'Volledige Audit';
+        })()}</span>
         <span>${new Date(p.createdAt).toLocaleDateString('nl-NL')}</span>
       </div>
     </div>
@@ -2637,7 +2685,7 @@ function showDomainReviews(domain) {
   let rows = '';
   domainProjects.forEach(p => {
     const score = calcProjectScore(p) || { answered: 0, total: 1, avg: 0, nvt: 0 };
-    const pct = Math.round((score.answered / score.total) * 100);
+    const pct = Math.min(Math.round((score.answered / score.total) * 100), 100);
     const scoreClass = score.avg >= 7.5 ? 'good' : score.avg >= 5 ? 'ok' : score.avg > 0 ? 'bad' : 'na';
     const isPro = p.mode === 'professional';
     const auditSt = p.auditStatus || (isPro ? 'pending' : null);
@@ -2646,13 +2694,19 @@ function showDomainReviews(domain) {
     const pkgLabels = { quick: 'Quick', deep: 'Deep', full: 'Full' };
     const userEmail = isAdmin ? getUserEmail(p.userId) : '';
 
+    // Determine template/scan type label
+    const tplId = p.selectedTemplate;
+    const tplBundle = tplId && typeof MODULE_REGISTRY !== 'undefined' ? MODULE_REGISTRY.bundles[tplId] : null;
+    const tplLabel = tplBundle ? tplBundle.name_nl.replace(' Quick Scan','') : (isPro ? pkgLabels[p.package] || 'Pro' : 'Volledige Audit');
+    const tplIcon = tplBundle ? tplBundle.icon_lucide : (isPro ? 'briefcase' : 'layout-grid');
+
     rows += `
       <tr class="domain-review-row ${canOpen ? 'clickable' : ''}" ${canOpen ? `onclick="document.querySelector('.domain-modal-overlay').remove();openProject('${p.id}')"` : ''}>
         <td><strong>${p.name}</strong>${p.client ? `<br><span style="color:var(--text-muted);font-size:11px">${p.client}</span>` : ''}</td>
         ${isAdmin ? `<td style="font-size:11px">${userEmail}</td>` : ''}
         <td><span class="pc-badge ${pct === 100 ? 'completed' : pct > 0 ? 'in-progress' : 'not-started'}" style="font-size:11px">${isPro ? (auditSt || 'pending') : status}</span></td>
         <td><span class="pc-score-num ${scoreClass}" style="font-size:13px;font-weight:700">${score.avg > 0 ? score.avg.toFixed(1) : '—'}</span></td>
-        <td style="font-size:11px;color:var(--text-muted)">${isPro ? pkgLabels[p.package] || 'Pro' : 'Self'}</td>
+        <td style="font-size:11px;color:var(--text-muted)"><span style="display:inline-flex;align-items:center;gap:3px"><i data-lucide="${tplIcon}" style="width:12px;height:12px"></i> ${tplLabel}</span></td>
         <td style="font-size:11px;color:var(--text-muted)">${new Date(p.createdAt).toLocaleDateString('nl-NL')}</td>
         <td>
           <button class="btn-icon-sm" onclick="event.stopPropagation();document.querySelector('.domain-modal-overlay').remove();deleteProject('${p.id}')" title="Verwijder">
@@ -2684,7 +2738,7 @@ function showDomainReviews(domain) {
               ${isAdmin ? '<th>Gebruiker</th>' : ''}
               <th>Status</th>
               <th>Score</th>
-              <th>Type</th>
+              <th>Scan Type</th>
               <th>Datum</th>
               <th></th>
             </tr>
@@ -2795,6 +2849,23 @@ function renderProjectCards() {
               <span style="font-size:16px;font-weight:700">${totalReviews - completedCount}</span>
               <span style="font-size:10px;color:var(--text-muted)">actief</span>
             </div>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:8px">
+            ${(() => {
+              const typeCounts = {};
+              domainProjects.forEach(p => {
+                const tplId = p.selectedTemplate;
+                const b = tplId && typeof MODULE_REGISTRY !== 'undefined' ? MODULE_REGISTRY.bundles[tplId] : null;
+                const label = b ? b.name_nl.replace(' Quick Scan','') : 'Volledige Audit';
+                const icon = b ? b.icon_lucide : 'layout-grid';
+                const key = label;
+                if (!typeCounts[key]) typeCounts[key] = { count: 0, icon };
+                typeCounts[key].count++;
+              });
+              return Object.entries(typeCounts).map(([label, {count, icon}]) =>
+                `<span style="font-size:10px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:2px 8px;display:inline-flex;align-items:center;gap:3px"><i data-lucide="${icon}" style="width:10px;height:10px"></i>${label}${count > 1 ? ' ×' + count : ''}</span>`
+              ).join('');
+            })()}
           </div>
           <div class="pc-footer">
             <span style="font-size:11px;color:var(--text-muted)">Laatste: ${latestDate}</span>
@@ -3645,7 +3716,7 @@ function renderAuditorDashboard() {
   if (myOwnProjects.length > 0) {
     myOwnProjects.slice().reverse().forEach(p => {
       const score = calcProjectScore(p) || { answered: 0, total: 1, avg: 0, nvt: 0 };
-      const pct = Math.round((score.answered / score.total) * 100);
+      const pct = Math.min(Math.round((score.answered / score.total) * 100), 100);
       const scoreClass = score.avg >= 7.5 ? 'good' : score.avg >= 5 ? 'ok' : score.avg > 0 ? 'bad' : 'na';
       const status = pct === 100 ? 'completed' : pct > 0 ? 'in-progress' : 'not-started';
       const statusLabel = pct === 100 ? 'Afgerond' : pct > 0 ? `${pct}% klaar` : 'Niet gestart';
@@ -3703,16 +3774,144 @@ async function deleteProject(id) {
 }
 
 // ═══════════════ NEW PROJECT ═══════════════
+let selectedTemplate = null;
+
 function showNewProject() {
   document.getElementById('dashboardScreen').classList.add('hidden');
   document.getElementById('newProjectScreen').classList.remove('hidden');
   newProjectMode = 'self-service';
+  selectedTemplate = null;
   // Mode fields are now visible to everyone
   const modeFields = document.getElementById('npModeFields');
   if (modeFields) modeFields.classList.remove('hidden');
   // Reset mode selection visual
   document.querySelectorAll('.mode-option').forEach((e, i) => e.classList.toggle('selected', i === 0));
   updateNewProjectForm();
+  renderTemplateSelector();
+}
+
+function renderTemplateSelector() {
+  const grid = document.getElementById('templateGrid');
+  if (!grid || typeof MODULE_REGISTRY === 'undefined') return;
+  const bundles = Object.entries(MODULE_REGISTRY.bundles).filter(([id, b]) => b.is_quick_scan);
+
+  let html = `<div class="template-card ${!selectedTemplate ? 'selected' : ''}" onclick="selectTemplate(null)">
+    <div class="template-card-icon"><i data-lucide="layout-grid" style="width:20px;height:20px"></i></div>
+    <div class="template-card-name">Volledige Audit</div>
+    <div class="template-card-meta">Alle modules</div>
+  </div>`;
+
+  bundles.forEach(([id, b]) => {
+    html += `<div class="template-card ${selectedTemplate === id ? 'selected' : ''}" id="tc-${id}" onclick="selectTemplate('${id}')">
+      <div class="template-card-icon"><i data-lucide="${b.icon_lucide}" style="width:20px;height:20px"></i></div>
+      <div class="template-card-name">${b.name_nl.replace(' Quick Scan','')}</div>
+      <div class="template-card-meta">${b.estimated_duration_nl}</div>
+    </div>`;
+  });
+  grid.innerHTML = html;
+  if (typeof lucide !== 'undefined') lucide.createIcons({ nodes: [grid] });
+}
+
+function selectTemplate(bundleId) {
+  selectedTemplate = bundleId;
+  document.querySelectorAll('.template-card').forEach(c => c.classList.remove('selected'));
+  if (bundleId) {
+    const el = document.getElementById('tc-' + bundleId);
+    if (el) el.classList.add('selected');
+  } else {
+    const first = document.querySelector('.template-card');
+    if (first) first.classList.add('selected');
+  }
+}
+
+function onNpUrlChange() {
+  const url = document.getElementById('npUrl').value.trim();
+  const row = document.getElementById('autoDetectRow');
+  if (row) row.style.display = url.length > 5 ? 'flex' : 'none';
+}
+
+async function detectPageType() {
+  const url = document.getElementById('npUrl').value.trim();
+  if (!url) return;
+  const resultEl = document.getElementById('detectResult');
+  const btn = document.getElementById('btnDetectType');
+  btn.disabled = true;
+  if (resultEl) resultEl.textContent = 'Analyseren...';
+
+  let finalUrl = url;
+  if (!url.startsWith('http')) finalUrl = 'https://' + url;
+
+  try {
+    const pageData = await getPageDocument(finalUrl);
+    if (!pageData || !pageData.doc) {
+      if (resultEl) resultEl.textContent = 'Kon pagina niet ophalen';
+      btn.disabled = false;
+      return;
+    }
+    const doc = pageData.doc;
+    const pathname = new URL(finalUrl).pathname.toLowerCase();
+    const scores = {};
+
+    // Schema.org signal (+40%)
+    try {
+      const jsonLd = doc.querySelectorAll('script[type="application/ld+json"]');
+      jsonLd.forEach(el => {
+        try {
+          const d = JSON.parse(el.textContent);
+          const t = (d['@type'] || '').toLowerCase();
+          if (t === 'product') scores['qs-product'] = (scores['qs-product']||0) + 40;
+          if (t === 'blogposting' || t === 'article' || t === 'newsarticle') scores['qs-blog'] = (scores['qs-blog']||0) + 40;
+          if (t === 'faqpage') scores['qs-pricing'] = (scores['qs-pricing']||0) + 20;
+          if (t === 'contactpage') scores['qs-contact'] = (scores['qs-contact']||0) + 40;
+          if (t === 'aboutpage') scores['qs-about'] = (scores['qs-about']||0) + 40;
+        } catch(e) {}
+      });
+    } catch(e) {}
+
+    // URL pattern signal (+25%)
+    if (pathname === '/' || pathname === '/home' || pathname === '/index.html') scores['qs-homepage'] = (scores['qs-homepage']||0) + 25;
+    if (/\/(product|products|item|shop\/|p\/)/.test(pathname)) scores['qs-product'] = (scores['qs-product']||0) + 25;
+    if (/\/(checkout|cart|basket|order)/.test(pathname)) scores['qs-checkout'] = (scores['qs-checkout']||0) + 25;
+    if (/\/(pricing|plans|packages)/.test(pathname)) scores['qs-pricing'] = (scores['qs-pricing']||0) + 25;
+    if (/\/(blog|post|article|news)/.test(pathname) || /\/\d{4}\/\d{2}\//.test(pathname)) scores['qs-blog'] = (scores['qs-blog']||0) + 25;
+    if (/\/(about|about-us|team|over-ons)/.test(pathname)) scores['qs-about'] = (scores['qs-about']||0) + 25;
+    if (/\/(contact|contact-us|kontakt)/.test(pathname)) scores['qs-contact'] = (scores['qs-contact']||0) + 25;
+    if (/\/(lp|landing)/.test(pathname) || finalUrl.includes('utm_')) scores['qs-landing'] = (scores['qs-landing']||0) + 25;
+    if (/\/(launch|coming-soon|waitlist|early-access)/.test(pathname)) scores['qs-launch'] = (scores['qs-launch']||0) + 25;
+    if (/\/(onboarding|welcome|get-started|signup)/.test(pathname)) scores['qs-onboarding'] = (scores['qs-onboarding']||0) + 25;
+
+    // DOM signal (+25%)
+    const addToCart = doc.querySelector('[class*="add-to-cart"], [class*="addtocart"], button[name="add"], [data-action="add-to-cart"]');
+    if (addToCart) scores['qs-product'] = (scores['qs-product']||0) + 25;
+    const priceEl = doc.querySelector('[class*="price"], [itemprop="price"]');
+    if (priceEl && addToCart) scores['qs-product'] = (scores['qs-product']||0) + 10;
+    const checkoutForm = doc.querySelector('input[autocomplete="cc-number"], [class*="checkout"], [class*="payment-form"]');
+    if (checkoutForm) scores['qs-checkout'] = (scores['qs-checkout']||0) + 25;
+    const pricingTable = doc.querySelector('[class*="pricing"], [class*="plan-"], [class*="tier"]');
+    if (pricingTable) scores['qs-pricing'] = (scores['qs-pricing']||0) + 25;
+    const articleEl = doc.querySelector('article, [class*="blog-post"], [class*="article-body"]');
+    const timeEl = doc.querySelector('time[datetime], [class*="publish-date"]');
+    if (articleEl && timeEl) scores['qs-blog'] = (scores['qs-blog']||0) + 25;
+    const contactForm = doc.querySelector('form[action*="contact"], form[class*="contact"]');
+    const phoneLink = doc.querySelector('a[href^="tel:"]');
+    if (contactForm || phoneLink) scores['qs-contact'] = (scores['qs-contact']||0) + 15;
+
+    // Find best match
+    const entries = Object.entries(scores).sort((a, b) => b[1] - a[1]);
+    if (entries.length > 0 && entries[0][1] >= 25) {
+      const bestId = entries[0][0];
+      const conf = Math.min(entries[0][1], 100);
+      selectTemplate(bestId);
+      const bundle = MODULE_REGISTRY.bundles[bestId];
+      if (resultEl) resultEl.textContent = `${bundle.name_nl.replace(' Quick Scan','')} gedetecteerd (${conf}% zeker)`;
+    } else {
+      if (resultEl) resultEl.textContent = 'Kon pagina-type niet bepalen — selecteer handmatig';
+    }
+  } catch(e) {
+    console.warn('[AutoDetect]', e);
+    if (resultEl) resultEl.textContent = 'Fout bij detectie';
+  }
+  btn.disabled = false;
 }
 
 function selectMode(mode, el) {
@@ -3766,7 +3965,10 @@ function createProject() {
     userId: currentUser ? currentUser.uid : null,
     leadEmail: currentUser ? currentUser.email : '',
     answers: {}, currentStep: 0, createdAt: new Date().toISOString(),
-    moduleConfig: typeof getDefaultModuleConfig === 'function' ? getDefaultModuleConfig() : null
+    selectedTemplate: selectedTemplate || null,
+    moduleConfig: selectedTemplate && typeof getBundleConfig === 'function'
+      ? getBundleConfig(selectedTemplate)
+      : (typeof getDefaultModuleConfig === 'function' ? getDefaultModuleConfig() : null)
   };
 
   // Professional mode → add audit workflow fields
@@ -3942,7 +4144,14 @@ function openProject(id) {
   document.getElementById('newProjectScreen').classList.add('hidden');
   document.getElementById('reviewScreen').classList.remove('hidden');
   const pnEl = document.getElementById('topbarProjectName');
-  if (pnEl) pnEl.textContent = '| ' + project.name;
+  if (pnEl) {
+    let label = '| ' + project.name;
+    if (project.selectedTemplate && typeof MODULE_REGISTRY !== 'undefined') {
+      const bundle = MODULE_REGISTRY.bundles[project.selectedTemplate];
+      if (bundle) label += ` — ${bundle.name_nl.replace(' Quick Scan','')} Quick Scan`;
+    }
+    pnEl.textContent = label;
+  }
   document.getElementById('urlInput').value = project.url;
 
   buildStepper();
@@ -4180,10 +4389,11 @@ function switchDevice(device, btn) {
 function buildStepper() {
   const answers = getAnswers();
   const stepper = document.getElementById('stepStepper');
-  // Progress at top of stepper
+  // Progress at top of stepper — only count answers matching current step questions
   const totalQ = reviewSteps.reduce((sum, s) => sum + s.questions.length, 0);
-  const answeredQ = Object.values(answers).filter(a => a.score).length;
-  const pct = totalQ > 0 ? Math.round((answeredQ / totalQ) * 100) : 0;
+  const stepQIds = new Set(reviewSteps.flatMap(s => s.questions.map(q => q.id)));
+  const answeredQ = Object.entries(answers).filter(([id, a]) => a.score && stepQIds.has(id)).length;
+  const pct = totalQ > 0 ? Math.min(Math.round((answeredQ / totalQ) * 100), 100) : 0;
   const progressColor = pct === 100 ? 'var(--green)' : 'var(--accent)';
 
   stepper.innerHTML = `
@@ -4741,8 +4951,9 @@ function showLightbox(qId, idx) {
 function updateProgress() {
   const answers = getAnswers();
   const total = reviewSteps.reduce((sum, s) => sum + s.questions.length, 0);
-  const answered = Object.values(answers).filter(a => a.score).length;
-  const pct = total > 0 ? Math.round((answered / total) * 100) : 0;
+  const stepQIds = new Set(reviewSteps.flatMap(s => s.questions.map(q => q.id)));
+  const answered = Object.entries(answers).filter(([id, a]) => a.score && stepQIds.has(id)).length;
+  const pct = total > 0 ? Math.min(Math.round((answered / total) * 100), 100) : 0;
   const progressColor = pct === 100 ? 'var(--green)' : 'var(--accent)';
   const pctEl = document.getElementById('progressPct');
   if (pctEl) { pctEl.textContent = pct + '%'; pctEl.style.color = progressColor; }
@@ -4832,7 +5043,11 @@ async function runAutoScan() {
   try {
     const pageData = await getPageDocument(url);
     if (pageData) {
+      console.log('[AutoScan] Pagina opgehaald via:', pageData.source, '— start DOM checks');
       domFilled = await runDomChecks(pageData, answers, autoFill);
+      console.log('[AutoScan] DOM checks klaar:', domFilled, 'velden ingevuld');
+    } else {
+      console.warn('[AutoScan] Geen pagina data — DOM checks overgeslagen!');
     }
   } catch(e) { console.warn('DOM checks error:', e); }
 
@@ -5170,10 +5385,13 @@ async function runAutoScan() {
   }
 
   // ── Show results in toast ──
-  const totalFilled = Object.values(answers).filter(a => a.autoScanned).length;
+  // For quick-scan: only count auto-filled answers matching current reviewSteps questions
+  const stepQIds = new Set(reviewSteps.flatMap(s => s.questions.map(q => q.id)));
+  const totalFilled = Object.entries(answers).filter(([id, a]) => a.autoScanned && stepQIds.has(id)).length;
+  const totalFilledAll = Object.values(answers).filter(a => a.autoScanned).length;
   showScanToast('success',
     `${totalFilled} vragen automatisch ingevuld`,
-    `${domFilled} via DOM analyse${psiFilled > 0 ? ` · ${psiFilled} via PageSpeed` : ''}`,
+    `${totalFilledAll > totalFilled ? totalFilled + ' relevant voor deze scan · ' : ''}${domFilled} via DOM analyse${psiFilled > 0 ? ` · ${psiFilled} via PageSpeed` : ''}`,
     4000
   );
 
@@ -5190,9 +5408,10 @@ async function getPageDocument(url) {
     const frame = document.getElementById('previewFrame');
     if (frame && frame.contentDocument && frame.contentDocument.body) {
       const test = frame.contentDocument.title; // throws if cross-origin
+      console.log('[AutoScan] Bron: iframe (same-origin)');
       return { doc: frame.contentDocument, source: 'iframe', css: true };
     }
-  } catch(e) { /* cross-origin */ }
+  } catch(e) { console.log('[AutoScan] iframe cross-origin, probeer fetch…'); }
 
   // Try 2: fetch + DOMParser (cross-origin fallback)
   try {
@@ -5201,8 +5420,9 @@ async function getPageDocument(url) {
     const html = await resp.text();
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, 'text/html');
+    console.log('[AutoScan] Bron: directe fetch (' + html.length + ' bytes)');
     return { doc, source: 'fetch', css: false };
-  } catch(e) { /* CORS blocked */ }
+  } catch(e) { console.log('[AutoScan] Directe fetch faalde: ' + e.message + ', probeer worker proxy…'); }
 
   // Try 3: Cloudflare Worker proxy (works from file:// and any origin)
   try {
@@ -5214,9 +5434,12 @@ async function getPageDocument(url) {
       const html = await resp.text();
       const parser = new DOMParser();
       const doc = parser.parseFromString(html, 'text/html');
+      console.log('[AutoScan] Bron: worker proxy (' + html.length + ' bytes)');
       return { doc, source: 'worker-proxy', css: false };
+    } else {
+      console.log('[AutoScan] Geen worker proxy URL geconfigureerd');
     }
-  } catch(e) { console.warn('[AutoScan] Worker proxy failed:', e.message); }
+  } catch(e) { console.warn('[AutoScan] Worker proxy faalde:', e.message); }
 
   // Try 4: allorigins fallback
   try {
@@ -5226,9 +5449,11 @@ async function getPageDocument(url) {
     const html = await resp.text();
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, 'text/html');
+    console.log('[AutoScan] Bron: allorigins proxy (' + html.length + ' bytes)');
     return { doc, source: 'proxy', css: false };
-  } catch(e) { /* proxy failed too */ }
+  } catch(e) { console.warn('[AutoScan] Allorigins proxy faalde:', e.message); }
 
+  console.error('[AutoScan] GEEN bron beschikbaar — pagina kon niet opgehaald worden voor URL:', url);
   return null;
 }
 
@@ -7184,7 +7409,505 @@ async function runDomChecks(pageData, answers, autoFill) {
     }
   } catch(e) {}
 
+  // ═══════════════ QUICK-SCAN TEMPLATE AUTO-CHECKS ═══════════════
+  const project = getActiveProject ? getActiveProject() : null;
+  const tpl = project?.selectedTemplate;
+  if (tpl) {
+    try { filled += runQuickScanAutoChecks(doc, tpl, autoFill); } catch(e) { console.warn('[QS AutoCheck]', e); }
+  }
+
   return filled;
+}
+
+function runQuickScanAutoChecks(doc, template, autoFill) {
+  let f = 0;
+  const allLinks = Array.from(doc.querySelectorAll('a'));
+  const allBtns = Array.from(doc.querySelectorAll('button, [role="button"], input[type="submit"]'));
+  const allForms = Array.from(doc.querySelectorAll('form'));
+  const allImgs = Array.from(doc.querySelectorAll('img'));
+  const allInputs = Array.from(doc.querySelectorAll('input, textarea, select'));
+  const headings = Array.from(doc.querySelectorAll('h1,h2,h3,h4,h5,h6'));
+
+  // ── LANDING PAGE auto-checks ──
+  if (template === 'qs-landing') {
+    // qs-lp-002: Single CTA focus
+    const ctaBtns = allBtns.filter(b => {
+      const t = (b.textContent || '').toLowerCase();
+      return t.includes('start') || t.includes('probeer') || t.includes('aanmeld') || t.includes('sign up') || t.includes('get') || t.includes('download') || t.includes('try');
+    });
+    const outLinks = allLinks.filter(a => a.hostname && a.hostname !== location.hostname).length;
+    if (ctaBtns.length === 1 && outLinks <= 2) {
+      autoFill('qs-lp-002', 'good', `1 primaire CTA gevonden, ${outLinks} externe links`); f++;
+    } else if (ctaBtns.length > 1) {
+      autoFill('qs-lp-002', 'bad', `${ctaBtns.length} CTA-knoppen gevonden — focus op 1 primaire actie`); f++;
+    }
+
+    // qs-lp-003: Navigation removal
+    const nav = doc.querySelector('nav, [role="navigation"], .navbar, .main-nav, .site-nav, header nav');
+    const navLinks = nav ? nav.querySelectorAll('a').length : 0;
+    if (!nav || navLinks <= 2) {
+      autoFill('qs-lp-003', 'good', nav ? `Minimale navigatie (${navLinks} links)` : 'Geen navigatiemenu gevonden'); f++;
+    } else {
+      autoFill('qs-lp-003', 'bad', `Navigatiemenu aanwezig met ${navLinks} links — verwijderen kan conversie verdubbelen`); f++;
+    }
+
+    // qs-lp-009: Form field count
+    const forms = allForms.filter(f => f.querySelectorAll('input:not([type="hidden"]):not([type="submit"])').length > 0);
+    if (forms.length > 0) {
+      const fields = forms[0].querySelectorAll('input:not([type="hidden"]):not([type="submit"]), textarea, select').length;
+      autoFill('qs-lp-009', fields <= 4 ? 'good' : fields <= 6 ? 'ok' : 'bad',
+        `${fields} formuliervelden gevonden (optimaal: ≤4 voor lead gen)`); f++;
+    }
+
+    // qs-lp-010: Social proof
+    const socialProof = doc.querySelector('[class*="testimonial"], [class*="review"], [class*="trust"], [class*="logo-bar"], [class*="client"], [class*="partner"]');
+    if (socialProof) {
+      autoFill('qs-lp-010', 'good', 'Social proof elementen gevonden op pagina'); f++;
+    } else {
+      autoFill('qs-lp-010', 'bad', 'Geen social proof gevonden — toevoegen verhoogt conversie met 34%'); f++;
+    }
+
+    // qs-lp-018: Contact info
+    const hasPhone = !!doc.querySelector('a[href^="tel:"]');
+    const hasEmail = !!doc.querySelector('a[href^="mailto:"]');
+    if (hasPhone || hasEmail) {
+      autoFill('qs-lp-018', 'good', `Contactinfo aanwezig: ${hasPhone ? 'telefoon' : ''} ${hasEmail ? 'e-mail' : ''}`); f++;
+    } else {
+      autoFill('qs-lp-018', 'ok', 'Geen contactinfo zichtbaar — toevoegen verhoogt signups met 14.8%'); f++;
+    }
+  }
+
+  // ── PRODUCT PAGE auto-checks ──
+  if (template === 'qs-product') {
+    // qs-pp-001: Add-to-cart button
+    const atc = doc.querySelector('[class*="add-to-cart"], [class*="addtocart"], button[name="add"], [data-action="add-to-cart"], .product-form button[type="submit"]');
+    if (atc) {
+      autoFill('qs-pp-001', 'good', `Add-to-cart knop gevonden: "${(atc.textContent||'').trim().substring(0,30)}"`); f++;
+    } else {
+      autoFill('qs-pp-001', 'bad', 'Geen add-to-cart knop gevonden'); f++;
+    }
+
+    // qs-pp-002: Product images
+    const productImgs = allImgs.filter(img => {
+      const src = (img.src || img.dataset.src || '').toLowerCase();
+      const cls = (img.className || '').toLowerCase();
+      return cls.includes('product') || cls.includes('gallery') || src.includes('product') || img.closest('[class*="gallery"], [class*="product-image"]');
+    });
+    const imgCount = productImgs.length || allImgs.filter(i => i.width > 200).length;
+    autoFill('qs-pp-002', imgCount >= 4 ? 'good' : imgCount >= 2 ? 'ok' : 'bad',
+      `${imgCount} productafbeeldingen gevonden (aanbevolen: ≥4)`); f++;
+
+    // qs-pp-004: Price visibility
+    const price = doc.querySelector('[class*="price"], [itemprop="price"], [data-price]');
+    if (price) {
+      autoFill('qs-pp-004', 'good', `Prijs element gevonden: "${(price.textContent||'').trim().substring(0,30)}"`); f++;
+    } else {
+      autoFill('qs-pp-004', 'bad', 'Geen prijs element gevonden op pagina'); f++;
+    }
+
+    // qs-pp-006: Horizontal tabs detection
+    const tabs = doc.querySelector('[role="tablist"], .tabs, .nav-tabs, .product-tabs');
+    if (tabs) {
+      autoFill('qs-pp-006', 'bad', 'Horizontale tabs gedetecteerd — 27% van gebruikers mist getabde content (Baymard)'); f++;
+    } else {
+      autoFill('qs-pp-006', 'good', 'Geen horizontale tabs — goede keuze voor productinfo zichtbaarheid'); f++;
+    }
+
+    // qs-pp-007: Customer reviews
+    const reviews = doc.querySelector('[class*="review"], [class*="rating"], [itemprop="aggregateRating"], [class*="star"]');
+    if (reviews) {
+      autoFill('qs-pp-007', 'good', 'Reviews/ratings sectie gevonden'); f++;
+    } else {
+      autoFill('qs-pp-007', 'bad', 'Geen reviews/ratings gevonden — 65% van sites heeft dit incorrect'); f++;
+    }
+
+    // qs-pp-015: Breadcrumbs
+    const breadcrumb = doc.querySelector('[class*="breadcrumb"], nav[aria-label*="breadcrumb"], [itemtype*="BreadcrumbList"]');
+    if (breadcrumb) {
+      autoFill('qs-pp-015', 'good', 'Breadcrumb navigatie aanwezig'); f++;
+    } else {
+      autoFill('qs-pp-015', 'bad', 'Geen breadcrumb navigatie gevonden'); f++;
+    }
+
+    // qs-pp-016: Product video
+    const video = doc.querySelector('video, iframe[src*="youtube"], iframe[src*="vimeo"], [class*="video"]');
+    if (video) {
+      autoFill('qs-pp-016', 'good', 'Productvideo aanwezig — verhoogt conversie tot 86%'); f++;
+    } else {
+      autoFill('qs-pp-016', 'ok', 'Geen productvideo gevonden — toevoegen kan conversie met 80-86% verhogen'); f++;
+    }
+  }
+
+  // ── CHECKOUT auto-checks ──
+  if (template === 'qs-checkout') {
+    // qs-co-003: Form field count
+    const visibleFields = allInputs.filter(i => i.type !== 'hidden' && i.type !== 'submit' && i.type !== 'button').length;
+    autoFill('qs-co-003', visibleFields <= 8 ? 'good' : visibleFields <= 12 ? 'ok' : 'bad',
+      `${visibleFields} zichtbare formuliervelden (optimaal: ≤8, gemiddeld: 11.3)`); f++;
+
+    // qs-co-004: Express checkout
+    const expressPayments = doc.querySelectorAll('[class*="apple-pay"], [class*="google-pay"], [class*="paypal"], [class*="ideal"], [class*="express"], [class*="wallet"]');
+    autoFill('qs-co-004', expressPayments.length >= 2 ? 'good' : expressPayments.length === 1 ? 'ok' : 'bad',
+      `${expressPayments.length} express checkout optie(s) gevonden (aanbevolen: ≥2)`); f++;
+
+    // qs-co-005: Security indicators
+    const securitySignals = doc.querySelectorAll('[class*="secure"], [class*="ssl"], [class*="trust"], [class*="lock"], [class*="badge"]');
+    autoFill('qs-co-005', securitySignals.length >= 2 ? 'good' : securitySignals.length === 1 ? 'ok' : 'bad',
+      `${securitySignals.length} security indicator(s) gevonden — 25% verlaat bij ontbreken`); f++;
+
+    // qs-co-011: Progress indicator
+    const progress = doc.querySelector('[class*="step"], [class*="progress"], [class*="breadcrumb"], [role="progressbar"]');
+    if (progress) {
+      autoFill('qs-co-011', 'good', 'Voortgangsindicator gevonden in checkout flow'); f++;
+    } else {
+      autoFill('qs-co-011', 'ok', 'Geen voortgangsindicator gevonden — aanbevolen bij multi-step checkout'); f++;
+    }
+
+    // qs-co-014: Promo code field
+    const promoField = doc.querySelector('input[name*="promo"], input[name*="coupon"], input[name*="discount"], input[placeholder*="code"]');
+    const promoVisible = promoField && promoField.offsetParent !== null;
+    if (promoField && !promoVisible) {
+      autoFill('qs-co-014', 'good', 'Promo-codeveld verborgen achter link — correcte implementatie'); f++;
+    } else if (promoField) {
+      autoFill('qs-co-014', 'bad', 'Promo-codeveld is direct zichtbaar — 35% van gebruikers verlaat checkout om code te zoeken'); f++;
+    }
+  }
+
+  // ── HOMEPAGE auto-checks ──
+  if (template === 'qs-homepage') {
+    // qs-hp-003: Navigation clarity
+    const navEl = doc.querySelector('nav, [role="navigation"]');
+    if (navEl) {
+      const navItems = navEl.querySelectorAll('a').length;
+      autoFill('qs-hp-003', navItems <= 7 ? 'good' : navItems <= 10 ? 'ok' : 'bad',
+        `${navItems} navigatie-items (optimaal: ≤7 top-level)`); f++;
+    }
+
+    // qs-hp-005: Logo top-left
+    const logo = doc.querySelector('header .logo, header [class*="logo"], .site-header img:first-child, header a:first-child img');
+    if (logo) {
+      autoFill('qs-hp-005', 'good', 'Logo gevonden in header'); f++;
+    }
+
+    // qs-hp-009: Search functionality
+    const search = doc.querySelector('input[type="search"], [role="search"], input[name="q"], input[name="search"], [class*="search-input"]');
+    if (search) {
+      autoFill('qs-hp-009', 'good', 'Zoekfunctie aanwezig op homepage'); f++;
+    } else {
+      autoFill('qs-hp-009', 'ok', 'Geen zoekfunctie gevonden — aanbevolen voor content-rijke sites'); f++;
+    }
+
+    // qs-hp-012: Footer essentials
+    const footer = doc.querySelector('footer');
+    if (footer) {
+      const footerLinks = Array.from(footer.querySelectorAll('a')).map(a => (a.textContent||'').toLowerCase());
+      const hasContact = footerLinks.some(t => t.includes('contact'));
+      const hasPrivacy = footerLinks.some(t => t.includes('privacy'));
+      const hasAbout = footerLinks.some(t => t.includes('about') || t.includes('over'));
+      const count = [hasContact, hasPrivacy, hasAbout].filter(Boolean).length;
+      autoFill('qs-hp-012', count >= 3 ? 'good' : count >= 2 ? 'ok' : 'bad',
+        `Footer links: ${hasContact?'✓':'✗'} Contact, ${hasPrivacy?'✓':'✗'} Privacy, ${hasAbout?'✓':'✗'} Over ons`); f++;
+    }
+
+    // qs-hp-008: Trust indicators
+    const trustSignals = doc.querySelectorAll('[class*="trust"], [class*="client"], [class*="partner"], [class*="testimonial"], [class*="review"], [class*="badge"]');
+    autoFill('qs-hp-008', trustSignals.length >= 2 ? 'good' : trustSignals.length === 1 ? 'ok' : 'bad',
+      `${trustSignals.length} trust indicator(s) gevonden op homepage`); f++;
+  }
+
+  // ── CONTACT PAGE auto-checks ──
+  if (template === 'qs-contact') {
+    // qs-ct-001: Page findability (check nav + footer)
+    const navContact = doc.querySelector('nav a[href*="contact"], [role="navigation"] a[href*="contact"]');
+    const footerContact = doc.querySelector('footer a[href*="contact"]');
+    autoFill('qs-ct-001', navContact && footerContact ? 'good' : navContact || footerContact ? 'ok' : 'bad',
+      `Contact link: ${navContact?'✓':'✗'} navigatie, ${footerContact?'✓':'✗'} footer`); f++;
+
+    // qs-ct-002: Phone number
+    const phone = doc.querySelector('a[href^="tel:"]');
+    if (phone) {
+      autoFill('qs-ct-002', 'good', `Telefoonnummer gevonden: ${(phone.textContent||'').trim().substring(0,20)}`); f++;
+    } else {
+      autoFill('qs-ct-002', 'bad', 'Geen telefoonnummer zichtbaar — "implies the org doesn\'t want to be bothered" (NNGroup)'); f++;
+    }
+
+    // qs-ct-003: Multiple contact methods
+    const hasPhoneLink = !!doc.querySelector('a[href^="tel:"]');
+    const hasEmailLink = !!doc.querySelector('a[href^="mailto:"]');
+    const hasForm = allForms.length > 0;
+    const hasChat = !!doc.querySelector('[class*="chat"], [class*="messenger"], [id*="chat"]');
+    const methods = [hasPhoneLink, hasEmailLink, hasForm, hasChat].filter(Boolean).length;
+    autoFill('qs-ct-003', methods >= 3 ? 'good' : methods >= 2 ? 'ok' : 'bad',
+      `${methods} contactmethode(n): ${hasPhoneLink?'telefoon ':''}${hasEmailLink?'email ':''}${hasForm?'formulier ':''}${hasChat?'chat ':''}`); f++;
+
+    // qs-ct-004: Form simplicity
+    if (allForms.length > 0) {
+      const reqFields = allForms[0].querySelectorAll('input[required]:not([type="hidden"]), textarea[required], select[required]').length;
+      autoFill('qs-ct-004', reqFields <= 5 ? 'good' : reqFields <= 7 ? 'ok' : 'bad',
+        `${reqFields} verplichte velden (optimaal: ≤5)`); f++;
+    }
+
+    // qs-ct-005: Mobile tap-to-call
+    const telLinks = doc.querySelectorAll('a[href^="tel:"]');
+    const mailtoLinks = doc.querySelectorAll('a[href^="mailto:"]');
+    autoFill('qs-ct-005', telLinks.length > 0 && mailtoLinks.length > 0 ? 'good' : telLinks.length > 0 || mailtoLinks.length > 0 ? 'ok' : 'bad',
+      `tel: links: ${telLinks.length}, mailto: links: ${mailtoLinks.length}`); f++;
+
+    // qs-ct-006: Physical address
+    const address = doc.querySelector('address, [itemprop="address"], [class*="address"]');
+    const map = doc.querySelector('iframe[src*="maps"], [class*="map"]');
+    if (address || map) {
+      autoFill('qs-ct-006', 'good', `${address?'Adres':''}${address&&map?' + ':''}${map?'Kaart':''} gevonden`); f++;
+    }
+
+    // qs-ct-009: FAQ/self-service
+    const faq = doc.querySelector('[class*="faq"], [class*="help"], a[href*="faq"], a[href*="help"]');
+    if (faq) {
+      autoFill('qs-ct-009', 'good', 'FAQ/help sectie of link gevonden'); f++;
+    }
+
+    // qs-ct-010: CTA button text
+    const submitBtns = allBtns.filter(b => b.type === 'submit' || b.closest('form'));
+    submitBtns.forEach(btn => {
+      const txt = (btn.textContent || btn.value || '').toLowerCase().trim();
+      if (txt === 'submit' || txt === 'verzenden') {
+        autoFill('qs-ct-010', 'ok', `Knoptekst "${txt}" — "Stuur Bericht" converteert ~3% beter`); f++;
+      } else if (txt.length > 0) {
+        autoFill('qs-ct-010', 'good', `Specifieke knoptekst: "${(btn.textContent||btn.value||'').trim().substring(0,30)}"`); f++;
+      }
+    });
+  }
+
+  // ── BLOG auto-checks ──
+  if (template === 'qs-blog') {
+    // qs-bl-001: Heading structure
+    const h1s = headings.filter(h => h.tagName === 'H1');
+    const levels = headings.map(h => parseInt(h.tagName[1]));
+    let skipped = false;
+    for (let i = 1; i < levels.length; i++) { if (levels[i] - levels[i-1] > 1) { skipped = true; break; } }
+    autoFill('qs-bl-001', h1s.length === 1 && !skipped ? 'good' : h1s.length === 1 ? 'ok' : 'bad',
+      `${h1s.length} H1(s), ${headings.length} totaal headings${skipped ? ', niveaus overgeslagen' : ''}`); f++;
+
+    // qs-bl-006: Image optimization
+    const imgsWithAlt = allImgs.filter(i => i.alt && i.alt.trim().length > 0).length;
+    const imgsTotal = allImgs.length;
+    autoFill('qs-bl-006', imgsTotal > 0 && imgsWithAlt === imgsTotal ? 'good' : imgsWithAlt > imgsTotal * 0.7 ? 'ok' : 'bad',
+      `${imgsWithAlt}/${imgsTotal} afbeeldingen hebben alt-tekst`); f++;
+
+    // qs-bl-007: Internal linking
+    const internalLinks = allLinks.filter(a => {
+      try { return a.hostname === location.hostname || !a.hostname; } catch(e) { return false; }
+    }).length;
+    autoFill('qs-bl-007', internalLinks >= 3 ? 'good' : internalLinks >= 1 ? 'ok' : 'bad',
+      `${internalLinks} interne links in content (aanbevolen: ≥3 voor posts >1000 woorden)`); f++;
+
+    // qs-bl-008: Author credibility
+    const author = doc.querySelector('[class*="author"], [rel="author"], [itemprop="author"], .byline');
+    if (author) {
+      autoFill('qs-bl-008', 'good', `Auteur informatie gevonden: "${(author.textContent||'').trim().substring(0,40)}"`); f++;
+    } else {
+      autoFill('qs-bl-008', 'bad', 'Geen auteur informatie — E-E-A-T is ranking factor (137× genoemd in Google Quality Raters)'); f++;
+    }
+
+    // qs-bl-009: Content freshness
+    const dateEl = doc.querySelector('time[datetime], [class*="date"], [class*="published"], [itemprop="datePublished"]');
+    if (dateEl) {
+      autoFill('qs-bl-009', 'good', `Publicatiedatum gevonden: "${(dateEl.textContent||dateEl.getAttribute('datetime')||'').trim().substring(0,30)}"`); f++;
+    } else {
+      autoFill('qs-bl-009', 'bad', 'Geen publicatie- of updatedatum gevonden — essentieel voor E-E-A-T'); f++;
+    }
+
+    // qs-bl-011: Related posts
+    const related = doc.querySelector('[class*="related"], [class*="more-posts"], [class*="suggested"], [class*="also-like"]');
+    if (related) {
+      autoFill('qs-bl-011', 'good', 'Gerelateerde artikelen sectie aanwezig'); f++;
+    } else {
+      autoFill('qs-bl-011', 'ok', 'Geen gerelateerde artikelen sectie gevonden'); f++;
+    }
+
+    // qs-bl-012: Table of contents
+    const toc = doc.querySelector('[class*="toc"], [class*="table-of-contents"], [id*="toc"]');
+    const wordCount = (doc.body?.textContent || '').split(/\s+/).length;
+    if (toc) {
+      autoFill('qs-bl-012', 'good', 'Inhoudsopgave aanwezig'); f++;
+    } else if (wordCount > 1500) {
+      autoFill('qs-bl-012', 'ok', `Geen inhoudsopgave bij ~${wordCount} woorden — aanbevolen boven 1500`); f++;
+    }
+
+    // qs-bl-013: Social share buttons
+    const shareButtons = doc.querySelectorAll('[class*="share"], [class*="social-share"], a[href*="twitter.com/intent"], a[href*="facebook.com/sharer"], a[href*="linkedin.com/share"]');
+    autoFill('qs-bl-013', shareButtons.length >= 3 ? 'good' : shareButtons.length >= 1 ? 'ok' : 'bad',
+      `${shareButtons.length} social share knoppen gevonden (aanbevolen: ≥3)`); f++;
+  }
+
+  // ── PRICING PAGE auto-checks ──
+  if (template === 'qs-pricing') {
+    // qs-pr-001: Plan comparison clarity
+    const planCards = doc.querySelectorAll('[class*="plan"], [class*="tier"], [class*="pricing-card"], [class*="package"]');
+    autoFill('qs-pr-001', planCards.length >= 3 && planCards.length <= 4 ? 'good' : planCards.length >= 2 ? 'ok' : 'bad',
+      `${planCards.length} prijsplannen gevonden (optimaal: 3-4)`); f++;
+
+    // qs-pr-003: CTA per plan
+    const planCTAs = doc.querySelectorAll('[class*="plan"] button, [class*="tier"] button, [class*="pricing-card"] button, [class*="pricing"] a[class*="btn"]');
+    autoFill('qs-pr-003', planCTAs.length >= planCards.length ? 'good' : planCTAs.length > 0 ? 'ok' : 'bad',
+      `${planCTAs.length} CTA-knoppen bij ${planCards.length} plannen`); f++;
+
+    // qs-pr-005: Feature comparison table
+    const featureTable = doc.querySelector('table, [class*="feature-comparison"], [class*="comparison"]');
+    if (featureTable) {
+      autoFill('qs-pr-005', 'good', 'Feature vergelijkingstabel aanwezig'); f++;
+    } else {
+      autoFill('qs-pr-005', 'ok', 'Geen feature vergelijkingstabel gevonden — vermindert support verzoeken met 31%'); f++;
+    }
+
+    // qs-pr-006: Annual/monthly toggle
+    const toggle = doc.querySelector('[class*="toggle"], [class*="switch"], [class*="billing"], input[type="checkbox"][class*="plan"]');
+    if (toggle) {
+      autoFill('qs-pr-006', 'good', 'Jaarlijks/maandelijks toggle aanwezig — verhoogt jaarlijkse adoptie met 19%'); f++;
+    } else {
+      autoFill('qs-pr-006', 'ok', 'Geen billing toggle gevonden'); f++;
+    }
+
+    // qs-pr-007: FAQ section
+    const faq = doc.querySelector('[class*="faq"], details, [class*="accordion"]');
+    if (faq) {
+      const faqItems = doc.querySelectorAll('[class*="faq"] dt, [class*="faq"] h3, details summary, [class*="accordion-item"]');
+      autoFill('qs-pr-007', faqItems.length >= 5 ? 'good' : faqItems.length >= 3 ? 'ok' : 'bad',
+        `${faqItems.length} FAQ items (aanbevolen: ≥5 — 67% verlaat bij vermoeden verborgen kosten)`); f++;
+    } else {
+      autoFill('qs-pr-007', 'bad', 'Geen FAQ sectie — 67% van pricing abandonment door vermoeden verborgen kosten'); f++;
+    }
+
+    // qs-pr-009: Enterprise option
+    const enterprise = doc.querySelector('[class*="enterprise"], a[href*="contact"], a[href*="sales"]');
+    if (enterprise) {
+      autoFill('qs-pr-009', 'good', 'Enterprise / Contact Sales optie aanwezig'); f++;
+    }
+
+    // qs-pr-011: Social proof
+    const socialProof = doc.querySelectorAll('[class*="testimonial"], [class*="client-logo"], [class*="trust"], [class*="badge"]');
+    autoFill('qs-pr-011', socialProof.length >= 2 ? 'good' : socialProof.length === 1 ? 'ok' : 'bad',
+      `${socialProof.length} social proof element(en) — verhoogt conversie 15-25%`); f++;
+  }
+
+  // ── ABOUT PAGE auto-checks ──
+  if (template === 'qs-about') {
+    // qs-ab-005: Credibility signals
+    const creds = doc.querySelectorAll('[class*="award"], [class*="cert"], [class*="partner"], [class*="press"], [class*="badge"]');
+    autoFill('qs-ab-005', creds.length >= 2 ? 'good' : creds.length === 1 ? 'ok' : 'bad',
+      `${creds.length} geloofwaardigheidssignalen (awards, certificeringen, pers)`); f++;
+
+    // qs-ab-006: Scannable content
+    const paragraphs = Array.from(doc.querySelectorAll('main p, article p, .content p, .about p'));
+    const longParas = paragraphs.filter(p => p.textContent.split('\n').length > 4 || p.textContent.length > 400).length;
+    autoFill('qs-ab-006', longParas === 0 ? 'good' : longParas <= 2 ? 'ok' : 'bad',
+      `${longParas} te lange paragrafen (max 4 regels per paragraaf)`); f++;
+
+    // qs-ab-007: Contact pathway CTA
+    const contactCTA = doc.querySelector('a[href*="contact"], button[onclick*="contact"], [class*="cta"]');
+    if (contactCTA) {
+      autoFill('qs-ab-007', 'good', 'Contact CTA aanwezig — geen dead-end pagina'); f++;
+    } else {
+      autoFill('qs-ab-007', 'bad', 'Geen contact CTA — Over Ons is een dead-end zonder volgende stap'); f++;
+    }
+
+    // qs-ab-009: Careers links
+    const careersLink = doc.querySelector('a[href*="career"], a[href*="jobs"], a[href*="vacature"], a[href*="werken-bij"]');
+    if (careersLink) {
+      autoFill('qs-ab-009', 'good', 'Vacature/careers link aanwezig'); f++;
+    }
+
+    // qs-ab-011: Third-party validation
+    const externalLinks = allLinks.filter(a => {
+      const href = (a.href||'').toLowerCase();
+      return href.includes('trustpilot') || href.includes('glassdoor') || href.includes('linkedin') || href.includes('g2.com') || href.includes('capterra');
+    });
+    if (externalLinks.length > 0) {
+      autoFill('qs-ab-011', 'good', `${externalLinks.length} link(s) naar externe reviews/validatie`); f++;
+    }
+  }
+
+  // ── OPT-IN auto-checks ──
+  if (template === 'qs-optin') {
+    // qs-oi-002: Form fields
+    const forms = allForms.filter(f => f.querySelector('input[type="email"]'));
+    if (forms.length > 0) {
+      const fields = forms[0].querySelectorAll('input:not([type="hidden"]):not([type="submit"]), textarea').length;
+      autoFill('qs-oi-002', fields <= 2 ? 'good' : fields <= 4 ? 'ok' : 'bad',
+        `${fields} velden in opt-in formulier (optimaal: 1-2 voor TOFU, 3-4 MOFU)`); f++;
+    }
+
+    // qs-oi-005: Privacy assurance
+    const privacyLink = doc.querySelector('a[href*="privacy"], [class*="privacy"]');
+    if (privacyLink) {
+      autoFill('qs-oi-005', 'good', 'Privacy link nabij formulier gevonden'); f++;
+    } else {
+      autoFill('qs-oi-005', 'bad', 'Geen privacy link bij formulier — essentieel voor GDPR en vertrouwen'); f++;
+    }
+
+    // qs-oi-007: Social proof near CTA
+    const sp = doc.querySelector('[class*="testimonial"], [class*="subscriber"], [class*="trust"]');
+    if (sp) {
+      autoFill('qs-oi-007', 'good', 'Social proof bij CTA — verhoogt conversie met 34%'); f++;
+    } else {
+      autoFill('qs-oi-007', 'bad', 'Geen social proof bij opt-in CTA'); f++;
+    }
+
+    // qs-oi-010: Distraction removal
+    const hasNav = !!doc.querySelector('nav, [role="navigation"]');
+    const hasSidebar = !!doc.querySelector('aside, [class*="sidebar"]');
+    if (!hasNav && !hasSidebar) {
+      autoFill('qs-oi-010', 'good', 'Geen navigatie of sidebar — minimale afleiding'); f++;
+    } else {
+      autoFill('qs-oi-010', 'bad', `${hasNav?'Navigatie':''}${hasNav&&hasSidebar?' + ':''}${hasSidebar?'Sidebar':''} aanwezig — verwijderen verhoogt conversie 266%`); f++;
+    }
+  }
+
+  // ── LAUNCH PAGE auto-checks ──
+  if (template === 'qs-launch') {
+    // qs-la-001: Email capture
+    const emailInput = doc.querySelector('input[type="email"]');
+    const totalFields = emailInput ? emailInput.closest('form')?.querySelectorAll('input:not([type="hidden"]):not([type="submit"])').length : 0;
+    if (emailInput) {
+      autoFill('qs-la-001', totalFields <= 2 ? 'good' : 'ok',
+        `Email capture gevonden met ${totalFields} veld(en) (optimaal: max 2)`); f++;
+    } else {
+      autoFill('qs-la-001', 'bad', 'Geen email capture formulier gevonden'); f++;
+    }
+
+    // qs-la-005: Countdown timer
+    const countdown = doc.querySelector('[class*="countdown"], [class*="timer"], [class*="launch-date"]');
+    if (countdown) {
+      autoFill('qs-la-005', 'good', 'Countdown timer of lanceringsdatum gevonden — verhoogt conversie ~9%'); f++;
+    }
+  }
+
+  // ── ONBOARDING auto-checks ──
+  if (template === 'qs-onboarding') {
+    // qs-ob-002: Signup friction
+    const signupForm = allForms.find(f => f.querySelector('input[type="email"]') || f.querySelector('input[type="password"]'));
+    if (signupForm) {
+      const fields = signupForm.querySelectorAll('input:not([type="hidden"]):not([type="submit"]):not([type="button"])').length;
+      const socialLogin = doc.querySelector('[class*="google"], [class*="github"], [class*="social-login"], [class*="oauth"]');
+      autoFill('qs-ob-002', fields <= 3 && socialLogin ? 'good' : fields <= 3 ? 'ok' : 'bad',
+        `${fields} signup velden${socialLogin ? ' + social login' : ''} (optimaal: ≤3 + social login)`); f++;
+    }
+
+    // qs-ob-009: Contextual help
+    const helpWidgets = doc.querySelectorAll('[class*="help"], [class*="chat"], [class*="support"], [class*="resource"], a[href*="help"], a[href*="docs"]');
+    autoFill('qs-ob-009', helpWidgets.length >= 2 ? 'good' : helpWidgets.length === 1 ? 'ok' : 'bad',
+      `${helpWidgets.length} help/support element(en) (aanbevolen: ≥2)`); f++;
+
+    // qs-ob-014: Mobile responsiveness
+    const viewport = doc.querySelector('meta[name="viewport"]');
+    if (viewport) {
+      autoFill('qs-ob-014', 'good', 'Viewport meta tag aanwezig voor mobiele ondersteuning'); f++;
+    } else {
+      autoFill('qs-ob-014', 'bad', 'Geen viewport meta tag — onboarding werkt niet goed op mobiel'); f++;
+    }
+  }
+
+  return f;
 }
 
 // ═══════════════ SCORECARD ═══════════════
@@ -7195,8 +7918,10 @@ function showScorecard() {
   const container = document.getElementById('scorecardContent');
 
   const totalQ = reviewSteps.reduce((s, st) => s + st.questions.length, 0);
-  const allNvt = Object.values(answers).filter(a => a.score === 'nvt').length;
-  const allScored = Object.values(answers).filter(a => a.score && a.score !== 'nvt');
+  // Only count answers matching current reviewSteps questions (prevent quick-scan counting all regular auto-checks)
+  const stepQIds = new Set(reviewSteps.flatMap(s => s.questions.map(q => q.id)));
+  const allNvt = Object.entries(answers).filter(([id, a]) => stepQIds.has(id) && a.score === 'nvt').length;
+  const allScored = Object.entries(answers).filter(([id, a]) => stepQIds.has(id) && a.score && a.score !== 'nvt').map(([, a]) => a);
   const overallEffective = totalQ - allNvt;
   // Unanswered questions count as 0 — divide by effective total
   const overallAvg = overallEffective > 0
@@ -7296,7 +8021,7 @@ function showScorecard() {
       <div class="kpi-card">
         <div class="kpi-label">Beoordeeld</div>
         <div class="kpi-value">${allScored.length}<span style="font-size:16px;font-weight:400;color:var(--text-muted)">/${overallEffective}</span></div>
-        <div class="kpi-sub">${overallEffective > 0 ? Math.round(allScored.length / overallEffective * 100) : 0}% voltooid</div>
+        <div class="kpi-sub">${overallEffective > 0 ? Math.min(Math.round(allScored.length / overallEffective * 100), 100) : 0}% voltooid</div>
       </div>
       <div class="kpi-card">
         <div class="kpi-label">Verbeterpunten</div>
@@ -7501,7 +8226,8 @@ function getSameUrlReviews(currentProject) {
     .sort((a, b) => (a.createdAt || '').localeCompare(b.createdAt || ''));
 }
 
-function calcProjectScore(proj) {
+function calcProjectScoreSimple(proj) {
+  // Simple score calc for site insights — counts all answered questions regardless of module config
   if (!proj || !proj.answers) return null;
   const ans = proj.answers;
   const allQIds = Object.keys(ans);
@@ -7578,7 +8304,7 @@ function renderSiteInsights(project, currentScore, container) {
   const domain = normalizeUrl(project.url);
 
   // Build score history (past reviews + current)
-  const history = sameUrlReviews.map(p => calcProjectScore(p)).filter(Boolean);
+  const history = sameUrlReviews.map(p => calcProjectScoreSimple(p)).filter(Boolean);
   if (currentScore > 0) history.push({ avg: currentScore, date: project.createdAt || new Date().toISOString() });
 
   // Calculate delta
@@ -7674,7 +8400,7 @@ function renderSiteInsights(project, currentScore, container) {
           <div class="insights-history">
             <div class="insights-history-label">Eerdere reviews</div>
             ${sameUrlReviews.map(p => {
-              const s = calcProjectScore(p);
+              const s = calcProjectScoreSimple(p);
               const sClass = !s ? 'sc-na' : s.avg >= 7.5 ? 'sc-good' : s.avg >= 5 ? 'sc-ok' : 'sc-bad';
               return `<div class="insights-history-row">
                 <span class="insights-h-score ${sClass}">${s ? s.avg.toFixed(1) : '—'}</span>
