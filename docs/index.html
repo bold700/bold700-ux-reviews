@@ -685,6 +685,13 @@
   .topbar-right .btn-icon { flex-shrink: 0; min-width: 28px; min-height: 28px; }
   .topbar-right .btn-nav { flex-shrink: 0; white-space: nowrap; }
 
+  /* Scan URL input — only visible in review-mode (side-by-side) */
+  .scan-url-input { display: none; height: 28px; padding: 0 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 12px; background: var(--bg); color: var(--text); width: 220px; outline: none; transition: border-color 0.2s; }
+  .scan-url-input:focus { border-color: var(--accent); }
+  .main.review-mode ~ .topbar .scan-url-input,
+  .review-mode .scan-url-input { display: block; }
+  /* Show scan URL input when url toolbar is hidden (review-mode) */
+
   .lucide, i[data-lucide] { width: 1em; height: 1em; display: inline-block; vertical-align: -0.125em; stroke-width: 2; }
   .icon-inline { display: inline-flex; align-items: center; gap: 4px; }
 
@@ -1534,6 +1541,80 @@
     #scorecardTopbar .dash-topbar-title { font-size: 12px; }
     #scorecardTopbar .dash-topbar-right .btn-icon { font-size: 10px; padding: 0 8px; height: 30px; }
   }
+
+  /* ═══ SCREEN 5: PREVIEW / LEAD GENERATION ═══ */
+  .preview-container { max-width: 720px; margin: 0 auto; padding: 24px; min-height: 100vh; background: var(--bg); }
+  .preview-header { display: flex; align-items: center; justify-content: center; padding: 16px 0 24px; }
+  .preview-logo { display: flex; align-items: center; gap: 8px; }
+  .preview-logo-text { font-size: 13px; color: var(--text-muted); font-weight: 500; }
+  .preview-hero { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 32px; margin-bottom: 24px; }
+  .preview-custom-msg { background: none; border: none; border-left: 2px solid var(--accent); padding: 0 0 0 16px; font-size: 15px; line-height: 1.7; margin-bottom: 24px; color: var(--text-muted); font-style: italic; }
+  .preview-score-row { display: flex; align-items: center; gap: 24px; }
+  .preview-score-circle { width: 88px; height: 88px; border-radius: 50%; border: 3px solid; display: flex; flex-direction: column; align-items: center; justify-content: center; flex-shrink: 0; background: var(--surface2); }
+  .preview-score-num { font-size: 28px; font-weight: 900; line-height: 1; }
+  .preview-score-label { font-size: 11px; color: var(--text-muted); }
+  .preview-title { font-size: 22px; font-weight: 800; margin-bottom: 8px; line-height: 1.3; }
+  .preview-meta-row { display: flex; flex-wrap: wrap; gap: 6px; font-size: 13px; color: var(--text-muted); margin-bottom: 12px; }
+  .preview-summary { display: flex; gap: 8px; flex-wrap: wrap; }
+  .preview-tag { font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 6px; }
+  .preview-tag.bad { background: rgba(239,68,68,0.15); color: var(--red); }
+  .preview-tag.ok { background: rgba(234,179,8,0.15); color: var(--yellow); }
+  .preview-tag.good { background: rgba(34,197,94,0.15); color: var(--green); }
+  .preview-findings { margin-bottom: 32px; }
+  .preview-findings h2 { font-size: 18px; font-weight: 800; margin-bottom: 16px; }
+  .preview-finding { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 12px; border-left: 3px solid var(--border); }
+  .preview-finding.bad { border-left-color: var(--red); }
+  .preview-finding.ok { border-left-color: var(--yellow); }
+  .preview-finding-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .preview-finding-badge { font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 4px; }
+  .preview-finding-badge.bad { background: rgba(239,68,68,0.15); color: var(--red); }
+  .preview-finding-badge.ok { background: rgba(234,179,8,0.15); color: var(--yellow); }
+  .preview-finding-sev { font-size: 10px; font-weight: 600; color: var(--red); text-transform: uppercase; letter-spacing: 0.05em; }
+  .preview-finding-text { font-size: 15px; font-weight: 600; margin-bottom: 8px; line-height: 1.4; }
+  .preview-finding-notes { font-size: 13px; color: var(--text-muted); margin-bottom: 8px; line-height: 1.5; font-style: italic; }
+  .preview-finding-impact { font-size: 13px; line-height: 1.5; margin-bottom: 4px; color: var(--text); }
+  .preview-finding-fix { font-size: 13px; line-height: 1.5; color: var(--text-muted); }
+  .preview-locked-section { position: relative; margin-top: 12px; border-radius: var(--radius); overflow: hidden; }
+  .preview-locked-blur { filter: blur(6px); opacity: 0.4; pointer-events: none; user-select: none; }
+  .preview-finding-fake { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 12px; }
+  .fake-badge { width: 80px; height: 20px; background: var(--surface3, #e5e7eb); border-radius: 4px; margin-bottom: 12px; }
+  .fake-line { height: 12px; background: var(--surface3, #e5e7eb); border-radius: 4px; margin-bottom: 8px; }
+  .fake-line.long { width: 90%; } .fake-line.medium { width: 70%; } .fake-line.short { width: 45%; }
+  .preview-locked-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 2; text-align: center; padding: 32px; }
+  .preview-locked-icon { font-size: 36px; margin-bottom: 12px; }
+  .preview-locked-title { font-size: 18px; font-weight: 800; margin-bottom: 8px; }
+  .preview-locked-desc { font-size: 14px; color: var(--text-muted); max-width: 400px; line-height: 1.6; }
+  .preview-cta-section { margin-bottom: 48px; }
+  .preview-cta-section h2 { font-size: 18px; font-weight: 800; margin-bottom: 16px; }
+  .preview-cta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .preview-cta-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 28px; text-align: center; }
+  .preview-cta-card.contact { border-color: var(--blue); }
+  .preview-cta-card.unlock { border-color: var(--accent); }
+  .preview-cta-icon { font-size: 28px; margin-bottom: 12px; }
+  .preview-cta-card h3 { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+  .preview-cta-card p { font-size: 13px; color: var(--text-muted); line-height: 1.5; margin-bottom: 16px; }
+  .preview-cta-btn { display: inline-block; padding: 12px 24px; border-radius: var(--radius); font-size: 14px; font-weight: 700; text-decoration: none; transition: all 0.2s; }
+  .preview-cta-btn.contact { background: var(--blue); color: #fff; }
+  .preview-cta-btn.contact:hover { background: #2563eb; }
+  .preview-cta-btn.unlock { background: var(--accent); color: #fff; }
+  .preview-cta-btn.unlock:hover { background: var(--accent-hover); }
+  .preview-cta-phone { font-size: 12px; color: var(--text-muted); margin-top: 8px; }
+  .preview-cta-phone a { color: var(--accent); text-decoration: none; }
+  .preview-footer { text-align: center; padding: 24px 0; border-top: 1px solid var(--border); }
+  .preview-footer-logo { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 8px; }
+  .preview-footer-logo span { font-size: 13px; font-weight: 600; color: var(--text-muted); }
+  .preview-footer-text { font-size: 11px; color: var(--text-muted); }
+  .pc-preview-btn { position: absolute; top: 8px; right: 28px; background: none; border: 1px solid var(--border); border-radius: 6px; padding: 3px 6px; cursor: pointer; color: var(--text-muted); transition: all 0.2s; }
+  .pc-preview-btn:hover { border-color: var(--accent); color: var(--accent); }
+  @media (max-width: 640px) {
+    .preview-container { padding: 16px; }
+    .preview-hero { padding: 20px; }
+    .preview-score-row { flex-direction: column; text-align: center; }
+    .preview-score-circle { width: 72px; height: 72px; }
+    .preview-score-num { font-size: 24px; }
+    .preview-title { font-size: 18px; }
+    .preview-cta-grid { grid-template-columns: 1fr; }
+  }
 </style>
 <!-- Firebase SDK (compat for single-file usage) -->
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
@@ -1775,6 +1856,7 @@
         </div>
       </div>
       <div class="topbar-right">
+        <input type="url" id="scanUrlInput" class="scan-url-input" placeholder="Pagina URL voor scan…" title="URL van de pagina die je wilt scannen">
         <button class="btn-icon" onclick="toggleContrastChecker()" style="border-color:var(--purple);color:var(--purple)" title="Contrast"><i data-lucide="contrast"></i></button>
         <button class="btn-icon" onclick="runAutoScan()" id="btnAutoScan" style="border-color:var(--blue);color:var(--blue)" title="Auto-Scan"><i data-lucide="zap"></i></button>
         <button class="btn-icon" onclick="showScorecard()" style="border-color:var(--green);color:var(--green)" title="Scorecard"><i data-lucide="check-circle"></i></button>
@@ -1815,6 +1897,9 @@
   <div id="scorecardTopbar"></div>
   <div class="scorecard-container" id="scorecardContent"></div>
 </div>
+
+<!-- ═══ SCREEN 5: PREVIEW / LEAD GENERATION ═══ -->
+<div id="previewScreen" class="hidden" style="overflow-y:auto;height:100vh;background:var(--bg)"></div>
 
 <!-- ═══ CONTRAST CHECKER PANEL ═══ -->
 <div id="contrastPanel" class="cc-panel">
@@ -1905,6 +1990,49 @@
 
 <script src="modules/module-data.js"></script>
 <script>
+// ═══════════════ XSS ESCAPE HELPER ═══════════════
+function esc(s) {
+  if (!s) return '';
+  const d = document.createElement('div');
+  d.textContent = String(s);
+  return d.innerHTML;
+}
+
+// ═══════════════ SEVERITY WEIGHTS (weighted scoring) ═══════════════
+const SEVERITY_WEIGHTS = { critical: 3, high: 2, medium: 1, low: 1 };
+
+function calcWeightedScore(questions, answers) {
+  let weightedSum = 0, totalWeight = 0, skipped = 0;
+  questions.forEach(q => {
+    const a = answers[q.id];
+    if (!a?.score || a.score === 'nvt') { skipped++; return; }
+    const weight = SEVERITY_WEIGHTS[q.severity || q.priority || 'medium'] || 1;
+    const value = a.score === 'good' ? 10 : a.score === 'ok' ? 5 : 0;
+    weightedSum += value * weight;
+    totalWeight += weight * 10;
+  });
+  if (totalWeight === 0) return { score: 0, answered: 0, total: questions.length, skipped };
+  return { score: (weightedSum / totalWeight) * 10, answered: questions.length - skipped, total: questions.length, skipped };
+}
+
+// ═══════════════ ERROR BOUNDARY HELPER ═══════════════
+function safeRender(fn, containerId) {
+  try { fn(); } catch(e) {
+    console.error('[RenderError]', e);
+    const el = containerId ? document.getElementById(containerId) : null;
+    if (el) el.innerHTML = `<div style="padding:24px;text-align:center;color:var(--red)"><p style="font-size:14px;font-weight:600">Er ging iets mis bij het laden.</p><p style="font-size:12px;color:var(--text-muted);margin-top:8px">${esc(e.message)}</p><button class="btn btn-secondary" onclick="location.reload()" style="margin-top:12px">Herlaad pagina</button></div>`;
+  }
+}
+
+// ═══════════════ AI RATE LIMITING ═══════════════
+const AI_RATE_LIMIT = { maxPerHour: 5, requests: [] };
+function canCallAI() {
+  const hourAgo = Date.now() - 3600000;
+  AI_RATE_LIMIT.requests = AI_RATE_LIMIT.requests.filter(t => t > hourAgo);
+  return AI_RATE_LIMIT.requests.length < AI_RATE_LIMIT.maxPerHour;
+}
+function trackAICall() { AI_RATE_LIMIT.requests.push(Date.now()); }
+
 // ═══════════════ BRAND LOGO SVG ═══════════════
 function brandLogo(size, animate) {
   return `<svg class="brand-b${animate ? ' animate' : ''}" viewBox="0 0 238 245" style="height:${size || '1em'}" xmlns="http://www.w3.org/2000/svg">
@@ -2342,6 +2470,7 @@ let authMode = 'login';    // 'login' or 'register'
 // URL params
 const urlParams = new URLSearchParams(window.location.search);
 const urlProjectId = urlParams.get('p');
+const urlPreviewId = urlParams.get('preview');
 
 function getActiveProject() { return projects.find(p => p.id === activeProjectId); }
 function getAnswers() { const p = getActiveProject(); return p ? p.answers : {}; }
@@ -2556,17 +2685,17 @@ function calcProjectScore(project) {
   // Build steps for this specific project's module config
   const config = project.moduleConfig || (typeof getDefaultModuleConfig === 'function' ? getDefaultModuleConfig() : null);
   const projSteps = (typeof buildReviewSteps === 'function' && config) ? buildReviewSteps(config) : reviewSteps;
-  const totalQ = projSteps.reduce((s, st) => s + st.questions.length, 0);
+  const allQ = projSteps.flatMap(s => s.questions);
+  const totalQ = allQ.length;
   // Only count answers that belong to this project's steps
-  const stepQIds = new Set(projSteps.flatMap(s => s.questions.map(q => q.id)));
-  const relevantAns = Object.entries(ans).filter(([id]) => stepQIds.has(id)).map(([, a]) => a);
-  const nvtCount = relevantAns.filter(a => a.score === 'nvt').length;
-  const scored = relevantAns.filter(a => a.score && a.score !== 'nvt');
+  const stepQIds = new Set(allQ.map(q => q.id));
+  const nvtCount = allQ.filter(q => ans[q.id]?.score === 'nvt').length;
+  const answered = allQ.filter(q => ans[q.id]?.score && ans[q.id].score !== 'nvt').length;
   const effectiveTotal = totalQ - nvtCount;
   if (effectiveTotal === 0) return { avg: 0, answered: 0, total: totalQ, effectiveTotal: 0, nvt: nvtCount };
-  const sum = scored.reduce((s, a) => s + (a.score === 'good' ? 10 : a.score === 'ok' ? 6 : 3), 0);
-  const avg = sum / effectiveTotal;
-  return { avg, answered: scored.length, total: totalQ, effectiveTotal, nvt: nvtCount };
+  // Weighted scoring: critical=3x, high=2x, medium/low=1x
+  const ws = calcWeightedScore(allQ, ans);
+  return { avg: ws.score, answered, total: totalQ, effectiveTotal, nvt: nvtCount };
 }
 
 // ═══════════════ DASHBOARD ═══════════════
@@ -2663,15 +2792,16 @@ function renderProjectCard(p) {
   return `
     <div class="${cardClass}" ${canOpen ? `onclick="${clickAction}"` : ''} style="position:relative">
       ${shareLink}
+      ${(isAdmin || isAuditor) ? `<button class="pc-preview-btn" onclick="event.stopPropagation();showPreviewModal('${p.id}')" title="Preview link voor lead"><i data-lucide="share-2" style="width:12px;height:12px"></i></button>` : ''}
       <button class="pc-delete" onclick="event.stopPropagation();deleteProject('${p.id}')" title="Verwijder project">×</button>
       <div class="pc-header">
         <div>
-          <div class="pc-name">${p.name}</div>
-          ${p.client ? `<div class="pc-client">${p.client}</div>` : ''}
+          <div class="pc-name">${esc(p.name)}</div>
+          ${p.client ? `<div class="pc-client">${esc(p.client)}</div>` : ''}
         </div>
         ${isProfessional ? `<span class="audit-badge ${auditSt}">${statusLabel}</span>` : `<span class="pc-badge ${status}">${statusLabel}</span>`}
       </div>
-      <div class="pc-url">${p.url}</div>
+      <div class="pc-url">${esc(p.url)}</div>
       ${adminInfo}
       ${auditStatusHtml}
       ${!isProfessional || auditSt === 'completed' ? `
@@ -2737,13 +2867,16 @@ function showDomainReviews(domain) {
 
     rows += `
       <tr class="domain-review-row ${canOpen ? 'clickable' : ''}" ${canOpen ? `onclick="document.querySelector('.domain-modal-overlay').remove();openProject('${p.id}')"` : ''}>
-        <td><strong>${p.name}</strong>${p.client ? `<br><span style="color:var(--text-muted);font-size:11px">${p.client}</span>` : ''}</td>
-        ${isAdmin ? `<td style="font-size:11px">${userEmail}</td>` : ''}
+        <td><strong>${esc(p.name)}</strong>${p.client ? `<br><span style="color:var(--text-muted);font-size:11px">${esc(p.client)}</span>` : ''}</td>
+        ${isAdmin ? `<td style="font-size:11px">${esc(userEmail)}</td>` : ''}
         <td><span class="pc-badge ${pct === 100 ? 'completed' : pct > 0 ? 'in-progress' : 'not-started'}" style="font-size:11px">${isPro ? (auditSt || 'pending') : status}</span></td>
         <td><span class="pc-score-num ${scoreClass}" style="font-size:13px;font-weight:700">${score.avg > 0 ? score.avg.toFixed(1) : '—'}</span></td>
         <td style="font-size:11px;color:var(--text-muted)"><span style="display:inline-flex;align-items:center;gap:3px"><i data-lucide="${tplIcon}" style="width:12px;height:12px"></i> ${tplLabel}</span></td>
         <td style="font-size:11px;color:var(--text-muted)">${new Date(p.createdAt).toLocaleDateString('nl-NL')}</td>
         <td>
+          ${(isAdmin || isAuditor) ? `<button class="btn-icon-sm" onclick="event.stopPropagation();document.querySelector('.domain-modal-overlay').remove();showPreviewModal('${p.id}')" title="Preview link">
+            <i data-lucide="share-2" style="width:13px;height:13px"></i>
+          </button>` : ''}
           <button class="btn-icon-sm" onclick="event.stopPropagation();document.querySelector('.domain-modal-overlay').remove();deleteProject('${p.id}')" title="Verwijder">
             <i data-lucide="trash-2" style="width:13px;height:13px"></i>
           </button>
@@ -2759,11 +2892,14 @@ function showDomainReviews(domain) {
       <div class="domain-modal-header">
         <div>
           <h2 style="font-size:18px;font-weight:700;margin:0;display:flex;align-items:center;gap:8px">
-            <i data-lucide="globe" style="width:18px;height:18px;color:var(--accent)"></i> ${domain}
+            <i data-lucide="globe" style="width:18px;height:18px;color:var(--accent)"></i> ${esc(domain)}
           </h2>
           <p style="margin:4px 0 0;font-size:12px;color:var(--text-muted)">${domainProjects.length} review${domainProjects.length !== 1 ? 's' : ''}</p>
         </div>
-        <button onclick="this.closest('.domain-modal-overlay').remove()" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:20px;padding:4px 8px">✕</button>
+        <div style="display:flex;align-items:center;gap:8px">
+          <button onclick="this.closest('.domain-modal-overlay').remove();addScanToDomain('${domain}')" class="btn btn-primary" style="font-size:12px;padding:6px 14px;display:flex;align-items:center;gap:5px"><i data-lucide="plus" style="width:13px;height:13px"></i> Nieuwe scan</button>
+          <button onclick="this.closest('.domain-modal-overlay').remove()" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:20px;padding:4px 8px">✕</button>
+        </div>
       </div>
       <div class="domain-modal-body">
         <table class="domain-reviews-table">
@@ -2785,6 +2921,31 @@ function showDomainReviews(domain) {
 
   document.body.appendChild(overlay);
   if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+// Add a new scan to an existing domain — opens wizard at step 2 with URL/client pre-filled
+function addScanToDomain(domain) {
+  // Find an existing project for this domain to copy URL/client info
+  const existing = projects.find(p => getDomain(p.url) === domain);
+  const baseUrl = existing ? existing.url : domain;
+  const client = existing ? (existing.client || '') : '';
+  const mode = existing ? existing.mode : 'self-service';
+
+  // Open new project wizard
+  showNewProject();
+
+  // Pre-fill mode from existing project
+  newProjectMode = mode;
+  document.querySelectorAll('.mode-option').forEach((e, i) => {
+    e.classList.toggle('selected', mode === 'professional' ? i === 1 : i === 0);
+  });
+
+  // Pre-fill URL and client for step 3
+  const npUrl = document.getElementById('npUrl'); if (npUrl) npUrl.value = baseUrl;
+  const npClient = document.getElementById('npClient'); if (npClient) npClient.value = client;
+
+  // Skip step 1 (mode) — go directly to step 2 (scan type)
+  showNpStep(2);
 }
 
 function renderProjectCards() {
@@ -2865,7 +3026,7 @@ function renderProjectCards() {
           <div class="pc-header">
             <div>
               <div class="pc-name" style="display:flex;align-items:center;gap:6px">
-                <i data-lucide="globe" style="width:14px;height:14px;color:var(--accent)"></i> ${domain}
+                <i data-lucide="globe" style="width:14px;height:14px;color:var(--accent)"></i> ${esc(domain)}
               </div>
               <div class="pc-client" style="font-size:11px">${totalReviews} reviews · ${uniqueUsers} gebruiker${uniqueUsers !== 1 ? 's' : ''}</div>
             </div>
@@ -2935,7 +3096,7 @@ function renderProjectCards() {
   if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
-function renderDashboard() {
+function renderDashboard() { try {
   const statsEl = document.getElementById('dashStats');
   const tabsEl = document.getElementById('dashTabs');
 
@@ -3015,7 +3176,7 @@ function renderDashboard() {
   }
 
   if (typeof lucide !== 'undefined') lucide.createIcons();
-}
+} catch(e) { console.error('[RenderError] renderDashboard:', e); const el = document.getElementById('projectsGrid'); if (el) el.innerHTML = `<div style="padding:24px;text-align:center;color:var(--red)"><p style="font-weight:600">Er ging iets mis bij het laden.</p><p style="font-size:12px;color:var(--text-muted);margin-top:8px">${esc(e.message)}</p><button class="btn btn-secondary" onclick="location.reload()" style="margin-top:12px">Herlaad pagina</button></div>`; } }
 
 function renderAdminConfig() {
   const el = document.getElementById('adminConfigSection');
@@ -3102,7 +3263,7 @@ async function changeUserPlan(uid, newPlan) {
   }
 }
 
-async function renderUserManagement() {
+async function renderUserManagement() { try {
   const el = document.getElementById('userManagementSection');
   if (!el) return;
 
@@ -3139,7 +3300,7 @@ async function renderUserManagement() {
                 <td>
                   <div style="display:flex;align-items:center;gap:8px">
                     <i data-lucide="${roleIcons[role] || 'user'}" style="width:14px;height:14px;color:${roleColors[role] || 'var(--text-muted)'}"></i>
-                    <span style="font-size:13px">${u.email || u.uid}</span>
+                    <span style="font-size:13px">${esc(u.email || u.uid)}</span>
                     ${isSelf ? '<span style="font-size:9px;background:var(--accent);color:#fff;padding:1px 5px;border-radius:4px;font-weight:700">JIJ</span>' : ''}
                   </div>
                 </td>
@@ -3175,7 +3336,7 @@ async function renderUserManagement() {
     </div>`;
 
   if (typeof lucide !== 'undefined') lucide.createIcons();
-}
+} catch(e) { console.error('[RenderError] renderUserManagement:', e); const el = document.getElementById('userManagementSection'); if (el) el.innerHTML = `<div style="padding:24px;text-align:center;color:var(--red)"><p style="font-weight:600">Er ging iets mis bij het laden.</p><p style="font-size:12px;color:var(--text-muted);margin-top:8px">${esc(e.message)}</p><button class="btn btn-secondary" onclick="location.reload()" style="margin-top:12px">Herlaad pagina</button></div>`; } }
 
 // ═══════════════ ADMIN: PROJECT MANAGEMENT PER USER ═══════════════
 function showUserProjects(uid, email) {
@@ -3196,7 +3357,7 @@ function showUserProjects(uid, email) {
     <div class="modal-box" style="max-width:600px;max-height:80vh;overflow-y:auto">
       <h3 style="font-size:16px;font-weight:700;margin:0 0 16px;display:flex;align-items:center;gap:8px">
         <i data-lucide="folder" style="width:16px;height:16px;color:var(--accent)"></i>
-        Projecten van ${email}
+        Projecten van ${esc(email)}
         <span style="font-size:12px;font-weight:400;color:var(--text-muted)">${userProjects.length} project${userProjects.length !== 1 ? 'en' : ''}</span>
       </h3>
       <div style="display:flex;flex-direction:column;gap:8px">
@@ -3206,8 +3367,8 @@ function showUserProjects(uid, email) {
           return `
           <div class="application-row" style="flex-wrap:wrap;gap:8px" id="uproj-${p.id}">
             <div class="app-info" style="min-width:180px">
-              <div class="app-email">${p.name || '—'}</div>
-              <div class="app-msg">${p.url || '—'} · ${mode} · ${score.avg > 0 ? score.avg.toFixed(1) : '—'}</div>
+              <div class="app-email">${esc(p.name || '—')}</div>
+              <div class="app-msg">${esc(p.url || '—')} · ${mode} · ${score.avg > 0 ? score.avg.toFixed(1) : '—'}</div>
             </div>
             <div class="app-date">${p.createdAt ? new Date(p.createdAt).toLocaleDateString('nl-NL') : '—'}</div>
             <div class="app-actions" style="flex-wrap:wrap">
@@ -3500,8 +3661,8 @@ function renderAuditorApplicationsAdmin() {
           ${pending.map(a => `
             <div class="application-row">
               <div class="app-info">
-                <div class="app-email">${a.email || a.displayName || a.id}</div>
-                <div class="app-msg" title="${(a.message || '').replace(/"/g, '&quot;')}">${a.message || '—'}</div>
+                <div class="app-email">${esc(a.email || a.displayName || a.id)}</div>
+                <div class="app-msg" title="${(a.message || '').replace(/"/g, '&quot;')}">${esc(a.message || '—')}</div>
               </div>
               <div class="app-date">${a.createdAt ? new Date(a.createdAt).toLocaleDateString('nl-NL') : '—'}</div>
               <div class="app-actions">
@@ -3519,7 +3680,7 @@ function renderAuditorApplicationsAdmin() {
             ${recent.map(a => `
               <div class="application-row" style="opacity:0.6">
                 <div class="app-info">
-                  <div class="app-email">${a.email || a.id}</div>
+                  <div class="app-email">${esc(a.email || a.id)}</div>
                 </div>
                 <span class="role-tag role-${a.status === 'approved' ? 'auditor' : 'user'}">${a.status === 'approved' ? 'Goedgekeurd' : 'Afgewezen'}</span>
                 <div class="app-date">${a.reviewedAt ? new Date(a.reviewedAt).toLocaleDateString('nl-NL') : '—'}</div>
@@ -3534,7 +3695,7 @@ function renderAuditorApplicationsAdmin() {
 }
 
 // ═══════════════ ADMIN: AUDIT QUEUE ═══════════════
-function renderAuditQueue() {
+function renderAuditQueue() { try {
   const el = document.getElementById('auditQueueSection');
   if (!el) return;
 
@@ -3548,11 +3709,11 @@ function renderAuditQueue() {
     const st = r.auditStatus || 'pending';
     const stLabel = { pending: 'In afwachting', assigned: 'Toegewezen', in_progress: 'Bezig', completed: 'Afgerond' }[st];
     return `<tr class="aq-row">
-      <td><strong>${r.name || '—'}</strong>${r.client ? '<br><span style="font-size:11px;color:var(--text-muted)">' + r.client + '</span>' : ''}</td>
-      <td style="font-size:12px">${r.url ? r.url.replace(/^https?:\/\/(www\.)?/, '').substring(0, 30) : '—'}</td>
+      <td><strong>${esc(r.name || '—')}</strong>${r.client ? '<br><span style="font-size:11px;color:var(--text-muted)">' + esc(r.client) + '</span>' : ''}</td>
+      <td style="font-size:12px">${r.url ? esc(r.url.replace(/^https?:\/\/(www\.)?/, '').substring(0, 30)) : '—'}</td>
       <td><span class="audit-badge ${st}">${stLabel}</span></td>
       <td style="font-size:12px">${pkgLabels[r.package] || r.package || '—'}</td>
-      <td style="font-size:12px">${r.assignedToName || '<span style="color:var(--text-muted)">—</span>'}</td>
+      <td style="font-size:12px">${esc(r.assignedToName) || '<span style="color:var(--text-muted)">—</span>'}</td>
       <td style="font-size:11px;color:var(--text-muted)">${r.createdAt ? new Date(r.createdAt).toLocaleDateString('nl-NL') : '—'}</td>
       <td>${showActions ? `<button class="btn btn-sm btn-accent" onclick="event.stopPropagation();showAssignModal('${r.id}')"><i data-lucide="user-plus" style="width:11px;height:11px"></i> Toewijzen</button>` :
         st === 'assigned' ? `<button class="btn btn-sm" onclick="event.stopPropagation();showAssignModal('${r.id}')">Herwijzen</button>` :
@@ -3583,7 +3744,7 @@ function renderAuditQueue() {
     </div>`;
 
   if (typeof lucide !== 'undefined') lucide.createIcons();
-}
+} catch(e) { console.error('[RenderError] renderAuditQueue:', e); const el = document.getElementById('auditQueueSection'); if (el) el.innerHTML = `<div style="padding:24px;text-align:center;color:var(--red)"><p style="font-weight:600">Er ging iets mis bij het laden.</p><p style="font-size:12px;color:var(--text-muted);margin-top:8px">${esc(e.message)}</p><button class="btn btn-secondary" onclick="location.reload()" style="margin-top:12px">Herlaad pagina</button></div>`; } }
 
 // ── Admin: Auditor assignment modal ──
 async function showAssignModal(projectId) {
@@ -3599,7 +3760,7 @@ async function showAssignModal(projectId) {
     ? allAuditors.map(a => `
       <div class="auditor-option" onclick="selectAuditorAndAssign('${projectId}', '${a.uid}', '${(a.email || '').replace(/'/g, '')}', this)">
         <div class="auditor-option-info">
-          <strong>${a.email || a.uid}</strong>
+          <strong>${esc(a.email || a.uid)}</strong>
           ${a.auditCount ? `<span style="font-size:10px;color:var(--text-muted)">${a.auditCount} audits voltooid</span>` : ''}
         </div>
         <i data-lucide="chevron-right" style="width:14px;height:14px;color:var(--text-muted)"></i>
@@ -3612,7 +3773,7 @@ async function showAssignModal(projectId) {
         <h3>Auditor Toewijzen</h3>
         <button class="modal-close" onclick="this.closest('.modal-overlay').remove()">×</button>
       </div>
-      <div class="modal-sub">Project: <strong>${project.name}</strong> · ${project.client || project.url}</div>
+      <div class="modal-sub">Project: <strong>${esc(project.name)}</strong> · ${esc(project.client || project.url)}</div>
       <div class="modal-body">${auditorList}</div>
     </div>`;
 
@@ -3647,7 +3808,7 @@ function showAuditorDashboard() {
   renderAuditorDashboard();
 }
 
-function renderAuditorDashboard() {
+function renderAuditorDashboard() { try {
   const statsEl = document.getElementById('dashStats');
   const gridEl = document.getElementById('projectsGrid');
   const uid = currentUser?.uid;
@@ -3679,12 +3840,12 @@ function renderAuditorDashboard() {
         <div class="project-card professional" onclick="${st === 'assigned' ? `updateAuditStatus('${r.id}','in_progress');openProject('${r.id}')` : `openProject('${r.id}')`}" style="position:relative;cursor:pointer">
           <div class="pc-header">
             <div>
-              <div class="pc-name">${r.name}</div>
-              ${r.client ? `<div class="pc-client">${r.client}</div>` : ''}
+              <div class="pc-name">${esc(r.name)}</div>
+              ${r.client ? `<div class="pc-client">${esc(r.client)}</div>` : ''}
             </div>
             <span class="audit-badge ${st}">${st === 'assigned' ? 'Start Audit' : 'Bezig'}</span>
           </div>
-          <div class="pc-url">${r.url}</div>
+          <div class="pc-url">${esc(r.url)}</div>
           <div class="pc-footer">
             <span class="pc-package">${pkgLabels[r.package] || 'Professional'}</span>
             <span>${r.assignedAt ? new Date(r.assignedAt).toLocaleDateString('nl-NL') : '—'}</span>
@@ -3701,12 +3862,12 @@ function renderAuditorDashboard() {
         <div class="project-card" style="position:relative">
           <div class="pc-header">
             <div>
-              <div class="pc-name">${r.name}</div>
-              ${r.client ? `<div class="pc-client">${r.client}</div>` : ''}
+              <div class="pc-name">${esc(r.name)}</div>
+              ${r.client ? `<div class="pc-client">${esc(r.client)}</div>` : ''}
             </div>
             <span class="audit-badge pending">Open</span>
           </div>
-          <div class="pc-url">${r.url}</div>
+          <div class="pc-url">${esc(r.url)}</div>
           <div class="pc-footer">
             <span class="pc-package">${pkgLabels[r.package] || 'Professional'}</span>
             <span>${r.createdAt ? new Date(r.createdAt).toLocaleDateString('nl-NL') : '—'}</span>
@@ -3724,12 +3885,12 @@ function renderAuditorDashboard() {
         <div class="project-card" onclick="openProject('${r.id}')" style="position:relative;cursor:pointer;opacity:0.7">
           <div class="pc-header">
             <div>
-              <div class="pc-name">${r.name}</div>
-              ${r.client ? `<div class="pc-client">${r.client}</div>` : ''}
+              <div class="pc-name">${esc(r.name)}</div>
+              ${r.client ? `<div class="pc-client">${esc(r.client)}</div>` : ''}
             </div>
             <span class="audit-badge completed">Afgerond</span>
           </div>
-          <div class="pc-url">${r.url}</div>
+          <div class="pc-url">${esc(r.url)}</div>
           <div class="pc-footer">
             <span class="pc-package">${pkgLabels[r.package] || 'Professional'}</span>
             <span>${r.completedAt ? new Date(r.completedAt).toLocaleDateString('nl-NL') : '—'}</span>
@@ -3758,15 +3919,16 @@ function renderAuditorDashboard() {
 
       html += `
         <div class="project-card" onclick="openProject('${p.id}')" style="position:relative;cursor:pointer">
+          <button class="pc-preview-btn" onclick="event.stopPropagation();showPreviewModal('${p.id}')" title="Preview link voor lead"><i data-lucide="share-2" style="width:12px;height:12px"></i></button>
           <button class="pc-delete" onclick="event.stopPropagation();deleteProject('${p.id}')" title="Verwijder project">×</button>
           <div class="pc-header">
             <div>
-              <div class="pc-name">${p.name}</div>
-              ${p.client ? `<div class="pc-client">${p.client}</div>` : ''}
+              <div class="pc-name">${esc(p.name)}</div>
+              ${p.client ? `<div class="pc-client">${esc(p.client)}</div>` : ''}
             </div>
             <span class="pc-badge ${status}">${statusLabel}</span>
           </div>
-          <div class="pc-url">${p.url}</div>
+          <div class="pc-url">${esc(p.url)}</div>
           <div class="pc-score-bar">
             <div class="bar-track"><div class="bar-fill ${scoreClass}" style="width:${score.avg > 0 ? score.avg * 10 : 0}%"></div></div>
             <div class="pc-score-num ${scoreClass}">${score.avg > 0 ? score.avg.toFixed(1) : '—'}</div>
@@ -3783,7 +3945,7 @@ function renderAuditorDashboard() {
 
   gridEl.innerHTML = html;
   if (typeof lucide !== 'undefined') lucide.createIcons();
-}
+} catch(e) { console.error('[RenderError] renderAuditorDashboard:', e); const el = document.getElementById('projectsGrid'); if (el) el.innerHTML = `<div style="padding:24px;text-align:center;color:var(--red)"><p style="font-weight:600">Er ging iets mis bij het laden.</p><p style="font-size:12px;color:var(--text-muted);margin-top:8px">${esc(e.message)}</p><button class="btn btn-secondary" onclick="location.reload()" style="margin-top:12px">Herlaad pagina</button></div>`; } }
 
 function copyShareLink(projectId) {
   const link = getShareableLink(projectId);
@@ -3971,7 +4133,7 @@ async function detectPageType() {
     if (/\/(onboarding|welcome|get-started|signup)/.test(pathname)) scores['qs-onboarding'] = (scores['qs-onboarding']||0) + 25;
 
     // DOM signal (+25%)
-    const addToCart = doc.querySelector('[class*="add-to-cart"], [class*="addtocart"], button[name="add"], [data-action="add-to-cart"]');
+    const addToCart = findAddToCart(doc);
     if (addToCart) scores['qs-product'] = (scores['qs-product']||0) + 25;
     const priceEl = doc.querySelector('[class*="price"], [itemprop="price"]');
     if (priceEl && addToCart) scores['qs-product'] = (scores['qs-product']||0) + 10;
@@ -4425,6 +4587,13 @@ function enterReviewMode() {
   // Show review mode info in topbar subtitle
   const review = document.getElementById('deviceBarReview');
   if (review) review.style.display = 'inline-flex';
+  // Show scan URL input (user can't change urlInput in review-mode)
+  const scanInput = document.getElementById('scanUrlInput');
+  if (scanInput) {
+    scanInput.style.display = 'block';
+    const project = getActiveProject();
+    scanInput.value = project?.url || '';
+  }
   if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
@@ -4447,6 +4616,9 @@ function exitReviewMode() {
   // Hide review mode info in topbar subtitle
   const review = document.getElementById('deviceBarReview');
   if (review) review.style.display = 'none';
+  // Hide scan URL input
+  const scanInput = document.getElementById('scanUrlInput');
+  if (scanInput) scanInput.style.display = 'none';
   if (typeof lucide !== 'undefined') lucide.createIcons();
   // Close site window
   if (siteWindow && !siteWindow.closed) siteWindow.close();
@@ -4474,7 +4646,7 @@ function switchDevice(device, btn) {
 }
 
 // ═══════════════ STEP NAVIGATION ═══════════════
-function buildStepper() {
+function buildStepper() { try {
   const answers = getAnswers();
   const stepper = document.getElementById('stepStepper');
   // Progress at top of stepper — only count answers matching current step questions
@@ -4503,11 +4675,8 @@ function buildStepper() {
       let meta = '';
 
       if (scored.length > 0) {
-        const sum = scored.reduce((s, q) => {
-          const sc = answers[q.id].score;
-          return s + (sc === 'good' ? 10 : sc === 'ok' ? 5 : 0);
-        }, 0);
-        avg = sum / scored.length;
+        const ws = calcWeightedScore(step.questions, answers);
+        avg = ws.score;
         meta = `<div class="stepper-meta">${avg.toFixed(1)} · ${scored.length}/${total} beoordeeld</div>`;
       }
 
@@ -4542,7 +4711,7 @@ function buildStepper() {
     const active = stepper.querySelector('.stepper-item.active');
     if (active) active.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }, 50);
-}
+} catch(e) { console.error('[RenderError] buildStepper:', e); const el = document.getElementById('stepStepper'); if (el) el.innerHTML = `<div style="padding:24px;text-align:center;color:var(--red)"><p style="font-weight:600">Er ging iets mis bij het laden.</p><p style="font-size:12px;color:var(--text-muted);margin-top:8px">${esc(e.message)}</p><button class="btn btn-secondary" onclick="location.reload()" style="margin-top:12px">Herlaad pagina</button></div>`; } }
 
 function goToStep(i) { saveCurrentAnswers(); currentStep = i; renderStep(i); buildStepper(); }
 
@@ -4558,7 +4727,7 @@ function prevStep() {
 }
 
 // ═══════════════ RENDER STEP ═══════════════
-function renderStep(stepIndex, resetScroll) {
+function renderStep(stepIndex, resetScroll) { try {
   if (resetScroll === undefined) resetScroll = true;
   if (resetScroll) lastActiveQId = null; // reset paste target on step change
   const step = reviewSteps[stepIndex];
@@ -4571,9 +4740,9 @@ function renderStep(stepIndex, resetScroll) {
   const stepNvt = step.questions.filter(q => answers[q.id]?.score === 'nvt').length;
   const stepEffective = step.questions.length - stepNvt;
   const stepAnswered = stepScored.length + stepNvt;
-  // Unanswered count as 0 — divide by effectiveTotal (excl. nvt)
-  const avgScore = stepEffective > 0
-    ? stepScored.reduce((sum, q) => sum + (answers[q.id].score === 'good' ? 10 : answers[q.id].score === 'ok' ? 6 : 3), 0) / stepEffective : 0;
+  // Weighted scoring per step
+  const stepWs = calcWeightedScore(step.questions, answers);
+  const avgScore = stepEffective > 0 ? stepWs.score : 0;
   const scoreClass = stepEffective === 0 ? 'neutral' : avgScore >= 8 ? 'good' : avgScore >= 5 ? 'ok' : 'bad';
 
   area.innerHTML = `
@@ -4607,7 +4776,7 @@ function renderStep(stepIndex, resetScroll) {
             <button class="sev-btn sev-strategic ${isHigh?'selected':''}" onclick="setSeverity('${q.id}','high',this)"><i data-lucide="target"></i> Strategisch</button>
             <button class="sev-btn sev-notnow ${!isHigh?'selected':''}" onclick="setSeverity('${q.id}','low',this)"><i data-lucide="pause"></i> Niet Nu</button>
           </div>`; })() : ''}
-          <textarea class="notes-input" id="notes-${q.id}" placeholder="Notities, bevindingen, aanbevelingen...">${a.notes||''}</textarea>
+          <textarea class="notes-input" id="notes-${q.id}" placeholder="Notities, bevindingen, aanbevelingen...">${esc(a.notes||'')}</textarea>
           <div class="screenshot-row">
             ${getScreenshots(q.id).map((src, si) => `
               <div class="screenshot-thumb">
@@ -4680,7 +4849,7 @@ function renderStep(stepIndex, resetScroll) {
     btnNext.style.borderColor = 'var(--accent)';
   }
   if (typeof lucide !== 'undefined') lucide.createIcons();
-}
+} catch(e) { console.error('[RenderError] renderStep:', e); const el = document.getElementById('questionsArea'); if (el) el.innerHTML = `<div style="padding:24px;text-align:center;color:var(--red)"><p style="font-weight:600">Er ging iets mis bij het laden.</p><p style="font-size:12px;color:var(--text-muted);margin-top:8px">${esc(e.message)}</p><button class="btn btn-secondary" onclick="location.reload()" style="margin-top:12px">Herlaad pagina</button></div>`; } }
 
 // ═══════════════ SCORING ═══════════════
 function setScore(qId, score) {
@@ -5101,7 +5270,13 @@ async function runAutoScan() {
   const project = getActiveProject();
   if (!project) return;
 
-  let url = project.url;
+  // Use the current preview URL (what the user is actually looking at), fallback to project URL
+  // Priority: scanUrlInput (review-mode) > urlInput (iframe-mode) > project.url
+  const scanUrlInput = document.getElementById('scanUrlInput');
+  const urlInput = document.getElementById('urlInput');
+  let url = (scanUrlInput && scanUrlInput.style.display !== 'none' && scanUrlInput.value.trim())
+    || (urlInput && urlInput.value.trim())
+    || project.url;
   if (!url) { alert('Voer eerst een URL in'); return; }
   if (!url.startsWith('http')) url = 'https://' + url;
 
@@ -5143,10 +5318,8 @@ async function runAutoScan() {
   renderStep(currentStep, false);
   buildStepper();
 
-  // ── Phase 2: PageSpeed Insights API (slower, richer data) ──
-  const isPro = project.mode !== 'self-service';
-
-  if (isPro) {
+  // ── Phase 2: PageSpeed Insights API (all users, gratis API) ──
+  {
     let apiKey = getApiKey();
     try {
       showScanToast('scanning', 'PageSpeed Insights laden…', 'Dit duurt 10-30 seconden');
@@ -7507,6 +7680,62 @@ async function runDomChecks(pageData, answers, autoFill) {
   return filled;
 }
 
+// ═══════════════ MULTI-SIGNAL DETECTION HELPERS ═══════════════
+function findAddToCart(doc) {
+  const byClass = doc.querySelector('[class*="add-to-cart"], [class*="addtocart"], [class*="add_to_cart"], [class*="add-to-bag"]');
+  if (byClass) return byClass;
+  const byAria = doc.querySelector('[aria-label*="cart" i], [aria-label*="winkelwagen" i], [aria-label*="toevoegen" i], [aria-label*="add to" i]');
+  if (byAria) return byAria;
+  const buttons = Array.from(doc.querySelectorAll('button, [role="button"], input[type="submit"]'));
+  const cartBtn = buttons.find(b => {
+    const t = (b.textContent || b.value || '').toLowerCase().trim();
+    return t.includes('in winkelmand') || t.includes('toevoegen') || t.includes('add to cart') || t.includes('add to bag') || t.includes('buy now') || t.includes('koop') || t.includes('bestel');
+  });
+  if (cartBtn) return cartBtn;
+  const byForm = doc.querySelector('form[action*="cart"], form[action*="add"], form[action*="basket"]');
+  return byForm ? (byForm.querySelector('button, input[type="submit"]') || byForm) : null;
+}
+
+function findNavigation(doc) {
+  return doc.querySelector('nav, [role="navigation"], .navbar, .main-nav, .site-nav, header nav, .nav-menu, [class*="navigation"], [class*="main-menu"]');
+}
+
+function findSocialProof(doc) {
+  const selectors = [
+    '[class*="testimonial"]', '[class*="review"]', '[class*="rating"]',
+    '[class*="klant"]', '[class*="customer"]', '[class*="trust"]',
+    '[class*="social-proof"]', '[class*="client-logo"]', '[class*="partner"]',
+    '[itemprop="reviewCount"]', '[class*="star-rating"]', '[class*="stars"]',
+    'figure blockquote', '.testimonials', '#testimonials'
+  ];
+  return doc.querySelector(selectors.join(', '));
+}
+
+function findPricingTable(doc) {
+  const selectors = [
+    '[class*="pricing"]', '[class*="price-table"]', '[class*="plans"]',
+    '[class*="tier"]', '[class*="package"]', '[class*="subscription"]',
+    'table[class*="price"]', '.pricing-grid', '#pricing'
+  ];
+  return doc.querySelector(selectors.join(', '));
+}
+
+function findContactInfo(doc) {
+  const tel = doc.querySelector('a[href^="tel:"], [itemprop="telephone"], [class*="phone-number"]');
+  const email = doc.querySelector('a[href^="mailto:"], [itemprop="email"], [class*="email-address"]');
+  const form = doc.querySelector('form[action*="contact"], form[class*="contact"], .contact-form, #contact-form');
+  return { tel, email, form, count: (tel ? 1 : 0) + (email ? 1 : 0) + (form ? 1 : 0) };
+}
+
+function findReviews(doc) {
+  const selectors = [
+    '[class*="review"]', '[itemprop="reviewCount"]', '[itemprop="ratingValue"]',
+    '[class*="star-rating"]', '[class*="stars"]', '[class*="rating"]',
+    '.reviews', '#reviews', '[class*="testimonial"]'
+  ];
+  return doc.querySelector(selectors.join(', '));
+}
+
 function runQuickScanAutoChecks(doc, template, autoFill) {
   let f = 0;
   const allLinks = Array.from(doc.querySelectorAll('a'));
@@ -7530,8 +7759,8 @@ function runQuickScanAutoChecks(doc, template, autoFill) {
       autoFill('qs-lp-002', 'bad', `${ctaBtns.length} CTA-knoppen gevonden — focus op 1 primaire actie`); f++;
     }
 
-    // qs-lp-003: Navigation removal
-    const nav = doc.querySelector('nav, [role="navigation"], .navbar, .main-nav, .site-nav, header nav');
+    // qs-lp-003: Navigation removal (multi-signal detection)
+    const nav = findNavigation(doc);
     const navLinks = nav ? nav.querySelectorAll('a').length : 0;
     if (!nav || navLinks <= 2) {
       autoFill('qs-lp-003', 'good', nav ? `Minimale navigatie (${navLinks} links)` : 'Geen navigatiemenu gevonden'); f++;
@@ -7567,8 +7796,8 @@ function runQuickScanAutoChecks(doc, template, autoFill) {
 
   // ── PRODUCT PAGE auto-checks ──
   if (template === 'qs-product') {
-    // qs-pp-001: Add-to-cart button
-    const atc = doc.querySelector('[class*="add-to-cart"], [class*="addtocart"], button[name="add"], [data-action="add-to-cart"], .product-form button[type="submit"]');
+    // qs-pp-001: Add-to-cart button (multi-signal detection)
+    const atc = findAddToCart(doc);
     if (atc) {
       autoFill('qs-pp-001', 'good', `Add-to-cart knop gevonden: "${(atc.textContent||'').trim().substring(0,30)}"`); f++;
     } else {
@@ -7999,7 +8228,7 @@ function runQuickScanAutoChecks(doc, template, autoFill) {
 }
 
 // ═══════════════ SCORECARD ═══════════════
-function showScorecard() {
+function showScorecard() { try {
   saveCurrentAnswers();
   const project = getActiveProject();
   const answers = project ? project.answers : {};
@@ -8011,18 +8240,19 @@ function showScorecard() {
   const allNvt = Object.entries(answers).filter(([id, a]) => stepQIds.has(id) && a.score === 'nvt').length;
   const allScored = Object.entries(answers).filter(([id, a]) => stepQIds.has(id) && a.score && a.score !== 'nvt').map(([, a]) => a);
   const overallEffective = totalQ - allNvt;
-  // Unanswered questions count as 0 — divide by effective total
-  const overallAvg = overallEffective > 0
-    ? allScored.reduce((s, a) => s + (a.score==='good'?10:a.score==='ok'?6:3), 0) / overallEffective : 0;
+  // Weighted scoring: critical=3x, high=2x, medium/low=1x
+  const allQ = reviewSteps.flatMap(s => s.questions);
+  const overallWs = calcWeightedScore(allQ, answers);
+  const overallAvg = overallWs.score;
   const overallClass = overallAvg >= 7.5 ? 'sc-good' : overallAvg >= 5 ? 'sc-ok' : 'sc-bad';
   const overallVerdict = overallAvg >= 8 ? 'Uitstekend' : overallAvg >= 7 ? 'Goed' : overallAvg >= 5 ? 'Voldoende — ruimte voor verbetering' : overallAvg >= 3 ? 'Onvoldoende — actie nodig' : 'Kritiek — directe actie vereist';
 
   const catScores = reviewSteps.map(step => {
-    const scored = step.questions.filter(q => answers[q.id]?.score && answers[q.id].score !== 'nvt');
     const nvt = step.questions.filter(q => answers[q.id]?.score === 'nvt').length;
     const effective = step.questions.length - nvt;
-    // Unanswered count as 0
-    const avg = effective > 0 ? scored.reduce((s, q) => s + (answers[q.id].score==='good'?10:answers[q.id].score==='ok'?6:3), 0) / effective : -1;
+    // Weighted scoring per category
+    const ws = calcWeightedScore(step.questions, answers);
+    const avg = effective > 0 ? ws.score : -1;
     const cls = effective === 0 ? 'sc-na' : avg >= 7.5 ? 'sc-good' : avg >= 5 ? 'sc-ok' : 'sc-bad';
     const status = effective === 0 ? 'Alles n.v.t.' : avg >= 7.5 ? 'Goed' : avg >= 5 ? 'Aandacht nodig' : 'Kritiek';
     const stCls = effective === 0 ? 'st-na' : avg >= 7.5 ? 'st-good' : avg >= 5 ? 'st-ok' : 'st-bad';
@@ -8089,7 +8319,7 @@ function showScorecard() {
       <div class="dash-topbar-left">
         <button class="back-btn" onclick="backToDashboardFromScorecard()" title="Dashboard"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1.5" y="1.5" width="5" height="5.5" rx="1"/><rect x="9.5" y="1.5" width="5" height="3.5" rx="1"/><rect x="1.5" y="9.5" width="5" height="3.5" rx="1"/><rect x="9.5" y="7.5" width="5" height="5.5" rx="1"/></svg></button>
         <span class="logo">${brandLogo('18px', true)}</span>
-        <div class="dash-topbar-title">${project?.name || 'UX Review'}${project?.client ? ' — ' + project.client : ''}</div>
+        <div class="dash-topbar-title">${esc(project?.name || 'UX Review')}${project?.client ? ' — ' + esc(project.client) : ''}</div>
       </div>
       <div class="dash-topbar-right">
         <div class="dash-topbar-meta">${new Date().toLocaleDateString('nl-NL')} · ${allScored.length}/${overallEffective} beoordeeld${allNvt > 0 ? ` · ${allNvt} n.v.t.` : ''}</div>
@@ -8291,7 +8521,7 @@ function showScorecard() {
   // Render Site Insights (premium feature)
   const insightsContainer = document.getElementById('siteInsightsContainer');
   if (insightsContainer) renderSiteInsights(project, overallAvg, insightsContainer);
-}
+} catch(e) { console.error('[RenderError] showScorecard:', e); const el = document.getElementById('scorecardContent'); if (el) el.innerHTML = `<div style="padding:24px;text-align:center;color:var(--red)"><p style="font-weight:600">Er ging iets mis bij het laden.</p><p style="font-size:12px;color:var(--text-muted);margin-top:8px">${esc(e.message)}</p><button class="btn btn-secondary" onclick="location.reload()" style="margin-top:12px">Herlaad pagina</button></div>`; } }
 
 // ═══════════════ SITE INSIGHTS (Premium) ═══════════════
 
@@ -8565,48 +8795,126 @@ function exportResults() {
   saveCurrentAnswers();
   const project = getActiveProject();
   const answers = project ? project.answers : {};
+  const isQuickScan = !!project?.selectedTemplate;
+  const tplBundle = isQuickScan && typeof MODULE_REGISTRY !== 'undefined' ? MODULE_REGISTRY.bundles[project.selectedTemplate] : null;
   const lines = [];
-  lines.push('══════════════════════════════════════════');
-  lines.push('  BOLD700 UX REVIEW RESULTATEN');
-  lines.push('══════════════════════════════════════════');
-  lines.push('');
-  lines.push(`Project:     ${project?.name||'—'}`);
-  lines.push(`Klant:       ${project?.client||'—'}`);
-  lines.push(`URL:         ${project?.url||'—'}`);
-  lines.push(`Datum:       ${new Date().toLocaleDateString('nl-NL')}`);
-  lines.push('');
 
-  const expScore = calcProjectScore(project || { answers: {} });
-  lines.push(`TOTAALSCORE: ${expScore.avg.toFixed(1)} / 10`);
-  lines.push(`(${expScore.answered} beoordeeld, ${expScore.nvt||0} n.v.t., ${expScore.effectiveTotal - expScore.answered} onbeantwoord = 0 punten)`);
-  lines.push('');
-  lines.push('── SCORES PER CATEGORIE ──');
-  lines.push('');
+  if (isQuickScan && tplBundle) {
+    // ── QUICK SCAN: kort, gericht rapport ──
+    const typeName = tplBundle.name_nl.replace(' Quick Scan', '');
+    lines.push('══════════════════════════════════════════');
+    lines.push(`  ${typeName} QUICK SCAN`);
+    lines.push('══════════════════════════════════════════');
+    lines.push('');
+    lines.push(`Project:  ${project?.name||'—'}`);
+    lines.push(`URL:      ${project?.url||'—'}`);
+    lines.push(`Datum:    ${new Date().toLocaleDateString('nl-NL')}`);
+    lines.push('');
 
-  reviewSteps.forEach(step => {
-    const stepAns = step.questions.filter(q => answers[q.id]?.score && answers[q.id].score !== 'nvt');
-    const stepNvt = step.questions.filter(q => answers[q.id]?.score === 'nvt').length;
-    const effective = step.questions.length - stepNvt;
-    const avg = effective > 0 ? stepAns.reduce((s, q) => s + (answers[q.id].score==='good'?10:answers[q.id].score==='ok'?6:3), 0) / effective : 0;
-    const status = effective === 0 ? 'Alles n.v.t.' : avg >= 8 ? 'Goed' : avg >= 5 ? 'Aandacht nodig' : 'Kritiek';
-    lines.push(`${step.title.padEnd(40)} ${effective>0?avg.toFixed(1):'—'}/10  [${status}]${stepNvt > 0 ? ` (${stepNvt} n.v.t.)` : ''}`);
-  });
+    const expScore = calcProjectScore(project || { answers: {} });
+    lines.push(`SCORE: ${expScore.avg.toFixed(1)} / 10`);
+    lines.push('');
 
-  lines.push('');
-  lines.push('── BEVINDINGEN ──');
-  lines.push('');
-  let n = 1;
-  reviewSteps.forEach(step => {
-    step.questions.forEach(q => {
-      const a = answers[q.id]; if (!a?.score) return;
-      if (a.score === 'nvt') { lines.push(`  #${n++} ${q.text}`); lines.push('     ○ N.v.t.'); lines.push(''); return; }
-      const lbl = a.score==='good'?'✓ Goed':a.score==='ok'?'~ Matig':'✗ Niet OK';
-      lines.push(`  #${n++} ${q.text}`);
-      lines.push(`     ${lbl}${a.severity?' ['+a.severity.toUpperCase()+']':''}`);
-      if (a.notes) lines.push(`     ${a.notes}`);
+    // Collect issues sorted by severity
+    const issues = [];
+    const good = [];
+    reviewSteps.forEach(step => {
+      step.questions.forEach(q => {
+        const a = answers[q.id]; if (!a?.score || a.score === 'nvt') return;
+        const sev = q.severity || q.priority || 'medium';
+        if (a.score === 'bad' || a.score === 'ok') {
+          issues.push({ q, a, sev, score: a.score });
+        } else {
+          good.push({ q, a });
+        }
+      });
+    });
+
+    // Sort: critical first, then high, then medium
+    const sevOrder = { critical: 0, high: 1, medium: 2, low: 3 };
+    issues.sort((a, b) => (sevOrder[a.sev]||3) - (sevOrder[b.sev]||3));
+
+    if (issues.length > 0) {
+      lines.push('🔴 FIX NU — Kritieke problemen');
+      lines.push('─────────────────────────────');
+      const critical = issues.filter(i => i.sev === 'critical' || i.score === 'bad');
+      critical.forEach(i => {
+        lines.push(`• ${i.q.text}`);
+        if (i.q.business_impact_nl) lines.push(`  Impact: ${i.q.business_impact_nl}`);
+        if (i.q.fix_suggestion_nl) lines.push(`  Fix: ${i.q.fix_suggestion_nl}`);
+        if (i.a.notes) lines.push(`  Notitie: ${i.a.notes.replace(/\[Auto-scan\]\s*/g, '').trim()}`);
+        lines.push('');
+      });
+
+      const plan = issues.filter(i => i.sev !== 'critical' && i.score !== 'bad');
+      if (plan.length > 0) {
+        lines.push('🟡 PLAN IN — Verbeterpunten');
+        lines.push('─────────────────────────────');
+        plan.forEach(i => {
+          lines.push(`• ${i.q.text}`);
+          if (i.q.fix_suggestion_nl) lines.push(`  Fix: ${i.q.fix_suggestion_nl}`);
+          lines.push('');
+        });
+      }
+    }
+
+    if (good.length > 0) {
+      lines.push(`🟢 GOED — ${good.length} punten scoren goed`);
+      lines.push('');
+    }
+
+    // Top 3 priorities
+    lines.push('── TOP 3 PRIORITEITEN ──');
+    lines.push('');
+    issues.slice(0, 3).forEach((i, idx) => {
+      lines.push(`${idx+1}. ${i.q.text}`);
+      if (i.q.fix_suggestion_nl) lines.push(`   → ${i.q.fix_suggestion_nl}`);
       lines.push('');
     });
-  });
+
+  } else {
+    // ── VOLLEDIGE AUDIT: uitgebreid format ──
+    lines.push('══════════════════════════════════════════');
+    lines.push('  BOLD700 UX REVIEW RESULTATEN');
+    lines.push('══════════════════════════════════════════');
+    lines.push('');
+    lines.push(`Project:     ${project?.name||'—'}`);
+    lines.push(`Klant:       ${project?.client||'—'}`);
+    lines.push(`URL:         ${project?.url||'—'}`);
+    lines.push(`Datum:       ${new Date().toLocaleDateString('nl-NL')}`);
+    lines.push('');
+
+    const expScore = calcProjectScore(project || { answers: {} });
+    lines.push(`TOTAALSCORE: ${expScore.avg.toFixed(1)} / 10 (gewogen)`);
+    lines.push(`(${expScore.answered} beoordeeld, ${expScore.nvt||0} n.v.t., ${expScore.effectiveTotal - expScore.answered} onbeantwoord = 0 punten)`);
+    lines.push('');
+    lines.push('── SCORES PER CATEGORIE ──');
+    lines.push('');
+
+    reviewSteps.forEach(step => {
+      const ws = calcWeightedScore(step.questions, answers);
+      const stepNvt = step.questions.filter(q => answers[q.id]?.score === 'nvt').length;
+      const effective = step.questions.length - stepNvt;
+      const status = effective === 0 ? 'Alles n.v.t.' : ws.score >= 8 ? 'Goed' : ws.score >= 5 ? 'Aandacht nodig' : 'Kritiek';
+      lines.push(`${step.title.padEnd(40)} ${effective>0?ws.score.toFixed(1):'—'}/10  [${status}]${stepNvt > 0 ? ` (${stepNvt} n.v.t.)` : ''}`);
+    });
+
+    lines.push('');
+    lines.push('── BEVINDINGEN ──');
+    lines.push('');
+    let n = 1;
+    reviewSteps.forEach(step => {
+      step.questions.forEach(q => {
+        const a = answers[q.id]; if (!a?.score) return;
+        if (a.score === 'nvt') { lines.push(`  #${n++} ${q.text}`); lines.push('     ○ N.v.t.'); lines.push(''); return; }
+        const lbl = a.score==='good'?'✓ Goed':a.score==='ok'?'~ Matig':'✗ Niet OK';
+        lines.push(`  #${n++} ${q.text}`);
+        lines.push(`     ${lbl}${q.severity?' ['+q.severity.toUpperCase()+']':''}`);
+        if (a.notes) lines.push(`     ${a.notes}`);
+        lines.push('');
+      });
+    });
+  }
 
   lines.push('══════════════════════════════════════════');
   lines.push('  Gegenereerd door BOLD700 UX Review Tool');
@@ -8772,6 +9080,15 @@ Regels:
 - Focus op wat het de klant OPLEVERT (meer klanten, minder uitval, betere Google positie, professionelere uitstraling)
 - Wees concreet maar kort
 - Gebruik Markdown formatting`;
+
+  // Rate limiting check
+  if (!canCallAI()) {
+    body.innerHTML = '<div class="ai-plan-empty" style="color:var(--orange)"><i data-lucide="alert-triangle" style="width:32px;height:32px;opacity:0.7;margin-bottom:8px;display:block;margin-inline:auto"></i>Je hebt het maximum van ' + AI_RATE_LIMIT.maxPerHour + ' AI-verzoeken per uur bereikt. Probeer het later opnieuw.</div>';
+    if (typeof lucide !== 'undefined') lucide.createIcons({nodes:[body]});
+    if (btn) { btn.disabled = false; btn.innerHTML = '<i data-lucide="sparkles"></i> Genereer AI Actieplan'; lucide.createIcons({nodes:[btn]}); }
+    return;
+  }
+  trackAICall();
 
   try {
     const resp = await fetch(proxyUrl, {
@@ -8998,10 +9315,336 @@ function initLogos() {
   }
 }
 
+// ═══════════════ PREVIEW / LEAD GENERATION MODE ═══════════════
+
+async function loadPreview(projectId) {
+  try {
+    const doc = await db.collection('projects').doc(projectId).get();
+    if (!doc.exists) { showPreviewError('Project niet gevonden'); return; }
+    const project = { ...doc.data(), id: doc.id };
+    if (!project.previewMode || !project.previewConfig?.enabled) {
+      showPreviewError('Deze preview is niet meer beschikbaar');
+      return;
+    }
+    renderPreview(project);
+  } catch(e) {
+    console.error('[Preview]', e);
+    showPreviewError('Kon preview niet laden');
+  }
+}
+
+function renderPreview(project) {
+  document.querySelectorAll('#authScreen, #dashboardScreen, #newProjectScreen, #reviewScreen, #scorecardScreen')
+    .forEach(el => el.classList.add('hidden'));
+  const screen = document.getElementById('previewScreen');
+  screen.classList.remove('hidden');
+  const config = project.previewConfig;
+  const answers = project.answers || {};
+
+  // Build review steps for this project
+  let steps;
+  if (typeof buildReviewSteps === 'function') {
+    steps = buildReviewSteps(project.moduleConfig || (typeof getDefaultModuleConfig === 'function' ? getDefaultModuleConfig() : null));
+  } else {
+    steps = typeof reviewSteps !== 'undefined' ? reviewSteps : [];
+  }
+
+  // Collect ALL findings that have a score
+  const allFindings = [];
+  steps.forEach((step, stepIndex) => {
+    step.questions.forEach(q => {
+      const a = answers[q.id];
+      if (!a?.score || a.score === 'nvt') return;
+      allFindings.push({
+        question: q, answer: a, step: step, stepIndex: stepIndex,
+        severity: q.severity || q.priority || step.impact || 'medium',
+        isNegative: a.score === 'bad' || a.score === 'ok'
+      });
+    });
+  });
+
+  // Sort: bad first, then ok, then good. Within each group: critical > high > medium
+  const sevOrder = { critical: 0, high: 1, medium: 2, low: 3 };
+  const scoreOrder = { bad: 0, ok: 1, good: 2 };
+  allFindings.sort((a, b) => {
+    const scoreDiff = (scoreOrder[a.answer.score] || 2) - (scoreOrder[b.answer.score] || 2);
+    if (scoreDiff !== 0) return scoreDiff;
+    return (sevOrder[a.severity] || 2) - (sevOrder[b.severity] || 2);
+  });
+
+  const maxVisible = config.visibleFindings || 5;
+  const negativeFindings = allFindings.filter(f => f.isNegative);
+  const visibleFindings = negativeFindings.slice(0, maxVisible);
+  const lockedCount = negativeFindings.length - visibleFindings.length;
+  const goodCount = allFindings.filter(f => f.answer.score === 'good').length;
+
+  // Total score
+  const scored = allFindings.filter(f => f.answer.score !== 'nvt');
+  const totalScore = scored.length > 0
+    ? scored.reduce((sum, f) => sum + (f.answer.score === 'good' ? 10 : f.answer.score === 'ok' ? 5 : 0), 0) / scored.length
+    : 0;
+  const scoreColor = totalScore >= 8 ? 'var(--green)' : totalScore >= 5 ? 'var(--yellow)' : 'var(--red)';
+
+  // Template label
+  let scanLabel = 'Volledige UX Audit';
+  if (project.selectedTemplate && typeof MODULE_REGISTRY !== 'undefined') {
+    const bundle = MODULE_REGISTRY.bundles[project.selectedTemplate];
+    if (bundle) scanLabel = bundle.name_nl.replace(' Quick Scan', '') + ' Quick Scan';
+  }
+
+  // Domain
+  let domain = project.url || '';
+  try { domain = new URL(domain.startsWith('http') ? domain : 'https://' + domain).hostname; } catch(e) {}
+
+  const badCount = allFindings.filter(f => f.answer.score === 'bad').length;
+  const okCount = allFindings.filter(f => f.answer.score === 'ok').length;
+
+  screen.innerHTML = `
+    <div class="preview-container">
+      <div class="preview-header">
+        <div class="preview-logo">
+          ${typeof brandLogo === 'function' ? brandLogo('28px', false) : '<strong>BOLD700</strong>'}
+          <span class="preview-logo-text">UX Review Platform</span>
+        </div>
+      </div>
+
+      <div class="preview-hero">
+        ${config.customMessage ? `<div class="preview-custom-msg">${esc(config.customMessage)}</div>` : ''}
+        <div class="preview-score-row">
+          <div class="preview-score-circle" style="border-color:${scoreColor}">
+            <div class="preview-score-num" style="color:${scoreColor}">${totalScore.toFixed(1)}</div>
+            <div class="preview-score-label">/ 10</div>
+          </div>
+          <div class="preview-meta">
+            <h1 class="preview-title">UX Review voor <span style="color:var(--accent)">${esc(domain)}</span></h1>
+            <div class="preview-meta-row">
+              <span>${esc(scanLabel)}</span>
+              <span>·</span>
+              <span>${scored.length} checks uitgevoerd</span>
+              <span>·</span>
+              <span>${new Date(project.createdAt || Date.now()).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+            </div>
+            <div class="preview-summary">
+              <span class="preview-tag bad">${badCount} kritiek</span>
+              <span class="preview-tag ok">${okCount} verbeterpunten</span>
+              <span class="preview-tag good">${goodCount} goed</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="preview-findings">
+        <h2>Bevindingen</h2>
+        ${visibleFindings.map(f => `
+          <div class="preview-finding ${f.answer.score}">
+            <div class="preview-finding-header">
+              <span class="preview-finding-badge ${f.answer.score}">${f.answer.score === 'bad' ? '✗ Kritiek' : '~ Verbeterpunt'}</span>
+              ${f.severity === 'critical' || f.severity === 'high' ? '<span class="preview-finding-sev">Hoge impact</span>' : ''}
+            </div>
+            <div class="preview-finding-text">${esc(f.question.text)}</div>
+            ${f.answer.notes ? `<div class="preview-finding-notes">${esc(f.answer.notes).substring(0, 200)}${f.answer.notes.length > 200 ? '…' : ''}</div>` : ''}
+            ${f.question.business_impact_nl ? `<div class="preview-finding-impact"><strong>Impact:</strong> ${esc(f.question.business_impact_nl)}</div>` : ''}
+            ${f.question.fix_suggestion_nl ? `<div class="preview-finding-fix"><strong>Aanbeveling:</strong> ${esc(f.question.fix_suggestion_nl)}</div>` : ''}
+          </div>
+        `).join('')}
+
+        ${lockedCount > 0 ? `
+        <div class="preview-locked-section">
+          <div class="preview-locked-overlay">
+            <div class="preview-locked-icon">🔒</div>
+            <div class="preview-locked-title">Nog ${lockedCount} bevindingen beschikbaar</div>
+            <div class="preview-locked-desc">Unlock de volledige scan voor alle bevindingen, een concreet actieplan, en prioritering op business impact.</div>
+          </div>
+          <div class="preview-locked-blur">
+            ${Array(Math.min(lockedCount, 3)).fill('').map(() => `
+              <div class="preview-finding-fake">
+                <div class="fake-badge"></div>
+                <div class="fake-line long"></div>
+                <div class="fake-line medium"></div>
+                <div class="fake-line short"></div>
+              </div>
+            `).join('')}
+          </div>
+        </div>` : ''}
+      </div>
+
+      <div class="preview-cta-section">
+        <h2>Volgende stap</h2>
+        <div class="preview-cta-grid">
+          ${config.ctaType !== 'pay' ? `
+          <div class="preview-cta-card contact">
+            <div class="preview-cta-icon">💬</div>
+            <h3>Gratis adviesgesprek</h3>
+            <p>Bespreek de bevindingen en krijg advies over prioriteiten en aanpak. Vrijblijvend.</p>
+            <a href="mailto:${esc(config.contactEmail || 'info@bold700.nl')}?subject=${encodeURIComponent('UX Review ' + domain)}&body=${encodeURIComponent('Hoi, ik heb de preview van mijn UX review bekeken en wil graag de bevindingen bespreken.')}" class="preview-cta-btn contact">
+              Neem contact op →
+            </a>
+            ${config.contactPhone ? `<div class="preview-cta-phone">Of bel: <a href="tel:${esc(config.contactPhone)}">${esc(config.contactPhone)}</a></div>` : ''}
+          </div>` : ''}
+
+          ${config.ctaType !== 'contact' ? `
+          <div class="preview-cta-card unlock">
+            <div class="preview-cta-icon">🔓</div>
+            <h3>Volledige scan unlocken</h3>
+            <p>Alle ${allFindings.length} bevindingen, gedetailleerd actieplan, en concrete fix-suggesties per item.</p>
+            <a href="mailto:${esc(config.contactEmail || 'info@bold700.nl')}?subject=${encodeURIComponent('Unlock UX Review ' + domain)}&body=${encodeURIComponent('Hoi, ik wil graag de volledige UX review unlocken voor ' + domain + '.')}" class="preview-cta-btn unlock">
+              Unlock volledige scan →
+            </a>
+          </div>` : ''}
+        </div>
+      </div>
+
+      <div class="preview-footer">
+        <div class="preview-footer-logo">
+          ${typeof brandLogo === 'function' ? brandLogo('20px', false) : '<strong>BOLD700</strong>'}
+          <span>BOLD700 · UX Review Expert</span>
+        </div>
+        <div class="preview-footer-text">Deze review is uitgevoerd met het BOLD700 UX Review Platform</div>
+      </div>
+    </div>`;
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+function showPreviewError(msg) {
+  document.querySelectorAll('#authScreen, #dashboardScreen, #newProjectScreen, #reviewScreen, #scorecardScreen')
+    .forEach(el => el.classList.add('hidden'));
+  const screen = document.getElementById('previewScreen');
+  screen.classList.remove('hidden');
+  screen.innerHTML = `
+    <div class="preview-container" style="text-align:center;padding:80px 24px">
+      <div style="font-size:48px;margin-bottom:16px">🔍</div>
+      <h1 style="font-size:24px;font-weight:800;margin-bottom:8px">${esc(msg)}</h1>
+      <p style="color:var(--text-muted);margin-bottom:24px">Deze preview link is mogelijk verlopen of ongeldig.</p>
+      <a href="${window.location.pathname}" style="color:var(--accent);font-weight:600;text-decoration:none">Naar BOLD700 →</a>
+    </div>`;
+}
+
+// ── Preview config modal (for admin/auditor) ──
+function showPreviewModal(projectId) {
+  const project = projects.find(p => p.id === projectId);
+  if (!project) return;
+  const existing = project.previewConfig;
+  const previewUrl = window.location.origin + window.location.pathname + '?preview=' + projectId;
+
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+
+  overlay.innerHTML = `
+    <div class="modal-box" style="max-width:500px">
+      <div class="modal-header" style="display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--border)">
+        <h3 style="margin:0;font-size:16px;font-weight:700">Preview Link voor Lead</h3>
+        <button onclick="this.closest('.modal-overlay').remove()" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:20px">×</button>
+      </div>
+      <div style="padding:20px">
+        <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px">
+          Genereer een publieke link die je prospect kan bekijken. Ze zien een deel van de bevindingen — de rest is gelocked.
+        </p>
+
+        <div class="form-group" style="margin-bottom:12px">
+          <label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px">Zichtbare bevindingen</label>
+          <select id="pvVisibleCount" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:var(--surface);color:var(--text)">
+            <option value="3" ${(existing?.visibleFindings || 5) === 3 ? 'selected' : ''}>3 bevindingen (meer urgentie)</option>
+            <option value="5" ${(existing?.visibleFindings || 5) === 5 ? 'selected' : ''}>5 bevindingen (goede balans)</option>
+            <option value="8" ${(existing?.visibleFindings || 5) === 8 ? 'selected' : ''}>8 bevindingen (meer waarde vooraf)</option>
+          </select>
+        </div>
+
+        <div class="form-group" style="margin-bottom:12px">
+          <label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px">Persoonlijk bericht (optioneel)</label>
+          <textarea id="pvMessage" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:var(--surface);color:var(--text);resize:vertical" rows="3" placeholder="bijv. Hoi! Ik heb je website bekeken en een paar dingen gevonden die je conversie kunnen verbeteren...">${existing?.customMessage || ''}</textarea>
+        </div>
+
+        <div class="form-group" style="margin-bottom:12px">
+          <label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px">Contact e-mail</label>
+          <input type="email" id="pvEmail" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:var(--surface);color:var(--text)" value="${existing?.contactEmail || currentUser?.email || 'info@bold700.nl'}">
+        </div>
+
+        <div class="form-group" style="margin-bottom:12px">
+          <label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px">Telefoonnummer (optioneel)</label>
+          <input type="tel" id="pvPhone" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:var(--surface);color:var(--text)" value="${existing?.contactPhone || ''}" placeholder="+31 6 12345678">
+        </div>
+
+        <div class="form-group" style="margin-bottom:12px">
+          <label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px">CTA opties</label>
+          <select id="pvCtaType" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:var(--surface);color:var(--text)">
+            <option value="both" ${(existing?.ctaType || 'both') === 'both' ? 'selected' : ''}>Contact + Betalen (beide)</option>
+            <option value="contact" ${existing?.ctaType === 'contact' ? 'selected' : ''}>Alleen contact</option>
+            <option value="pay" ${existing?.ctaType === 'pay' ? 'selected' : ''}>Alleen betalen</option>
+          </select>
+        </div>
+
+        ${existing?.enabled ? `
+        <div style="margin-top:16px;padding:12px;background:var(--surface2);border-radius:8px">
+          <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:6px">PREVIEW LINK</label>
+          <div style="display:flex;gap:8px">
+            <input type="text" id="pvLinkField" value="${previewUrl}" readonly style="flex:1;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:8px 10px;font-size:11px;color:var(--text);font-family:monospace">
+            <button class="btn btn-secondary" style="font-size:11px;padding:6px 12px;white-space:nowrap" onclick="navigator.clipboard.writeText(document.getElementById('pvLinkField').value);this.textContent='✓ Gekopieerd';setTimeout(()=>this.textContent='Kopieer',2000)">Kopieer</button>
+          </div>
+        </div>` : ''}
+
+        <div style="display:flex;gap:8px;margin-top:20px">
+          <button class="btn btn-primary" style="flex:1" onclick="savePreviewConfig('${projectId}')">
+            ${existing?.enabled ? 'Bijwerken' : 'Preview link genereren'}
+          </button>
+          ${existing?.enabled ? `<button class="btn btn-secondary" onclick="disablePreview('${projectId}')">Uitschakelen</button>` : ''}
+        </div>
+      </div>
+    </div>`;
+
+  document.body.appendChild(overlay);
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+async function savePreviewConfig(projectId) {
+  const project = projects.find(p => p.id === projectId);
+  if (!project) return;
+
+  project.previewMode = true;
+  project.previewConfig = {
+    enabled: true,
+    createdAt: project.previewConfig?.createdAt || new Date().toISOString(),
+    visibleFindings: parseInt(document.getElementById('pvVisibleCount').value),
+    showOverallScore: true,
+    showCategoryScores: false,
+    ctaType: document.getElementById('pvCtaType').value,
+    contactEmail: document.getElementById('pvEmail').value.trim(),
+    contactPhone: document.getElementById('pvPhone').value.trim(),
+    customMessage: document.getElementById('pvMessage').value.trim(),
+    showBranding: true
+  };
+
+  await syncProjectToFirestore(project);
+
+  const previewUrl = window.location.origin + window.location.pathname + '?preview=' + projectId;
+  try { await navigator.clipboard.writeText(previewUrl); } catch(e) {}
+
+  document.querySelector('.modal-overlay')?.remove();
+  showScanToast('success', 'Preview link actief!', 'Link is gekopieerd naar je klembord', 4000);
+  renderDashboard();
+}
+
+async function disablePreview(projectId) {
+  const project = projects.find(p => p.id === projectId);
+  if (!project) return;
+  project.previewMode = false;
+  if (project.previewConfig) project.previewConfig.enabled = false;
+  await syncProjectToFirestore(project);
+  document.querySelector('.modal-overlay')?.remove();
+  showScanToast('info', 'Preview uitgeschakeld', 'De link werkt niet meer', 3000);
+  renderDashboard();
+}
+
 // Main auth state listener — drives the entire app
 auth.onAuthStateChanged(async (user) => {
   initLogos();
   if (typeof lucide !== 'undefined') lucide.createIcons();
+
+  // Preview mode: skip auth flow entirely
+  if (urlPreviewId) {
+    loadPreview(urlPreviewId);
+    return;
+  }
 
   if (!user) {
     // Not logged in → show auth screen
