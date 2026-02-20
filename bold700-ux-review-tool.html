@@ -606,6 +606,29 @@
 
   .np-actions .btn { flex: 1; justify-content: center; }
 
+  /* Wizard stepper */
+  .np-stepper { display:flex; align-items:center; justify-content:center; gap:0; margin-bottom:28px; }
+  .np-step { display:flex; flex-direction:column; align-items:center; gap:4px; }
+  .np-step-dot { width:28px; height:28px; border-radius:50%; border:2px solid var(--border); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; color:var(--text-muted); transition:all 0.2s; }
+  .np-step.active .np-step-dot { border-color:var(--accent); background:var(--accent); color:#fff; }
+  .np-step.done .np-step-dot { border-color:var(--green); background:var(--green); color:#fff; }
+  .np-step.done .np-step-dot::after { content:'✓'; font-size:13px; }
+  .np-step-num { display:inline; }
+  .np-step.done .np-step-num { display:none; }
+  .np-step-label { font-size:11px; color:var(--text-muted); }
+  .np-step.active .np-step-label { color:var(--accent); font-weight:600; }
+  .np-step.done .np-step-label { color:var(--green); }
+  .np-step-line { width:48px; height:2px; background:var(--border); margin:0 8px; margin-bottom:18px; transition:background 0.2s; }
+  .np-step-line.done { background:var(--green); }
+
+  /* Hide/show form groups by wizard step */
+  .np-card [data-np-step] { display:none; }
+  .np-card [data-np-step].np-visible { display:block; }
+
+  /* Step title within wizard */
+  .np-step-title { font-size:18px; font-weight:700; margin-bottom:4px; }
+  .np-step-desc { font-size:13px; color:var(--text-muted); margin-bottom:20px; }
+
   /* ═══ SCREEN 3: REVIEW INTERFACE ═══ */
 
   /* URL toolbar (full-width, very top) */
@@ -1633,32 +1656,20 @@
     <div class="np-subtitle">UX Review Platform</div>
     <h2>Nieuw Project</h2>
 
-    <div class="form-group">
-      <label>Website URL *</label>
-      <input type="url" id="npUrl" class="form-input" placeholder="https://jouwwebsite.nl" oninput="onNpUrlChange()">
+    <!-- Wizard stepper -->
+    <div class="np-stepper" id="npStepper">
+      <div class="np-step active" data-step="1"><span class="np-step-dot"><span class="np-step-num">1</span></span><span class="np-step-label">Modus</span></div>
+      <div class="np-step-line"></div>
+      <div class="np-step" data-step="2"><span class="np-step-dot"><span class="np-step-num">2</span></span><span class="np-step-label">Type</span></div>
+      <div class="np-step-line"></div>
+      <div class="np-step" data-step="3"><span class="np-step-dot"><span class="np-step-num">3</span></span><span class="np-step-label">Details</span></div>
     </div>
 
-    <div class="form-group">
-      <label>Projectnaam *</label>
-      <input type="text" id="npName" class="form-input" placeholder="bijv. Webshop Review">
-    </div>
-
-    <!-- Page-type template selection -->
-    <div class="form-group" id="npTemplateGroup">
-      <label>Pagina-type <span style="font-weight:400;color:var(--text-muted);font-size:11px">— kies een quick scan of start een volledige audit</span></label>
-      <div class="template-grid" id="templateGrid"></div>
-      <div id="autoDetectRow" style="display:none;margin-top:6px">
-        <button class="btn-detect" id="btnDetectType" onclick="detectPageType()">
-          <i data-lucide="search" style="width:12px;height:12px"></i> Auto-detecteer pagina-type
-        </button>
-        <span id="detectResult" style="font-size:11px;color:var(--text-muted);margin-left:8px"></span>
-      </div>
-    </div>
-
-    <!-- Mode selection: available to all users -->
-    <div id="npModeFields">
-      <div class="form-group">
-        <label>Modus</label>
+    <!-- ═══ STEP 1: Modus ═══ -->
+    <div data-np-step="1" class="np-visible">
+      <div class="np-step-title">Hoe wil je reviewen?</div>
+      <div class="np-step-desc">Kies of je zelf aan de slag gaat of een expert inschakelt.</div>
+      <div id="npModeFields">
         <div class="mode-choice">
           <div class="mode-option selected" onclick="selectMode('self-service', this)">
             <div class="mode-icon"><i data-lucide="scan-search"></i></div>
@@ -1672,8 +1683,36 @@
           </div>
         </div>
       </div>
+    </div>
+
+    <!-- ═══ STEP 2: Type ═══ -->
+    <div data-np-step="2">
+      <div class="np-step-title">Wat wil je scannen?</div>
+      <div class="np-step-desc">Kies een pagina-type voor een gerichte quick scan, of start een volledige audit.</div>
+      <div class="template-grid" id="templateGrid"></div>
+      <div id="autoDetectRow" style="display:none;margin-top:6px">
+        <button class="btn-detect" id="btnDetectType" onclick="detectPageType()">
+          <i data-lucide="search" style="width:12px;height:12px"></i> Auto-detecteer pagina-type
+        </button>
+        <span id="detectResult" style="font-size:11px;color:var(--text-muted);margin-left:8px"></span>
+      </div>
+    </div>
+
+    <!-- ═══ STEP 3: Details ═══ -->
+    <div data-np-step="3">
+      <div class="np-step-title">Project details</div>
+      <div class="np-step-desc">Vul de URL en projectnaam in om te starten.</div>
+      <div class="form-group">
+        <label>Website URL *</label>
+        <input type="url" id="npUrl" class="form-input" placeholder="https://jouwwebsite.nl" oninput="onNpUrlChange()">
+      </div>
+      <div class="form-group">
+        <label>Projectnaam *</label>
+        <input type="text" id="npName" class="form-input" placeholder="bijv. Webshop Review">
+      </div>
+      <!-- Professional-only fields (shown conditionally) -->
       <div class="form-group hidden" id="npClientGroup">
-        <label>Bedrijfsnaam klant</label>
+        <label>Bedrijfsnaam klant *</label>
         <input type="text" id="npClient" class="form-input" placeholder="bijv. Bakkerij de Goudkorst">
       </div>
       <div class="form-group hidden" id="npPackageGroup">
@@ -1695,14 +1734,10 @@
       </div>
     </div>
 
-    <div class="form-group">
-      <label>Doelgroep (optioneel)</label>
-      <input type="text" id="npAudience" class="form-input" placeholder="bijv. Jonge ouders, 25-40 jaar">
-    </div>
-
+    <!-- Wizard navigation buttons -->
     <div class="np-actions">
-      <button class="btn btn-secondary" onclick="showDashboard()">Annuleer</button>
-      <button class="btn btn-primary btn-lg" onclick="createProject()">Start Review →</button>
+      <button class="btn btn-secondary" id="npBtnBack" onclick="npPrev()">Annuleer</button>
+      <button class="btn btn-primary btn-lg" id="npBtnNext" onclick="npNext()">Volgende →</button>
     </div>
   </div>
 </div>
@@ -3773,21 +3808,76 @@ async function deleteProject(id) {
   renderDashboard();
 }
 
-// ═══════════════ NEW PROJECT ═══════════════
+// ═══════════════ NEW PROJECT (WIZARD) ═══════════════
 let selectedTemplate = null;
+let npStep = 1;
 
 function showNewProject() {
   document.getElementById('dashboardScreen').classList.add('hidden');
   document.getElementById('newProjectScreen').classList.remove('hidden');
   newProjectMode = 'self-service';
   selectedTemplate = null;
-  // Mode fields are now visible to everyone
-  const modeFields = document.getElementById('npModeFields');
-  if (modeFields) modeFields.classList.remove('hidden');
+  npStep = 1;
   // Reset mode selection visual
   document.querySelectorAll('.mode-option').forEach((e, i) => e.classList.toggle('selected', i === 0));
-  updateNewProjectForm();
+  // Reset form fields
+  const npUrl = document.getElementById('npUrl'); if (npUrl) npUrl.value = '';
+  const npName = document.getElementById('npName'); if (npName) npName.value = '';
+  const npClient = document.getElementById('npClient'); if (npClient) npClient.value = '';
   renderTemplateSelector();
+  showNpStep(1);
+}
+
+function showNpStep(step) {
+  npStep = step;
+  // Show/hide step content
+  document.querySelectorAll('.np-card [data-np-step]').forEach(el => {
+    el.classList.toggle('np-visible', el.getAttribute('data-np-step') == step);
+  });
+  // Update stepper dots
+  document.querySelectorAll('.np-stepper .np-step').forEach(el => {
+    const s = parseInt(el.getAttribute('data-step'));
+    el.classList.toggle('active', s === step);
+    el.classList.toggle('done', s < step);
+  });
+  // Update stepper lines
+  document.querySelectorAll('.np-stepper .np-step-line').forEach((line, i) => {
+    line.classList.toggle('done', (i + 1) < step);
+  });
+  // Update buttons
+  const btnBack = document.getElementById('npBtnBack');
+  const btnNext = document.getElementById('npBtnNext');
+  if (step === 1) {
+    btnBack.textContent = 'Annuleer';
+    btnBack.onclick = () => showDashboard();
+    btnNext.textContent = 'Volgende →';
+    btnNext.onclick = () => npNext();
+  } else if (step === 2) {
+    btnBack.textContent = '← Terug';
+    btnBack.onclick = () => npPrev();
+    btnNext.textContent = 'Volgende →';
+    btnNext.onclick = () => npNext();
+  } else if (step === 3) {
+    btnBack.textContent = '← Terug';
+    btnBack.onclick = () => npPrev();
+    const isPro = newProjectMode === 'professional';
+    btnNext.textContent = isPro ? 'Aanvraag versturen →' : 'Start Review →';
+    btnNext.onclick = () => createProject();
+    // Show/hide professional fields
+    updateNewProjectForm();
+  }
+  // Refresh lucide icons for visible step
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+function npNext() {
+  if (npStep >= 3) return;
+  showNpStep(npStep + 1);
+}
+
+function npPrev() {
+  if (npStep <= 1) return;
+  showNpStep(npStep - 1);
 }
 
 function renderTemplateSelector() {
@@ -3918,7 +4008,6 @@ function selectMode(mode, el) {
   newProjectMode = mode;
   document.querySelectorAll('.mode-option').forEach(e => e.classList.remove('selected'));
   el.classList.add('selected');
-  updateNewProjectForm();
 }
 
 function updateNewProjectForm() {
@@ -3936,7 +4025,6 @@ function createProject() {
   const name = document.getElementById('npName').value.trim();
   const client = document.getElementById('npClient').value.trim();
   const pkg = document.getElementById('npPackage').value;
-  const audience = document.getElementById('npAudience').value.trim();
 
   if (!url || !name) { alert('Vul minimaal een URL en projectnaam in.'); return; }
 
@@ -3961,7 +4049,7 @@ function createProject() {
     id: projectId,
     name, url, client: newProjectMode === 'professional' ? client : '',
     package: newProjectMode === 'professional' ? pkg : 'self-service',
-    audience, mode: newProjectMode,
+    mode: newProjectMode,
     userId: currentUser ? currentUser.uid : null,
     leadEmail: currentUser ? currentUser.email : '',
     answers: {}, currentStep: 0, createdAt: new Date().toISOString(),
