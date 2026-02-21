@@ -1716,6 +1716,24 @@
     .ff-category-row { gap: 3px; }
     .ff-cat-tag { font-size: 10px; padding: 2px 6px; }
   }
+
+  /* ═══ FREE-FORM MOBILE: telefoon als notitieblok ═══ */
+  @media (max-width: 768px) {
+    .ff-mobile-mode .preview-panel { display: none !important; }
+    .ff-mobile-mode .review-panel {
+      width: 100% !important; max-width: 100% !important;
+      min-width: 100% !important; border-right: none;
+    }
+    .ff-mobile-mode .step-stepper { display: none !important; }
+    .ff-mobile-mode .review-body { max-width: 100%; }
+    .ff-mobile-mode .questions-area { max-width: 100%; padding: 12px; }
+    .ff-mobile-mode .url-toolbar { display: none !important; }
+    .ff-mobile-mode .ff-paste-zone { display: none; }
+    .ff-mobile-mode .ff-notes-main { min-height: 80px; font-size: 15px; }
+    .ff-mobile-mode .score-btn { padding: 8px 14px; font-size: 13px; }
+    .ff-mobile-mode .ff-add-btn { padding: 14px; font-size: 15px; }
+    .ff-mobile-mode .ff-footer { flex-direction: column; gap: 12px; text-align: center; }
+  }
 </style>
 <!-- Firebase SDK (compat for single-file usage) -->
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
@@ -4905,6 +4923,16 @@ function openProject(id) {
   document.getElementById('dashboardScreen').classList.add('hidden');
   document.getElementById('newProjectScreen').classList.add('hidden');
   document.getElementById('reviewScreen').classList.remove('hidden');
+
+  // Free-form op mobiel: verberg preview, full-width notities
+  const mainEl = document.querySelector('.main');
+  if (mainEl) {
+    mainEl.classList.remove('ff-mobile-mode');
+    if (project.reviewType === 'free-form') {
+      mainEl.classList.add('ff-mobile-mode');
+    }
+  }
+
   const pnEl = document.getElementById('topbarProjectName');
   if (pnEl) {
     let label = '| ' + project.name;
@@ -4942,6 +4970,8 @@ function backToDashboard() {
   const project = getActiveProject();
   if (project) { project.currentStep = currentStep; saveState(); }
   document.getElementById('reviewScreen').classList.add('hidden');
+  const mainEl = document.querySelector('.main');
+  if (mainEl) mainEl.classList.remove('ff-mobile-mode');
   clearUrlParam('p');
   showDashboard();
 }
