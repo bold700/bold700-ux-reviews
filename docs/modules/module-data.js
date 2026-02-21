@@ -14488,6 +14488,35 @@ const SUBCATEGORY_NAMES = {
     'pricing': { nl: 'Prijspagina', en: 'Pricing Page' },
     'blog': { nl: 'Blog / Content', en: 'Blog / Content' },
     'onboarding': { nl: 'SaaS Onboarding', en: 'SaaS Onboarding' }
+  },
+  'storytelling': {
+    'messaging': { nl: 'Messaging & Boodschap', en: 'Messaging & Message' },
+    'structure': { nl: 'Verhaalstructuur', en: 'Story Structure' },
+    'persuasion': { nl: 'Overtuiging & CTA', en: 'Persuasion & CTA' }
+  },
+  'content-quality': {
+    'readability': { nl: 'Leesbaarheid', en: 'Readability' },
+    'structure': { nl: 'Tekststructuur', en: 'Text Structure' },
+    'microcopy': { nl: 'Microcopy & Labels', en: 'Microcopy & Labels' },
+    'quality': { nl: 'Contentkwaliteit', en: 'Content Quality' }
+  },
+  'persuasion': {
+    'social-proof': { nl: 'Social Proof', en: 'Social Proof' },
+    'trust': { nl: 'Vertrouwen & Veiligheid', en: 'Trust & Security' },
+    'cta-optimization': { nl: 'CTA Optimalisatie', en: 'CTA Optimization' },
+    'psychology': { nl: 'Overtuigingspsychologie', en: 'Persuasion Psychology' },
+    'ethics': { nl: 'Ethiek & Dark Patterns', en: 'Ethics & Dark Patterns' }
+  },
+  'info-architecture': {
+    'navigation': { nl: 'Navigatie', en: 'Navigation' },
+    'wayfinding': { nl: 'Wayfinding & Oriëntatie', en: 'Wayfinding & Orientation' },
+    'layout': { nl: 'Layout & Scanpatronen', en: 'Layout & Scan Patterns' },
+    'mobile': { nl: 'Mobiele IA', en: 'Mobile IA' }
+  },
+  'eeat': {
+    'identity': { nl: 'Identiteit & Contact', en: 'Identity & Contact' },
+    'authority': { nl: 'Autoriteit & Bewijs', en: 'Authority & Evidence' },
+    'experience': { nl: 'Ervaring & Originaliteit', en: 'Experience & Originality' }
   }
 };
 
@@ -14802,6 +14831,263 @@ MODULE_REGISTRY.bundles['qs-figma-mobile'] = {
   modules: ['figma-design'],
   include_checks: ['fig-touch-targets', 'fig-min-text-size', 'fig-contrast', 'fig-spacing-grid', 'fig-component-reuse', 'fig-auto-layout', 'fig-interaction-states', 'fig-empty-states', 'fig-naming-layers'],
   description_nl: 'Mobile-specifiek: touch targets, leesbare tekst, spacing, interaction states en empty states.'
+};
+
+// ═══════════════ STORYTELLING & MESSAGING MODULE ═══════════════
+MODULE_REGISTRY.modules.push({
+  id: 'storytelling',
+  name_nl: 'Storytelling & Messaging',
+  name_en: 'Storytelling & Messaging',
+  icon: 'message-circle',
+  color: '#8b5cf6',
+  enabled_by_default: false,
+  default_weight: 1.0,
+  subcategories: ['messaging', 'structure', 'persuasion']
+});
+
+MODULE_CHECKS['storytelling'] = [
+  // ── Subcategory: messaging ──
+  { id: 'st-you-vs-we', module: 'storytelling', subcategory: 'messaging', question_nl: 'Spreekt de pagina de bezoeker aan? ("jij/je/u" meer dan "wij/ons")', question_en: 'Does the page address the visitor? ("you/your" more than "we/our")', severity: 'high', type: 'auto', business_impact_nl: 'Pagina\'s die de klant centraal zetten converteren significant beter.', fix_suggestion_nl: 'Herschrijf kopij met de klant als onderwerp. Verhouding "jij/je/u" vs "wij/ons" moet minimaal 2:1 zijn.', source: 'StoryBrand (Donald Miller)' },
+  { id: 'st-above-fold-complete', module: 'storytelling', subcategory: 'messaging', question_nl: 'Zijn headline + subheadline + CTA + trust-element alle vier zichtbaar boven de fold?', question_en: 'Are headline, subheadline, CTA, and trust element all visible above the fold?', severity: 'critical', type: 'auto', business_impact_nl: '80% van bezoekers leest alleen de headline. Alles boven de fold moet het verhaal vertellen.', fix_suggestion_nl: 'Zorg dat H1 + ondertitel + primaire CTA + minimaal 1 trust-element zichtbaar zijn zonder scrollen.', source: 'NNGroup' },
+  { id: 'st-headline-length', module: 'storytelling', subcategory: 'messaging', question_nl: 'Is de primaire headline 5-12 woorden? (optimaal voor begrip en scanning)', question_en: 'Is the primary headline 5-12 words?', severity: 'medium', type: 'auto', business_impact_nl: 'Te lange headlines worden niet gelezen. Te korte missen context.', fix_suggestion_nl: 'Herschrijf de headline naar 5-12 woorden. Focus op het belangrijkste voordeel voor de bezoeker.', source: 'Ogilvy / Copyblogger research' },
+  { id: 'st-grunt-test', module: 'storytelling', subcategory: 'messaging', question_nl: 'Grunt Test: Kan een nieuwe bezoeker binnen 5 seconden zien wat je aanbiedt, hoe het helpt, en wat ze moeten doen?', question_en: '5-second Grunt Test: Can a visitor identify what you offer, how it helps, and what to do next?', severity: 'critical', type: 'manual', business_impact_nl: 'Gebruikers beslissen in 10-20 seconden of ze blijven.', fix_suggestion_nl: 'Laat iemand 5 seconden naar je pagina kijken. Kunnen ze vertellen: 1) wat je doet, 2) voor wie, 3) wat de volgende stap is?', source: 'StoryBrand Grunt Test / NNGroup' },
+  { id: 'st-hero-readability', module: 'storytelling', subcategory: 'messaging', question_nl: 'Is de hero-tekst op maximaal groep 8 leesniveau? (Flesch-Kincaid ≤ 8)', question_en: 'Is the hero text at grade 8 reading level or below?', severity: 'high', type: 'auto', business_impact_nl: 'Tekst op 5e-7e klas niveau converteert 2x beter dan academisch niveau.', fix_suggestion_nl: 'Gebruik korte zinnen (max 15 woorden), eenvoudige woorden, en vermijd jargon in de hero-sectie.', source: 'Unbounce / Flesch-Kincaid' },
+  // ── Subcategory: structure ──
+  { id: 'st-problem', module: 'storytelling', subcategory: 'structure', question_nl: 'Benoemt de pagina duidelijk het specifieke probleem van de doelgroep?', question_en: 'Does the page clearly state the target audience\'s specific problem?', severity: 'critical', type: 'manual', business_impact_nl: 'Mensen kopen oplossingen voor problemen. Zonder probleemherkenning is er geen motivatie.', fix_suggestion_nl: 'Benoem het probleem in de woorden van de klant, niet in bedrijfstaal.', source: 'PAS framework / Kahneman' },
+  { id: 'st-agitation', module: 'storytelling', subcategory: 'structure', question_nl: 'Beschrijft de pagina de gevolgen van inactie? (emotioneel, financieel, of praktisch)', question_en: 'Does the page describe consequences of inaction?', severity: 'high', type: 'manual', business_impact_nl: 'Mensen voelen verlies 2x sterker dan winst (Kahneman).', fix_suggestion_nl: 'Voeg een sectie toe die beschrijft wat er gebeurt als de bezoeker niets doet. Wees specifiek en eerlijk.', source: 'PAS framework / Prospect Theory' },
+  { id: 'st-solution', module: 'storytelling', subcategory: 'structure', question_nl: 'Sluit de oplossing direct aan op het genoemde probleem? (niet generiek)', question_en: 'Does the solution directly address the stated problem?', severity: 'high', type: 'manual', business_impact_nl: 'Als je oplossing niet aansluit op het probleem dat je noemde, verlies je geloofwaardigheid.', fix_suggestion_nl: 'Koppel elke feature/benefit expliciet terug aan het eerder genoemde probleem.', source: 'StoryBrand / PAS' },
+  { id: 'st-transformation', module: 'storytelling', subcategory: 'structure', question_nl: 'Schildert de pagina een helder "na"-beeld van het leven van de klant na gebruik?', question_en: 'Does the page paint a vivid "after" picture?', severity: 'medium', type: 'manual', business_impact_nl: 'Mensen kopen transformaties, niet producten.', fix_suggestion_nl: 'Voeg een "Stel je voor..."-sectie toe of gebruik klantresultaten die de transformatie laten zien.', source: 'StoryBrand (Success element)' },
+  { id: 'st-message-hierarchy', module: 'storytelling', subcategory: 'structure', question_nl: 'Volgt de pagina een logische verhaallijn? (Probleem → Oplossing → Bewijs → CTA)', question_en: 'Does the page follow a logical narrative arc?', severity: 'high', type: 'manual', business_impact_nl: 'Een logische volgorde leidt de bezoeker naar conversie.', fix_suggestion_nl: 'Optimale volgorde: hero → probleem → oplossing → social proof → features/benefits → herhaalde CTA → FAQ → footer.', source: 'AIDA / StoryBrand' },
+  { id: 'st-inverted-pyramid', module: 'storytelling', subcategory: 'structure', question_nl: 'Staat de kernboodschap bovenaan? (niet pas na scrollen duidelijk wat je doet)', question_en: 'Is the key message at the top?', severity: 'high', type: 'manual', business_impact_nl: '80% leest alleen de headline.', fix_suggestion_nl: 'Leid met je conclusie/belofte, niet met je achtergrondverhaal.', source: 'NNGroup (28% woorden gelezen)' },
+  // ── Subcategory: persuasion ──
+  { id: 'st-single-cta', module: 'storytelling', subcategory: 'persuasion', question_nl: 'Is er per viewport maar één dominante CTA? (geen concurrerende acties)', question_en: 'Is there only one dominant CTA per viewport?', severity: 'critical', type: 'auto', business_impact_nl: 'Pagina\'s met 1 CTA converteren 13.5%, met 5+ CTA\'s daalt dat naar 10.5%.', fix_suggestion_nl: 'Kies 1 primaire actie per schermvullend gedeelte.', source: 'Unbounce (41.000 landing pages studie)' },
+  { id: 'st-heading-hierarchy', module: 'storytelling', subcategory: 'persuasion', question_nl: 'Is H1 visueel dominant met duidelijke grootte-afname naar H2 en H3?', question_en: 'Is H1 visually dominant with clear size progression?', severity: 'high', type: 'auto', business_impact_nl: 'Zonder visuele hiërarchie weet de bezoeker niet waar te beginnen.', fix_suggestion_nl: 'H1 moet het grootste element zijn. Minimaal 25% grootteverschil tussen heading-niveaus.', source: 'Gestalt principes' },
+  { id: 'st-cta-benefit', module: 'storytelling', subcategory: 'persuasion', question_nl: 'Gebruikt de CTA een actiewerkwoord + voordeel? (niet "Verstuur" of "Klik hier")', question_en: 'Does the CTA use action verb + benefit?', severity: 'critical', type: 'semi-auto', business_impact_nl: 'Persoonlijke CTA\'s presteren 202% beter dan generieke (HubSpot).', fix_suggestion_nl: 'Vervang "Submit/Verstuur" door actie + waarde, bijv. "Ontvang je gratis rapport".', source: 'HubSpot / ContentVerve' },
+  { id: 'st-clear-plan', module: 'storytelling', subcategory: 'persuasion', question_nl: 'Toont de pagina een duidelijk stappen-plan (3-4 stappen) hoe de bezoeker kan starten?', question_en: 'Does the page show a clear 3-4 step plan?', severity: 'high', type: 'semi-auto', business_impact_nl: 'Een zichtbaar plan verlaagt de drempel om actie te ondernemen.', fix_suggestion_nl: 'Voeg een "Hoe het werkt" sectie toe met 3-4 stappen.', source: 'StoryBrand / Fogg Behavior Model' },
+  { id: 'st-so-what', module: 'storytelling', subcategory: 'persuasion', question_nl: '"En wat dan?"-test: Beantwoordt elke sectie de vraag "waarom zou ik dit belangrijk vinden?"', question_en: 'So What test: Does every section answer "why should I care?"', severity: 'high', type: 'manual', business_impact_nl: 'Secties die alleen features noemen zonder benefits worden overgeslagen.', fix_suggestion_nl: 'Gebruik de "because bridge": feature → voordeel → resultaat → emotioneel voordeel.', source: 'So What Test' }
+];
+
+// ═══════════════ CONTENT & COPY KWALITEIT MODULE ═══════════════
+MODULE_REGISTRY.modules.push({
+  id: 'content-quality',
+  name_nl: 'Content & Copy Kwaliteit',
+  name_en: 'Content & Copy Quality',
+  icon: 'file-text',
+  color: '#06b6d4',
+  enabled_by_default: false,
+  default_weight: 1.0,
+  subcategories: ['readability', 'structure', 'microcopy', 'quality']
+});
+
+MODULE_CHECKS['content-quality'] = [
+  // ── Subcategory: readability ──
+  { id: 'cq-readability', module: 'content-quality', subcategory: 'readability', question_nl: 'Is de tekst goed leesbaar? (Flesch Reading Ease ≥ 60, of ≥ 50 voor B2B)', question_en: 'Is text readable? (Flesch Reading Ease ≥ 60)', severity: 'critical', type: 'auto', business_impact_nl: 'Tekst op 5e-7e klas niveau converteert 11.1% vs 5.3% voor academisch niveau.', fix_suggestion_nl: 'Gebruik korte zinnen, eenvoudige woorden, en actieve schrijfstijl. Streef naar Flesch score 60-70.', source: 'Unbounce / Flesch-Kincaid' },
+  { id: 'cq-sentence-length', module: 'content-quality', subcategory: 'readability', question_nl: 'Is de gemiddelde zinslengte maximaal 20 woorden?', question_en: 'Is average sentence length ≤ 20 words?', severity: 'high', type: 'auto', business_impact_nl: 'Optimale zinslengte voor conversie is 10-11 woorden.', fix_suggestion_nl: 'Splits lange zinnen op. Eén idee per zin.', source: 'Entropy study (2021)' },
+  { id: 'cq-passive-voice', module: 'content-quality', subcategory: 'readability', question_nl: 'Wordt passieve schrijfstijl beperkt gebruikt? (max 15% passieve zinnen)', question_en: 'Is passive voice limited? (max 15%)', severity: 'medium', type: 'auto', business_impact_nl: 'Passieve zinnen zijn zwakker en moeilijker te lezen.', fix_suggestion_nl: 'Herschrijf passieve zinnen naar actief. "Het formulier wordt verstuurd" → "Verstuur het formulier".', source: 'Web writing best practices' },
+  { id: 'cq-jargon', module: 'content-quality', subcategory: 'readability', question_nl: 'Wordt vakjargon vermeden of uitgelegd?', question_en: 'Is jargon avoided or explained?', severity: 'high', type: 'semi-auto', business_impact_nl: 'Jargon duwt bezoekers weg die geen insider zijn.', fix_suggestion_nl: 'Vervang jargon door eenvoudige alternatieven. Leg vakterm uit bij eerste gebruik.', source: 'NNGroup (Nielsen Heuristic #2)' },
+  // ── Subcategory: structure ──
+  { id: 'cq-paragraph-length', module: 'content-quality', subcategory: 'structure', question_nl: 'Zijn paragrafen kort? (max 100 woorden / 4 zinnen per paragraaf)', question_en: 'Are paragraphs short? (max 100 words / 4 sentences)', severity: 'high', type: 'auto', business_impact_nl: 'Korte paragrafen verhogen scanbaarheid.', fix_suggestion_nl: 'Breek lange paragrafen op. Maximaal 4 zinnen per paragraaf.', source: 'NNGroup (+124% usability)' },
+  { id: 'cq-text-walls', module: 'content-quality', subcategory: 'structure', question_nl: 'Geen tekst-muren: komt er elke 300 woorden een subheading voor?', question_en: 'No walls of text: subheading every 300 words?', severity: 'high', type: 'auto', business_impact_nl: 'Tekst-muren worden overgeslagen.', fix_suggestion_nl: 'Voeg H2/H3 subheadings toe elke 2-4 paragrafen.', source: 'NNGroup (scangedrag)' },
+  { id: 'cq-heading-hierarchy', module: 'content-quality', subcategory: 'structure', question_nl: 'Is de heading-hiërarchie correct? (H1 → H2 → H3, geen niveaus overgeslagen)', question_en: 'Is heading hierarchy correct?', severity: 'medium', type: 'auto', business_impact_nl: 'Correcte hiërarchie verbetert scanbaarheid en SEO.', fix_suggestion_nl: 'Eén H1 per pagina. Gebruik H2 voor secties, H3 voor subsecties.', source: 'WCAG / SEO best practices' },
+  { id: 'cq-bold-scanning', module: 'content-quality', subcategory: 'structure', question_nl: 'Zijn kernwoorden en -zinnen vetgedrukt voor scanning?', question_en: 'Are key terms bolded for scanning?', severity: 'medium', type: 'auto', business_impact_nl: 'Vetgedrukte woorden fungeren als ankerpunten bij het scannen.', fix_suggestion_nl: 'Maak 2-3 kernwoorden per paragraaf vet.', source: 'NNGroup (+124% usability)' },
+  // ── Subcategory: microcopy ──
+  { id: 'cq-cta-labels', module: 'content-quality', subcategory: 'microcopy', question_nl: 'Gebruiken CTA-knoppen specifieke actiewerkwoorden? (niet "Submit", "Klik hier")', question_en: 'Do CTA buttons use specific action verbs?', severity: 'critical', type: 'auto', business_impact_nl: '"Start mijn gratis proefperiode" presteert 90% beter dan generiek.', fix_suggestion_nl: 'Vervang generieke labels door actie + waarde.', source: 'ContentVerve / HubSpot' },
+  { id: 'cq-form-labels', module: 'content-quality', subcategory: 'microcopy', question_nl: 'Hebben formuliervelden zichtbare labels? (niet alleen placeholders)', question_en: 'Do form fields have visible labels?', severity: 'high', type: 'auto', business_impact_nl: 'Placeholders verdwijnen bij invullen.', fix_suggestion_nl: 'Voeg altijd een <label> toe boven of naast het veld.', source: 'NNGroup / WCAG' },
+  { id: 'cq-generic-links', module: 'content-quality', subcategory: 'microcopy', question_nl: 'Geen generieke link-tekst? (geen "Klik hier", "Lees meer")', question_en: 'No generic link text?', severity: 'medium', type: 'auto', business_impact_nl: 'Generieke links geven geen informatie-geur.', fix_suggestion_nl: 'Vervang "Lees meer" door beschrijvende tekst.', source: 'NNGroup / WCAG 2.4.4' },
+  { id: 'cq-microcopy', module: 'content-quality', subcategory: 'microcopy', question_nl: 'Is microcopy consistent? (dezelfde actie = dezelfde benaming overal)', question_en: 'Is microcopy consistent across the site?', severity: 'medium', type: 'semi-auto', business_impact_nl: '"Winkelwagen" op de ene pagina en "Mandje" op de andere schept verwarring.', fix_suggestion_nl: 'Maak een woordenlijst voor je site.', source: 'Smashing Magazine' },
+  { id: 'cq-error-messages', module: 'content-quality', subcategory: 'microcopy', question_nl: 'Bevatten foutmeldingen zowel een uitleg als een oplossing?', question_en: 'Do error messages include both explanation and remediation?', severity: 'high', type: 'semi-auto', business_impact_nl: 'Foutmeldingen zonder oplossing frustreren.', fix_suggestion_nl: 'Elke foutmelding: 1) wat er mis ging, 2) hoe je het oplost.', source: 'NNGroup / WCAG' },
+  // ── Subcategory: quality ──
+  { id: 'cq-author-present', module: 'content-quality', subcategory: 'quality', question_nl: 'Zijn er auteur/expertise-signalen op content pagina\'s?', question_en: 'Are author/expertise signals present?', severity: 'medium', type: 'auto', business_impact_nl: 'Auteurschap verhoogt geloofwaardigheid en E-E-A-T score.', fix_suggestion_nl: 'Voeg auteur-naam, foto, en korte bio toe.', source: 'Google E-E-A-T' },
+  { id: 'cq-tone-consistency', module: 'content-quality', subcategory: 'quality', question_nl: 'Is de tone of voice consistent op alle pagina\'s?', question_en: 'Is tone of voice consistent across pages?', severity: 'high', type: 'semi-auto', business_impact_nl: 'Inconsistente toon schaadt merkperceptie en vertrouwen.', fix_suggestion_nl: 'Bepaal je merkpersoonlijkheid en toets alle tekst hieraan.', source: 'NNGroup (4 Dimensions of Tone of Voice)' },
+  { id: 'cq-content-current', module: 'content-quality', subcategory: 'quality', question_nl: 'Is de content actueel? (geen verouderde datums of achterhaalde informatie)', question_en: 'Is content current and up-to-date?', severity: 'high', type: 'manual', business_impact_nl: 'Verouderde content ondermijnt geloofwaardigheid.', fix_suggestion_nl: 'Controleer alle datums en verwijzingen.', source: 'E-E-A-T / Content freshness' },
+  { id: 'cq-benefits-not-features', module: 'content-quality', subcategory: 'quality', question_nl: 'Beschrijft de tekst voordelen voor de klant, niet alleen product-features?', question_en: 'Does copy describe benefits, not just features?', severity: 'critical', type: 'manual', business_impact_nl: 'Features vertellen wat het is. Benefits vertellen waarom het uitmaakt.', fix_suggestion_nl: 'Bij elke feature, voeg toe: "...zodat je [voordeel voor klant]".', source: 'Copywriting fundamentals / AIDA' },
+  { id: 'cq-content-accuracy', module: 'content-quality', subcategory: 'quality', question_nl: 'Zijn claims onderbouwd met bewijs? (cijfers, bronnen, case studies)', question_en: 'Are claims supported by evidence?', severity: 'high', type: 'manual', business_impact_nl: 'Ononderbouwde claims worden niet geloofd.', fix_suggestion_nl: 'Onderbouw elke claim met specifieke cijfers of externe bronnen.', source: 'E-E-A-T / Cialdini (authority)' }
+];
+
+// ═══════════════ PERSUASION & TRUST MODULE ═══════════════
+MODULE_REGISTRY.modules.push({
+  id: 'persuasion',
+  name_nl: 'Overtuigingskracht & Vertrouwen',
+  name_en: 'Persuasion & Trust',
+  icon: 'shield-check',
+  color: '#f59e0b',
+  enabled_by_default: false,
+  default_weight: 1.0,
+  subcategories: ['social-proof', 'trust', 'cta-optimization', 'psychology', 'ethics']
+});
+
+MODULE_CHECKS['persuasion'] = [
+  // ── Subcategory: social-proof ──
+  { id: 'ps-social-proof', module: 'persuasion', subcategory: 'social-proof', question_nl: 'Zijn er minimaal 2 soorten social proof zichtbaar? (testimonials, logo\'s, reviews, cijfers)', question_en: 'Are at least 2 types of social proof visible?', severity: 'critical', type: 'auto', business_impact_nl: 'Producten met 5 reviews verkopen 270% meer.', fix_suggestion_nl: 'Voeg minimaal toe: klantlogo\'s + testimonials, of reviews + gebruikerscijfers.', source: 'Cialdini / Spiegel Research Center' },
+  { id: 'ps-client-logos', module: 'persuasion', subcategory: 'social-proof', question_nl: 'Zijn er herkenbare klantlogo\'s zichtbaar boven de fold?', question_en: 'Are recognizable client logos visible above fold?', severity: 'high', type: 'auto', business_impact_nl: 'Bit.io voegde logo\'s toe en conversie steeg van 5.6% naar 11.8%.', fix_suggestion_nl: 'Toon 4-6 herkenbare logo\'s. Grijze versies ogen professioneler.', source: 'CXL / Bit.io case study' },
+  { id: 'ps-testimonials-specific', module: 'persuasion', subcategory: 'social-proof', question_nl: 'Zijn testimonials specifiek? (naam, foto, bedrijf, meetbaar resultaat)', question_en: 'Are testimonials specific?', severity: 'high', type: 'semi-auto', business_impact_nl: 'Generieke testimonials zijn weinig overtuigend.', fix_suggestion_nl: 'Vraag klanten om: naam + functie, foto, en een specifiek resultaat.', source: 'Cialdini / CXL' },
+  { id: 'ps-reviews-recent', module: 'persuasion', subcategory: 'social-proof', question_nl: 'Zijn reviews/testimonials recent? (binnen 6 maanden)', question_en: 'Are reviews recent?', severity: 'medium', type: 'manual', business_impact_nl: '83% van kopers vindt reviews ouder dan 3 maanden niet meer relevant.', fix_suggestion_nl: 'Ververs testimonials minimaal elk half jaar.', source: 'BrightLocal Consumer Review Survey' },
+  // ── Subcategory: trust ──
+  { id: 'ps-trust-badges', module: 'persuasion', subcategory: 'trust', question_nl: 'Zijn er vertrouwenssignalen (SSL badge, betaalproviders, keurmerken) bij formulieren?', question_en: 'Are trust badges present near forms/payment?', severity: 'critical', type: 'auto', business_impact_nl: '19% verlaat de checkout door gebrek aan vertrouwen.', fix_suggestion_nl: 'Plaats beveiligingsbadges direct naast het betaalformulier.', source: 'Baymard Institute' },
+  { id: 'ps-https', module: 'persuasion', subcategory: 'trust', question_nl: 'Is HTTPS actief op de hele site?', question_en: 'Is HTTPS active site-wide?', severity: 'critical', type: 'auto', business_impact_nl: 'Browsers tonen "Niet veilig" waarschuwing zonder HTTPS.', fix_suggestion_nl: 'Activeer SSL/TLS certificaat en forceer HTTPS redirect.', source: 'Google / Browser security' },
+  { id: 'ps-contact-findable', module: 'persuasion', subcategory: 'trust', question_nl: 'Is contactinformatie binnen 1 klik bereikbaar?', question_en: 'Is contact information accessible within 1 click?', severity: 'high', type: 'auto', business_impact_nl: '52% van bezoekers checkt de About-pagina om geloofwaardigheid te beoordelen.', fix_suggestion_nl: 'Zet telefoon/email in de header of footer.', source: 'KoMarketing study' },
+  { id: 'ps-return-policy', module: 'persuasion', subcategory: 'trust', question_nl: 'Is het retour-/annuleringsbeleid duidelijk vermeld?', question_en: 'Is the return/cancellation policy clearly stated?', severity: 'high', type: 'manual', business_impact_nl: 'Onduidelijk retourbeleid is een top-reden voor cart abandonment.', fix_suggestion_nl: 'Vermeld het retourbeleid dichtbij de koopknop.', source: 'Baymard Institute' },
+  // ── Subcategory: cta-optimization ──
+  { id: 'ps-cta-above-fold', module: 'persuasion', subcategory: 'cta-optimization', question_nl: 'Is de primaire CTA zichtbaar boven de fold?', question_en: 'Is the primary CTA visible above the fold?', severity: 'critical', type: 'auto', business_impact_nl: 'CTA boven de fold geeft 101% hogere click-through.', fix_suggestion_nl: 'Plaats de primaire CTA in de hero-sectie.', source: 'Archive Social / CXL' },
+  { id: 'ps-cta-repeated', module: 'persuasion', subcategory: 'cta-optimization', question_nl: 'Wordt de CTA herhaald op logische plekken bij lange pagina\'s?', question_en: 'Is the CTA repeated at logical intervals?', severity: 'medium', type: 'auto', business_impact_nl: 'Niet iedereen converteert na de hero.', fix_suggestion_nl: 'Voeg CTA toe na elke 2-3 content-secties.', source: 'CXL' },
+  { id: 'ps-no-friction-words', module: 'persuasion', subcategory: 'cta-optimization', question_nl: 'Geen frictie-woorden nabij CTA\'s? ("spam", "verplicht", "contract")', question_en: 'No friction words near CTAs?', severity: 'medium', type: 'auto', business_impact_nl: 'Negatieve woorden triggeren twijfel.', fix_suggestion_nl: 'Vervang "Geen spam" door "Wekelijkse tips". Verwijder negatieve woorden bij de CTA.', source: 'CXL' },
+  { id: 'ps-fogg-ability', module: 'persuasion', subcategory: 'cta-optimization', question_nl: 'Is de gewenste actie makkelijk uit te voeren? (≤ 3 stappen, minimale velden)', question_en: 'Is the desired action easy?', severity: 'critical', type: 'manual', business_impact_nl: '23% van gebruikers verlaat te lange formulieren.', fix_suggestion_nl: 'Verwijder alle niet-essentiële velden.', source: 'Fogg Behavior Model / Baymard' },
+  // ── Subcategory: psychology ──
+  { id: 'ps-reciprocity', module: 'persuasion', subcategory: 'psychology', question_nl: 'Wordt er gratis waarde geboden vóór de conversie-vraag?', question_en: 'Is free value offered before asking for conversion?', severity: 'high', type: 'semi-auto', business_impact_nl: 'Reciprociteit is een van de sterkste overtuigingsprincipes.', fix_suggestion_nl: 'Bied een gratis resource aan: whitepaper, calculator, proefperiode.', source: 'Cialdini (Reciprocity)' },
+  { id: 'ps-authority', module: 'persuasion', subcategory: 'psychology', question_nl: 'Zijn er autoriteit-signalen? (certificeringen, "bekend van" media, awards)', question_en: 'Are authority signals present?', severity: 'high', type: 'semi-auto', business_impact_nl: 'Autoriteit verlaagt onzekerheid.', fix_suggestion_nl: 'Toon certificeringen, media-logo\'s, award badges.', source: 'Cialdini (Authority)' },
+  { id: 'ps-risk-reversal', module: 'persuasion', subcategory: 'psychology', question_nl: 'Is er een niet-goed-geld-terug garantie of risico-omkering?', question_en: 'Is there a money-back guarantee or risk reversal?', severity: 'high', type: 'semi-auto', business_impact_nl: 'Garanties verlagen de drempel dramatisch.', fix_suggestion_nl: 'Voeg een garantie toe dicht bij de CTA.', source: 'CXL' },
+  { id: 'ps-loss-framing', module: 'persuasion', subcategory: 'psychology', question_nl: 'Wordt verlies-framing strategisch ingezet?', question_en: 'Is loss framing used strategically?', severity: 'medium', type: 'semi-auto', business_impact_nl: 'Verlies-framing converteert 30-40% beter dan winst-framing.', fix_suggestion_nl: 'Beschrijf wat de bezoeker mist zonder het product.', source: 'Prospect Theory / Kahneman' },
+  { id: 'ps-pricing-anchoring', module: 'persuasion', subcategory: 'psychology', question_nl: 'Wordt er anchoring toegepast bij prijzen?', question_en: 'Is anchoring used in pricing?', severity: 'medium', type: 'semi-auto', business_impact_nl: 'Het eerste getal bepaalt de referentie.', fix_suggestion_nl: 'Toon originele prijs naast korting. Markeer het midden-plan als "Meest gekozen".', source: 'Anchoring effect / Dan Ariely' },
+  { id: 'ps-post-conversion', module: 'persuasion', subcategory: 'psychology', question_nl: 'Is de ervaring ná conversie positief? (bevestigingspagina warm en nuttig)', question_en: 'Is the post-conversion experience positive?', severity: 'medium', type: 'manual', business_impact_nl: 'Peak-end rule: mensen onthouden het hoogtepunt en het einde.', fix_suggestion_nl: 'Maak een thank-you pagina met bevestiging en volgende stap.', source: 'Peak-end rule (Kahneman)' },
+  // ── Subcategory: ethics ──
+  { id: 'ps-ethical-urgency', module: 'persuasion', subcategory: 'ethics', question_nl: 'Als er urgentie/schaarste wordt gebruikt — is het eerlijk? (geen nep-timers)', question_en: 'If urgency/scarcity is used — is it honest?', severity: 'high', type: 'semi-auto', business_impact_nl: 'Nep-countdowns vernietigen vertrouwen.', fix_suggestion_nl: 'Gebruik alleen echte deadlines. Geen timers die resetten.', source: 'Princeton dark patterns study / EU DSA' },
+  { id: 'ps-no-confirmshaming', module: 'persuasion', subcategory: 'ethics', question_nl: 'Geen confirmshaming: geven afwijz-opties de bezoeker geen schuldgevoel?', question_en: 'No confirmshaming in decline options?', severity: 'high', type: 'manual', business_impact_nl: '"Nee, ik wil geen geld besparen" is manipulatief en schaadt je merk.', fix_suggestion_nl: 'Maak de afwijz-optie neutraal: "Nee bedankt" of "Niet nu".', source: 'Dark patterns / EU DSA' }
+];
+
+// ═══════════════ INFORMATIE-ARCHITECTUUR MODULE ═══════════════
+MODULE_REGISTRY.modules.push({
+  id: 'info-architecture',
+  name_nl: 'Informatie-architectuur',
+  name_en: 'Information Architecture',
+  icon: 'layout-grid',
+  color: '#10b981',
+  enabled_by_default: false,
+  default_weight: 1.0,
+  subcategories: ['navigation', 'wayfinding', 'layout', 'mobile']
+});
+
+MODULE_CHECKS['info-architecture'] = [
+  // ── Subcategory: navigation ──
+  { id: 'ia-nav-items', module: 'info-architecture', subcategory: 'navigation', question_nl: 'Heeft de primaire navigatie maximaal 7 items?', question_en: 'Does primary navigation have ≤ 7 items?', severity: 'high', type: 'auto', business_impact_nl: 'Elke extra keuze voegt beslissingstijd toe (Hick\'s Law).', fix_suggestion_nl: 'Beperk de hoofdnavigatie tot 5-7 items.', source: 'Hick\'s Law' },
+  { id: 'ia-logo-home', module: 'info-architecture', subcategory: 'navigation', question_nl: 'Linkt het logo naar de homepage en staat het links-boven?', question_en: 'Does the logo link to homepage?', severity: 'medium', type: 'auto', business_impact_nl: 'Dit is een universele webconventie.', fix_suggestion_nl: 'Maak het logo klikbaar met een link naar /.', source: 'NNGroup' },
+  { id: 'ia-nav-position', module: 'info-architecture', subcategory: 'navigation', question_nl: 'Staat de navigatie op een standaardlocatie?', question_en: 'Is navigation in standard location?', severity: 'medium', type: 'auto', business_impact_nl: 'Niet-standaard navigatie verhoogt de leercurve.', fix_suggestion_nl: 'Horizontale navigatie bovenaan of linker zijbalk voor dashboards.', source: 'NNGroup' },
+  { id: 'ia-nav-labels', module: 'info-architecture', subcategory: 'navigation', question_nl: 'Zijn navigatie-labels beschrijvend? (niet "Oplossingen", "Ontdek")', question_en: 'Are navigation labels descriptive?', severity: 'high', type: 'semi-auto', business_impact_nl: 'Herbenoeming met klanttaal verhoogde first-click succes van 52% naar 78%.', fix_suggestion_nl: 'Vervang vage labels door specifieke beschrijvingen.', source: 'NNGroup' },
+  { id: 'ia-customer-language', module: 'info-architecture', subcategory: 'navigation', question_nl: 'Gebruikt de navigatie klanttaal, niet intern jargon?', question_en: 'Does navigation use customer language?', severity: 'high', type: 'semi-auto', business_impact_nl: 'Navigatie in klanttaal verhoogt first-click succes dramatisch.', fix_suggestion_nl: 'Test je navigatie-labels met echte gebruikers.', source: 'Card sorting research' },
+  // ── Subcategory: wayfinding ──
+  { id: 'ia-active-state', module: 'info-architecture', subcategory: 'wayfinding', question_nl: 'Is de huidige pagina duidelijk gemarkeerd in de navigatie? (active state)', question_en: 'Is the current page indicated in navigation?', severity: 'medium', type: 'auto', business_impact_nl: 'Zonder active state weet de bezoeker niet waar ze zijn.', fix_suggestion_nl: 'Markeer het actieve menu-item met andere kleur of onderstreping.', source: 'Wayfinding best practices' },
+  { id: 'ia-breadcrumbs', module: 'info-architecture', subcategory: 'wayfinding', question_nl: 'Zijn er breadcrumbs op pagina\'s 2+ niveaus diep?', question_en: 'Are breadcrumbs present on pages 2+ levels deep?', severity: 'medium', type: 'auto', business_impact_nl: 'Breadcrumbs verbeteren navigatie en verlagen bounce rate.', fix_suggestion_nl: 'Voeg breadcrumbs toe boven de content.', source: 'NNGroup / Baymard' },
+  { id: 'ia-search', module: 'info-architecture', subcategory: 'wayfinding', question_nl: 'Is er een zoekfunctie beschikbaar?', question_en: 'Is site search available?', severity: 'medium', type: 'auto', business_impact_nl: 'Zoek-gebruikers converteren 1.8x vaker.', fix_suggestion_nl: 'Voeg een zoekfunctie toe in de header.', source: 'NNGroup / Econsultancy' },
+  { id: 'ia-mental-model', module: 'info-architecture', subcategory: 'wayfinding', question_nl: 'Klopt de sitestructuur met het mentale model van de doelgroep?', question_en: 'Does the site structure match the audience\'s mental model?', severity: 'high', type: 'manual', business_impact_nl: 'Wayfair herstructureerde navigatie en zag 15% meer conversies.', fix_suggestion_nl: 'Vraag: hoe zou mijn klant dit zoeken?', source: 'Wayfair case study' },
+  // ── Subcategory: layout ──
+  { id: 'ia-touch-targets', module: 'info-architecture', subcategory: 'layout', question_nl: 'Zijn alle interactieve elementen minimaal 44×44px?', question_en: 'Are all interactive elements ≥ 44×44px?', severity: 'critical', type: 'auto', business_impact_nl: 'Te kleine targets leiden tot miskliks.', fix_suggestion_nl: 'Maak alle knoppen en links minimaal 44×44px.', source: 'WCAG 2.5.5 / Apple HIG' },
+  { id: 'ia-progressive-disclosure', module: 'info-architecture', subcategory: 'layout', question_nl: 'Wordt progressive disclosure gebruikt bij complexiteit?', question_en: 'Is progressive disclosure used for complexity?', severity: 'medium', type: 'auto', business_impact_nl: 'Alles tegelijk tonen is overweldigend.', fix_suggestion_nl: 'Gebruik accordions voor FAQ\'s, tabbladen voor productdetails.', source: 'NNGroup / Cognitive Load Theory' },
+  { id: 'ia-scan-pattern', module: 'info-architecture', subcategory: 'layout', question_nl: 'Volgt de content het natuurlijke scanpatroon? (F-patroon of Z-patroon)', question_en: 'Does content follow natural scanning patterns?', severity: 'high', type: 'semi-auto', business_impact_nl: '80% van kijktijd is op de linkerhelft.', fix_suggestion_nl: 'Plaats waardepropositie links-boven. Gebruik F-patroon voor tekst, Z-patroon voor visueel.', source: 'NNGroup (eyetracking)' },
+  { id: 'ia-content-chunking', module: 'info-architecture', subcategory: 'layout', question_nl: 'Is content opgedeeld in visuele groepen?', question_en: 'Is content chunked into visual groups?', severity: 'medium', type: 'semi-auto', business_impact_nl: 'Werkgeheugen verwerkt ~4 items tegelijk.', fix_suggestion_nl: 'Groepeer gerelateerde items visueel met kaarten of secties.', source: 'Miller\'s Law / Gestalt' },
+  { id: 'ia-gestalt-proximity', module: 'info-architecture', subcategory: 'layout', question_nl: 'Staan gerelateerde elementen dicht bij elkaar?', question_en: 'Are related elements visually grouped?', severity: 'medium', type: 'semi-auto', business_impact_nl: 'Als een prijs ver van de koopknop staat, mist de bezoeker de connectie.', fix_suggestion_nl: 'Zet labels bij hun velden. Plaats prijzen naast koopknoppen.', source: 'Gestalt (proximity)' },
+  { id: 'ia-pricing-options', module: 'info-architecture', subcategory: 'layout', question_nl: 'Maximaal 4 prijsopties met een gemarkeerd "aanbevolen" plan?', question_en: 'Are there ≤ 4 pricing options with highlighted recommended?', severity: 'medium', type: 'manual', business_impact_nl: 'Te veel opties leiden tot keuzestress.', fix_suggestion_nl: 'Bied 3 opties aan. Markeer de middelste als "Meest gekozen".', source: 'Hick\'s Law / Center-stage effect' },
+  // ── Subcategory: mobile ──
+  { id: 'ia-mobile-nav', module: 'info-architecture', subcategory: 'mobile', question_nl: 'Is de mobiele navigatie adequaat? (≤5 tabs, hamburger bereikbaar)', question_en: 'Is mobile navigation adequate?', severity: 'high', type: 'manual', business_impact_nl: '60%+ van webverkeer is mobiel.', fix_suggestion_nl: 'Max 5 items in bottom navigation. Hamburger bereikbaar met duim.', source: 'Google Material Design / Apple HIG' }
+];
+
+// ═══════════════ E-E-A-T & GELOOFWAARDIGHEID MODULE ═══════════════
+MODULE_REGISTRY.modules.push({
+  id: 'eeat',
+  name_nl: 'E-E-A-T & Geloofwaardigheid',
+  name_en: 'E-E-A-T & Credibility',
+  icon: 'award',
+  color: '#3b82f6',
+  enabled_by_default: false,
+  default_weight: 1.0,
+  subcategories: ['identity', 'authority', 'experience']
+});
+
+MODULE_CHECKS['eeat'] = [
+  // ── Subcategory: identity ──
+  { id: 'ee-about-page', module: 'eeat', subcategory: 'identity', question_nl: 'Bestaat er een About/Over ons-pagina met echte bedrijfsinformatie?', question_en: 'Does an About page exist with real company info?', severity: 'high', type: 'auto', business_impact_nl: '52% van bezoekers bekijkt de Over ons-pagina.', fix_suggestion_nl: 'Maak een About-pagina met bedrijfsverhaal, team, missie, contactinfo.', source: 'KoMarketing study' },
+  { id: 'ee-contact-methods', module: 'eeat', subcategory: 'identity', question_nl: 'Is er een contactpagina met meerdere methodes? (telefoon, email, adres)', question_en: 'Is there a contact page with multiple methods?', severity: 'high', type: 'auto', business_impact_nl: 'Alleen een formulier voelt onbetrouwbaar.', fix_suggestion_nl: 'Bied minimaal 2 contactmethodes.', source: 'E-E-A-T / Local SEO' },
+  { id: 'ee-privacy-terms', module: 'eeat', subcategory: 'identity', question_nl: 'Zijn privacy policy en algemene voorwaarden gelinkt vanuit de footer?', question_en: 'Are privacy policy and terms linked from footer?', severity: 'medium', type: 'auto', business_impact_nl: 'Verplicht in de EU (AVG/GDPR).', fix_suggestion_nl: 'Link privacy policy en voorwaarden vanuit de footer.', source: 'AVG/GDPR / E-E-A-T' },
+  { id: 'ee-https', module: 'eeat', subcategory: 'identity', question_nl: 'Is HTTPS actief op alle pagina\'s?', question_en: 'Is HTTPS enforced?', severity: 'critical', type: 'auto', business_impact_nl: 'Google markeert HTTP-sites als "Niet veilig".', fix_suggestion_nl: 'Activeer SSL certificaat en forceer HTTPS redirect.', source: 'Google / Browser security' },
+  { id: 'ee-real-photos', module: 'eeat', subcategory: 'identity', question_nl: 'Worden echte teamfoto\'s getoond, geen stockfoto\'s?', question_en: 'Are real team photos shown?', severity: 'high', type: 'manual', business_impact_nl: 'Stockfoto\'s ondermijnen vertrouwen.', fix_suggestion_nl: 'Investeer in echte teamfoto\'s.', source: 'Cialdini (Liking) / E-E-A-T' },
+  // ── Subcategory: authority ──
+  { id: 'ee-author-attribution', module: 'eeat', subcategory: 'authority', question_nl: 'Hebben content-pagina\'s auteur-attributie?', question_en: 'Do content pages have author attribution?', severity: 'medium', type: 'auto', business_impact_nl: 'E-E-A-T wordt 120+ keer genoemd in Google\'s Quality Rater Guidelines.', fix_suggestion_nl: 'Voeg auteur-naam, functie, en bio toe.', source: 'Google Quality Rater Guidelines' },
+  { id: 'ee-credentials', module: 'eeat', subcategory: 'authority', question_nl: 'Worden certificeringen, accreditaties, of lidmaatschappen getoond?', question_en: 'Are industry credentials displayed?', severity: 'medium', type: 'semi-auto', business_impact_nl: 'Certificeringen verhogen autoriteit en vertrouwen.', fix_suggestion_nl: 'Toon relevante certificeringen met logos.', source: 'Cialdini (Authority) / E-E-A-T' },
+  { id: 'ee-claims-evidence', module: 'eeat', subcategory: 'authority', question_nl: 'Worden claims onderbouwd met bronnen of bewijs?', question_en: 'Are claims supported by evidence?', severity: 'high', type: 'semi-auto', business_impact_nl: 'Ononderbouwde claims worden niet geloofd.', fix_suggestion_nl: 'Voeg bronvermelding toe bij statistieken.', source: 'E-E-A-T / Cialdini (Authority)' },
+  { id: 'ee-third-party', module: 'eeat', subcategory: 'authority', question_nl: 'Is er validatie door derden? (reviews op externe platforms, media, awards)', question_en: 'Is there third-party validation?', severity: 'medium', type: 'semi-auto', business_impact_nl: 'Onafhankelijke validatie is sterker dan zelf-promotie.', fix_suggestion_nl: 'Link naar Google Reviews, Trustpilot, of branche-awards.', source: 'E-E-A-T / Cialdini' },
+  // ── Subcategory: experience ──
+  { id: 'ee-content-updated', module: 'eeat', subcategory: 'experience', question_nl: 'Is content recent bijgewerkt?', question_en: 'Is content regularly updated?', severity: 'medium', type: 'semi-auto', business_impact_nl: 'Verouderde content signaleert verwaarlozing.', fix_suggestion_nl: 'Update of verwijder achterhaalde content. Toon "Laatst bijgewerkt" datums.', source: 'E-E-A-T / Content freshness' },
+  { id: 'ee-first-hand', module: 'eeat', subcategory: 'experience', question_nl: 'Toont de content eigen ervaring? (originele data, eigen foto\'s, case studies)', question_en: 'Does content show first-hand experience?', severity: 'high', type: 'manual', business_impact_nl: 'Het eerste "E" staat voor Experience.', fix_suggestion_nl: 'Deel eigen data, screenshots, case studies.', source: 'Google E-E-A-T' },
+  { id: 'ee-topical-depth', module: 'eeat', subcategory: 'experience', question_nl: 'Behandelt de site het onderwerp grondig met sterke interne linking?', question_en: 'Does the site cover its topic comprehensively?', severity: 'medium', type: 'manual', business_impact_nl: 'Topische autoriteit wordt opgebouwd door gerelateerde pagina\'s.', fix_suggestion_nl: 'Maak cluster-content: pillar page + ondersteunende pagina\'s.', source: 'E-E-A-T / Topical authority' }
+];
+
+// ═══════════════ QUICK SCAN BUNDLES: NON-TECHNICAL ═══════════════
+MODULE_REGISTRY.bundles['qs-storytelling'] = {
+  id: 'qs-storytelling',
+  name_nl: 'Storytelling & Messaging Scan',
+  name_en: 'Storytelling & Messaging Scan',
+  icon_lucide: 'message-circle',
+  is_quick_scan: true,
+  source_type: 'url',
+  estimated_duration_nl: '10-15 min',
+  estimated_duration_en: '10-15 min',
+  modules: ['storytelling'],
+  description_nl: 'Beoordeelt of je website een helder verhaal vertelt: boodschap, verhaallijn en conversie.'
+};
+
+MODULE_REGISTRY.bundles['qs-content'] = {
+  id: 'qs-content',
+  name_nl: 'Content & Copy Kwaliteit Scan',
+  name_en: 'Content & Copy Quality Scan',
+  icon_lucide: 'file-text',
+  is_quick_scan: true,
+  source_type: 'url',
+  estimated_duration_nl: '10-15 min',
+  estimated_duration_en: '10-15 min',
+  modules: ['content-quality'],
+  description_nl: 'Analyseert leesbaarheid, tekststructuur, tone of voice en microcopy kwaliteit.'
+};
+
+MODULE_REGISTRY.bundles['qs-persuasion'] = {
+  id: 'qs-persuasion',
+  name_nl: 'Overtuigingskracht & Vertrouwen Scan',
+  name_en: 'Persuasion & Trust Scan',
+  icon_lucide: 'shield-check',
+  is_quick_scan: true,
+  source_type: 'url',
+  estimated_duration_nl: '10-15 min',
+  estimated_duration_en: '10-15 min',
+  modules: ['persuasion'],
+  description_nl: 'Evalueert social proof, trust signals, CTA-effectiviteit en overtuigingsprincipes.'
+};
+
+MODULE_REGISTRY.bundles['qs-ia'] = {
+  id: 'qs-ia',
+  name_nl: 'Informatie-architectuur Scan',
+  name_en: 'Information Architecture Scan',
+  icon_lucide: 'layout-grid',
+  is_quick_scan: true,
+  source_type: 'url',
+  estimated_duration_nl: '10-15 min',
+  estimated_duration_en: '10-15 min',
+  modules: ['info-architecture'],
+  description_nl: 'Beoordeelt navigatie, sitestructuur en content-organisatie.'
+};
+
+MODULE_REGISTRY.bundles['qs-eeat'] = {
+  id: 'qs-eeat',
+  name_nl: 'E-E-A-T & Geloofwaardigheid Scan',
+  name_en: 'E-E-A-T & Credibility Scan',
+  icon_lucide: 'award',
+  is_quick_scan: true,
+  source_type: 'url',
+  estimated_duration_nl: '5-10 min',
+  estimated_duration_en: '5-10 min',
+  modules: ['eeat'],
+  description_nl: 'Controleert geloofwaardigheid volgens Google\'s E-E-A-T richtlijnen.'
+};
+
+// ═══════════════ FREE-FORM REVIEW ═══════════════
+MODULE_REGISTRY.bundles['free-form'] = {
+  id: 'free-form',
+  name_nl: 'Vrije Review',
+  name_en: 'Free-Form Review',
+  icon_lucide: 'pen-tool',
+  is_quick_scan: true,
+  source_type: 'url',
+  estimated_duration_nl: 'Flexibel',
+  estimated_duration_en: 'Flexible',
+  modules: [],
+  description_nl: 'Geen checklist — voeg zelf bevindingen toe met screenshots, scores, en aanbevelingen. Ideaal voor expert reviews en ad-hoc observaties.',
+  is_free_form: true
 };
 
 // ═══════════════ EXPORT FOR NODE/COMMONJS ═══════════════

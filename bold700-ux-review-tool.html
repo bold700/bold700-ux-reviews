@@ -1629,6 +1629,93 @@
     .preview-title { font-size: 18px; }
     .preview-cta-grid { grid-template-columns: 1fr; }
   }
+
+  /* ═══ FREE-FORM REVIEW ═══ */
+  .ff-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 0; margin-bottom: 8px;
+  }
+  .ff-stats { display: flex; gap: 16px; flex-wrap: wrap; }
+  .ff-stat { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-muted); }
+  .dot { width: 8px; height: 8px; border-radius: 50%; }
+  .dot-bad { background: var(--score-bad); }
+  .dot-ok { background: var(--score-ok); }
+  .dot-good { background: var(--score-good); }
+  .dot-unscored { background: var(--border); }
+
+  .ff-card { cursor: grab; transition: box-shadow 0.2s, opacity 0.2s; }
+  .ff-card.dragging { opacity: 0.5; }
+  .ff-card-header {
+    display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
+  }
+  .ff-card-number {
+    width: 24px; height: 24px; border-radius: 50%; background: var(--surface2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700; color: var(--text-muted); flex-shrink: 0;
+  }
+  .ff-card-spacer { flex: 1; }
+  .ff-notes-main { min-height: 60px; margin-bottom: 8px; }
+  .ff-bottom-row { display: flex; flex-direction: column; gap: 8px; }
+  .ff-delete-btn {
+    background: none; border: none; color: var(--text-muted); cursor: pointer;
+    padding: 4px; border-radius: 4px; opacity: 0; transition: opacity 0.2s;
+  }
+  .ff-card:hover .ff-delete-btn { opacity: 0.5; }
+  .ff-delete-btn:hover { opacity: 1 !important; color: var(--score-bad); }
+
+  .ff-category-row {
+    display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 10px;
+  }
+  .ff-cat-tag {
+    font-size: 11px; padding: 3px 8px; border-radius: 12px;
+    border: 1px solid var(--border); background: var(--surface);
+    color: var(--text-muted); cursor: pointer; display: flex; align-items: center; gap: 4px;
+    transition: all 0.15s;
+  }
+  .ff-cat-tag:hover { border-color: var(--text-muted); }
+  .ff-cat-tag.selected { font-weight: 600; }
+
+  .ff-screenshots { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+  .ff-screenshot-large {
+    width: 200px !important; height: 120px !important; object-fit: cover;
+  }
+
+  .ff-add-btn {
+    width: 100%; padding: 16px; margin-top: 8px;
+    border: 2px dashed var(--border); border-radius: var(--radius);
+    background: transparent; color: var(--text-muted); cursor: pointer;
+    font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 8px;
+    transition: all 0.2s;
+  }
+  .ff-add-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(255,107,53,0.03); }
+
+  .ff-paste-zone {
+    padding: 24px; margin-top: 12px; text-align: center;
+    border: 1px dashed var(--border); border-radius: var(--radius);
+    color: var(--text-muted); font-size: 13px;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    opacity: 0.6;
+  }
+
+  .ff-footer {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 16px 0; margin-top: 16px; border-top: 1px solid var(--border);
+  }
+  .ff-footer-info { font-size: 13px; color: var(--text-muted); }
+  .ff-scorecard-btn {
+    padding: 8px 16px; display: flex; align-items: center; gap: 6px;
+    font-size: 13px; font-weight: 600; border-radius: var(--radius);
+    border: 1px solid var(--border); background: var(--surface);
+    color: var(--text); cursor: pointer; transition: all 0.15s;
+  }
+  .ff-scorecard-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .ff-scorecard-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  @media (max-width: 600px) {
+    .ff-screenshot-large { width: 100% !important; height: auto !important; }
+    .ff-category-row { gap: 3px; }
+    .ff-cat-tag { font-size: 10px; padding: 2px 6px; }
+  }
 </style>
 <!-- Firebase SDK (compat for single-file usage) -->
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
@@ -4624,6 +4711,17 @@ function createProject() {
       : (typeof getDefaultModuleConfig === 'function' ? getDefaultModuleConfig() : null)
   };
 
+  // Free-form review: sla extra type flag op + start met 1 lege bevinding
+  if (selectedTemplate === 'free-form') {
+    project.reviewType = 'free-form';
+    const fId = 'ff-' + Date.now() + '-' + Math.random().toString(36).substr(2, 6);
+    project.answers[fId] = {
+      score: null, severity: null, notes: '',
+      findingTitle: '', findingCategory: null,
+      findingOrder: 0, screenshots: []
+    };
+  }
+
   // Figma source → add Figma-specific fields
   if (projectSource === 'figma') {
     const parsed = parseFigmaUrl(url);
@@ -4788,14 +4886,17 @@ function openProject(id) {
   }
 
   // ── Build review steps from project module config ──
-  if (typeof buildReviewSteps === 'function') {
+  if (project.reviewType === 'free-form') {
+    // Free-form: no predefined steps, generate dynamically
+    reviewSteps = [];
+  } else if (typeof buildReviewSteps === 'function') {
     reviewSteps = buildReviewSteps(project.moduleConfig || (typeof getDefaultModuleConfig === 'function' ? getDefaultModuleConfig() : null));
   } else if (reviewSteps.length === 0) {
     reviewSteps = LEGACY_STEPS_BACKUP;
   }
 
   currentStep = project.currentStep || 0;
-  if (currentStep >= reviewSteps.length) currentStep = 0;
+  if (reviewSteps.length > 0 && currentStep >= reviewSteps.length) currentStep = 0;
 
   // Update URL to reflect current project
   updateUrlParam('p', id);
@@ -4815,8 +4916,18 @@ function openProject(id) {
   }
   document.getElementById('urlInput').value = project.url;
 
-  buildStepper();
-  renderStep(currentStep);
+  // ── Free-form review: andere UI ──
+  if (project.reviewType === 'free-form') {
+    renderFreeFormReview(project);
+    document.getElementById('prevBtn').style.display = 'none';
+    document.getElementById('nextBtn').style.display = 'none';
+  } else {
+    // Restore nav buttons (might be hidden from previous free-form project)
+    document.getElementById('prevBtn').style.display = '';
+    document.getElementById('nextBtn').style.display = '';
+    buildStepper();
+    renderStep(currentStep);
+  }
 
   // Figma projects → load frame previews instead of URL iframe
   if (project.sourceType === 'figma') {
@@ -4833,6 +4944,321 @@ function backToDashboard() {
   document.getElementById('reviewScreen').classList.add('hidden');
   clearUrlParam('p');
   showDashboard();
+}
+
+// ═══════════════ FREE-FORM REVIEW ═══════════════
+
+const FF_CATEGORIES = [
+  { id: 'usability', label: 'Usability', icon: 'mouse-pointer', color: '#8b5cf6' },
+  { id: 'visual', label: 'Visueel Design', icon: 'palette', color: '#ec4899' },
+  { id: 'content', label: 'Content & Copy', icon: 'file-text', color: '#06b6d4' },
+  { id: 'conversion', label: 'Conversie', icon: 'target', color: '#f59e0b' },
+  { id: 'technical', label: 'Technisch', icon: 'code', color: '#10b981' },
+  { id: 'ia', label: 'Navigatie & IA', icon: 'layout-grid', color: '#3b82f6' },
+  { id: 'trust', label: 'Vertrouwen', icon: 'shield-check', color: '#14b8a6' },
+  { id: 'other', label: 'Overig', icon: 'more-horizontal', color: '#6b7280' }
+];
+
+const FF_CAT_LABELS = {};
+FF_CATEGORIES.forEach(c => FF_CAT_LABELS[c.id] = c.label);
+
+function renderFreeFormReview(project) {
+  const answers = project.answers || {};
+  const findings = Object.keys(answers)
+    .filter(k => k.startsWith('ff-'))
+    .sort((a, b) => (answers[a].findingOrder || 0) - (answers[b].findingOrder || 0));
+
+  const area = document.getElementById('questionsArea');
+
+  // Update step indicator
+  document.getElementById('stepIndicator').textContent = `Vrije Review · ${findings.length} bevinding${findings.length !== 1 ? 'en' : ''}`;
+
+  // Stats
+  const goodCount = findings.filter(f => answers[f]?.score === 'good').length;
+  const okCount = findings.filter(f => answers[f]?.score === 'ok').length;
+  const badCount = findings.filter(f => answers[f]?.score === 'bad').length;
+  const unscoredCount = findings.filter(f => !answers[f]?.score).length;
+  const scoredCount = findings.length - unscoredCount;
+
+  // Build stepper for free-form (overview, geen voortgang%)
+  const stepper = document.getElementById('stepStepper');
+  if (stepper) {
+    stepper.innerHTML = `
+      <div style="padding:16px">
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted);margin-bottom:12px">Bevindingen (${findings.length})</div>
+        ${findings.map((fId, i) => {
+          const a = answers[fId] || {};
+          const scoreColor = a.score === 'good' ? 'var(--score-good)' : a.score === 'ok' ? 'var(--score-ok)' : a.score === 'bad' ? 'var(--score-bad)' : 'var(--border)';
+          const label = a.findingTitle || (a.notes || '').split('\n')[0].substring(0, 40) || 'Bevinding ' + (i+1);
+          return `<div style="padding:6px 8px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12px;border-radius:6px;margin-bottom:2px;display:flex;align-items:center;gap:8px" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''" onclick="document.getElementById('card-${fId}')?.scrollIntoView({behavior:'smooth',block:'center'})"><span style="width:8px;height:8px;border-radius:50%;background:${scoreColor};flex-shrink:0"></span>${esc(label)}</div>`;
+        }).join('')}
+        <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);font-size:11px;color:var(--text-muted)">
+          ${badCount > 0 ? `<span style="color:var(--score-bad)">${badCount} niet ok</span> · ` : ''}${okCount > 0 ? `<span style="color:var(--score-ok)">${okCount} matig</span> · ` : ''}${goodCount > 0 ? `<span style="color:var(--score-good)">${goodCount} goed</span>` : ''}
+        </div>
+      </div>`;
+  }
+
+  area.innerHTML = `
+    <div class="ff-header">
+      <div class="ff-stats">
+        <span class="ff-stat"><span class="dot dot-bad"></span> ${badCount} Niet OK</span>
+        <span class="ff-stat"><span class="dot dot-ok"></span> ${okCount} Matig</span>
+        <span class="ff-stat"><span class="dot dot-good"></span> ${goodCount} Goed</span>
+        ${unscoredCount > 0 ? `<span class="ff-stat"><span class="dot dot-unscored"></span> ${unscoredCount} Onbeoordeeld</span>` : ''}
+      </div>
+    </div>
+
+    <div id="ff-findings-list">
+      ${findings.map((fId, idx) => renderFindingCard(fId, answers[fId], idx)).join('')}
+    </div>
+
+    <button class="ff-add-btn" onclick="addFreeFormFinding()">
+      <i data-lucide="plus-circle"></i> Nieuwe bevinding toevoegen
+    </button>
+
+    <div class="ff-paste-zone" id="ffPasteZone">
+      <i data-lucide="clipboard"></i>
+      <span>Plak een screenshot (Ctrl+V) om direct een nieuwe bevinding te starten</span>
+    </div>
+
+    <div class="ff-footer">
+      <div class="ff-footer-info">
+        ${findings.length} bevinding${findings.length !== 1 ? 'en' : ''}${scoredCount > 0 ? ` · ${scoredCount} beoordeeld` : ''}
+      </div>
+      <button class="ff-scorecard-btn" onclick="showScorecard()" ${findings.length === 0 ? 'disabled' : ''}>
+        <i data-lucide="bar-chart-3"></i> Resultaat bekijken
+      </button>
+    </div>
+  `;
+
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+function renderFindingCard(fId, finding, index) {
+  const a = finding || {};
+  const shots = a.screenshots || (a.screenshot ? [a.screenshot] : []);
+
+  return `
+    <div class="question-card ff-card ${a.score ? 'answered' : ''}" id="card-${fId}" onclick="setActiveQuestion('${fId}')" draggable="true" ondragstart="ffDragStart(event,'${fId}')" ondragover="ffDragOver(event)" ondrop="ffDrop(event,'${fId}')">
+
+      <div class="ff-card-header">
+        <span class="ff-card-number">${index + 1}</span>
+        <div class="ff-card-spacer"></div>
+        <button class="ff-delete-btn" onclick="event.stopPropagation(); deleteFinding('${fId}')" title="Verwijder bevinding">
+          <i data-lucide="trash-2" style="width:14px;height:14px"></i>
+        </button>
+      </div>
+
+      <textarea class="notes-input ff-notes-main" id="notes-${fId}"
+        placeholder="Beschrijf je bevinding, probleem, of aanbeveling..."
+        oninput="updateFindingNotes('${fId}', this.value)"
+        onclick="event.stopPropagation()"
+      >${a.notes || ''}</textarea>
+
+      ${shots.length > 0 ? `
+        <div class="ff-screenshots">
+          ${shots.map((src, si) => `
+            <div class="screenshot-thumb">
+              <img class="screenshot-preview ff-screenshot-large" src="${src}" onclick="showLightbox('${fId}',${si})" title="Klik om te vergroten">
+              <button class="screenshot-remove" onclick="event.stopPropagation(); removeScreenshot('${fId}',${si})" title="Verwijder">&times;</button>
+            </div>
+          `).join('')}
+        </div>
+      ` : ''}
+
+      <div class="ff-bottom-row" onclick="event.stopPropagation()">
+        <div class="ff-category-row">
+          ${FF_CATEGORIES.map(c => {
+            const cats = a.findingCategories || (a.findingCategory ? [a.findingCategory] : []);
+            const isSel = cats.includes(c.id);
+            return `
+            <button class="ff-cat-tag ${isSel ? 'selected' : ''}"
+              style="${isSel ? 'background:' + c.color + '22;border-color:' + c.color + '44;color:' + c.color : ''}"
+              onclick="toggleFindingCategory('${fId}', '${c.id}')">
+              <i data-lucide="${c.icon}" style="width:12px;height:12px"></i> ${c.label}
+            </button>`;
+          }).join('')}
+        </div>
+
+        <div class="screenshot-row">
+          <button class="screenshot-btn capture-primary" id="capBtn-${fId}" onclick="capturePreviewScreenshot('${fId}')" title="Capture preview"><i data-lucide="camera"></i><span class="btn-label"> Capture</span></button>
+          <button class="screenshot-btn" onclick="document.getElementById('file-${fId}').click()" title="Upload"><i data-lucide="upload"></i><span class="btn-label"> Upload</span></button>
+          <span class="screenshot-hint"><i data-lucide="clipboard" style="width:11px;height:11px"></i> Ctrl+V</span>
+          <input type="file" id="file-${fId}" accept="image/*" style="display:none" onchange="handleScreenshot('${fId}', this)">
+        </div>
+
+        <div class="score-row">
+          <button class="score-btn score-bad ${a.score==='bad'?'selected':''}" onclick="setFfScore('${fId}','bad')"><i data-lucide="x"></i> Niet OK</button>
+          <button class="score-btn score-ok ${a.score==='ok'?'selected':''}" onclick="setFfScore('${fId}','ok')">~ Matig</button>
+          <button class="score-btn score-good ${a.score==='good'?'selected':''}" onclick="setFfScore('${fId}','good')"><i data-lucide="check"></i> Goed</button>
+        </div>
+
+        ${a.score === 'ok' || a.score === 'bad' ? `
+          <div class="severity-row">
+            ${a.score === 'ok' ? `
+              <button class="sev-btn sev-quickwin ${a.severity==='high'?'selected':''}" onclick="setFfSeverity('${fId}','high')"><i data-lucide="zap"></i> Quick Win</button>
+              <button class="sev-btn sev-filler ${a.severity!=='high'?'selected':''}" onclick="setFfSeverity('${fId}','low')"><i data-lucide="archive"></i> Opvuller</button>
+            ` : `
+              <button class="sev-btn sev-strategic ${a.severity==='high'?'selected':''}" onclick="setFfSeverity('${fId}','high')"><i data-lucide="target"></i> Strategisch</button>
+              <button class="sev-btn sev-notnow ${a.severity!=='high'?'selected':''}" onclick="setFfSeverity('${fId}','low')"><i data-lucide="pause"></i> Niet Nu</button>
+            `}
+          </div>
+        ` : ''}
+      </div>
+    </div>
+  `;
+}
+
+// ── CRUD functies voor bevindingen ──
+
+function addFreeFormFinding(initialScreenshot) {
+  const project = getActiveProject();
+  if (!project) return;
+  if (!project.answers) project.answers = {};
+
+  const fId = 'ff-' + Date.now() + '-' + Math.random().toString(36).substr(2, 6);
+  const existingCount = Object.keys(project.answers).filter(k => k.startsWith('ff-')).length;
+
+  project.answers[fId] = {
+    score: null,
+    severity: null,
+    notes: '',
+    findingTitle: '',
+    findingCategory: null,
+    findingOrder: existingCount,
+    screenshots: initialScreenshot ? [initialScreenshot] : []
+  };
+
+  saveState();
+  saveCurrentAnswers();
+  renderFreeFormReview(project);
+
+  setTimeout(() => {
+    const card = document.getElementById('card-' + fId);
+    if (card) card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    const notesInput = document.getElementById('notes-' + fId);
+    if (notesInput) notesInput.focus();
+  }, 100);
+}
+
+function deleteFinding(fId) {
+  if (!confirm('Bevinding verwijderen?')) return;
+  const project = getActiveProject();
+  if (!project || !project.answers) return;
+  delete project.answers[fId];
+  const remaining = Object.keys(project.answers)
+    .filter(k => k.startsWith('ff-'))
+    .sort((a, b) => (project.answers[a].findingOrder || 0) - (project.answers[b].findingOrder || 0));
+  remaining.forEach((k, i) => project.answers[k].findingOrder = i);
+  saveState();
+  saveCurrentAnswers();
+  renderFreeFormReview(project);
+}
+
+function updateFindingTitle(fId, value) {
+  const project = getActiveProject();
+  if (!project?.answers?.[fId]) return;
+  project.answers[fId].findingTitle = value;
+  clearTimeout(window._ffSaveTimeout);
+  window._ffSaveTimeout = setTimeout(() => { saveState(); saveCurrentAnswers(); }, 500);
+}
+
+function updateFindingNotes(fId, value) {
+  const project = getActiveProject();
+  if (!project?.answers?.[fId]) return;
+  project.answers[fId].notes = value;
+  lastActiveQId = fId;
+  clearTimeout(window._ffSaveTimeout);
+  window._ffSaveTimeout = setTimeout(() => { saveState(); saveCurrentAnswers(); }, 500);
+}
+
+function toggleFindingCategory(fId, catId) {
+  const project = getActiveProject();
+  if (!project?.answers?.[fId]) return;
+  const a = project.answers[fId];
+  // Migreer oud single-value naar array
+  if (!a.findingCategories) {
+    a.findingCategories = a.findingCategory ? [a.findingCategory] : [];
+  }
+  const idx = a.findingCategories.indexOf(catId);
+  if (idx >= 0) {
+    a.findingCategories.splice(idx, 1);
+  } else {
+    a.findingCategories.push(catId);
+  }
+  // Hou findingCategory in sync (eerste categorie, voor backward compat)
+  a.findingCategory = a.findingCategories[0] || null;
+  lastActiveQId = fId;
+  saveState();
+  saveCurrentAnswers();
+  renderFreeFormReview(project);
+}
+
+function setFfScore(fId, score) {
+  const project = getActiveProject();
+  if (!project?.answers?.[fId]) return;
+  if (project.answers[fId].score === score) {
+    project.answers[fId].score = null;
+    project.answers[fId].severity = null;
+  } else {
+    project.answers[fId].score = score;
+    if (score === 'good') project.answers[fId].severity = null;
+    if (score === 'bad') project.answers[fId].severity = 'high';
+    if (score === 'ok') project.answers[fId].severity = 'low';
+  }
+  lastActiveQId = fId;
+  saveState();
+  saveCurrentAnswers();
+  renderFreeFormReview(project);
+}
+
+function setFfSeverity(fId, severity) {
+  const project = getActiveProject();
+  if (!project?.answers?.[fId]) return;
+  project.answers[fId].severity = severity;
+  lastActiveQId = fId;
+  saveState();
+  saveCurrentAnswers();
+  renderFreeFormReview(project);
+}
+
+// ── Drag & drop herordenen ──
+let ffDraggedId = null;
+
+function ffDragStart(e, fId) {
+  ffDraggedId = fId;
+  e.dataTransfer.effectAllowed = 'move';
+  e.target.style.opacity = '0.5';
+}
+
+function ffDragOver(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+}
+
+function ffDrop(e, targetId) {
+  e.preventDefault();
+  if (!ffDraggedId || ffDraggedId === targetId) return;
+
+  const project = getActiveProject();
+  if (!project?.answers) return;
+
+  const allFindings = Object.keys(project.answers)
+    .filter(k => k.startsWith('ff-'))
+    .sort((a, b) => (project.answers[a].findingOrder || 0) - (project.answers[b].findingOrder || 0));
+
+  const fromIdx = allFindings.indexOf(ffDraggedId);
+  const toIdx = allFindings.indexOf(targetId);
+  if (fromIdx === -1 || toIdx === -1) return;
+
+  allFindings.splice(fromIdx, 1);
+  allFindings.splice(toIdx, 0, ffDraggedId);
+  allFindings.forEach((k, i) => project.answers[k].findingOrder = i);
+
+  ffDraggedId = null;
+  saveState();
+  saveCurrentAnswers();
+  renderFreeFormReview(project);
 }
 
 // ═══════════════ URL & DEVICE ═══════════════
@@ -5296,7 +5722,15 @@ function setSeverity(qId, severity, btn) {
 function saveCurrentAnswers() {
   const project = getActiveProject();
   if (!project) return;
+
+  // Free-form: notes worden al direct opgeslagen via updateFindingNotes
+  if (project.reviewType === 'free-form') {
+    saveState();
+    return;
+  }
+
   const step = reviewSteps[currentStep];
+  if (!step) { saveState(); return; }
   step.questions.forEach(q => {
     const notesEl = document.getElementById('notes-' + q.id);
     if (notesEl) {
@@ -5324,7 +5758,12 @@ function handleScreenshot(qId, input) {
       const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
       saveCurrentAnswers();
       addScreenshot(qId, dataUrl);
-      renderStep(currentStep, false);
+      const proj = getActiveProject();
+      if (proj?.reviewType === 'free-form') {
+        renderFreeFormReview(proj);
+      } else {
+        renderStep(currentStep, false);
+      }
     };
     img.src = e.target.result;
   };
@@ -5372,7 +5811,12 @@ function removeScreenshot(qId, idx) {
   delete answers[qId].screenshot; // clean up old field
   saveState();
   saveCurrentAnswers();
-  renderStep(currentStep, false);
+  const proj = getActiveProject();
+  if (proj?.reviewType === 'free-form') {
+    renderFreeFormReview(proj);
+  } else {
+    renderStep(currentStep, false);
+  }
 }
 
 // ── Auto-paste screenshot on Ctrl+V ──
@@ -5392,8 +5836,14 @@ function getActiveQuestionId() {
   if (focused && focused.id && focused.id.startsWith('notes-')) {
     return focused.id.replace('notes-', '');
   }
+  // 1b. If a title input is focused (free-form), use that finding
+  if (focused && focused.id && focused.id.startsWith('title-')) {
+    return focused.id.replace('title-', '');
+  }
   // 2. Use last actively clicked/interacted question
   if (lastActiveQId) {
+    // Free-form: ff- IDs zijn altijd geldig
+    if (lastActiveQId.startsWith('ff-')) return lastActiveQId;
     // Verify it's still on the current step
     if (typeof reviewSteps !== 'undefined' && reviewSteps[currentStep]) {
       const onStep = reviewSteps[currentStep].questions.some(q => q.id === lastActiveQId);
@@ -5416,18 +5866,22 @@ document.addEventListener('paste', function(e) {
   // Only on review screen
   const reviewScreen = document.getElementById('reviewScreen');
   if (!reviewScreen || reviewScreen.classList.contains('hidden')) return;
-  // Don't intercept if typing in a text field (unless it's a notes textarea)
+  // Don't intercept text pastes in text fields
   const focused = document.activeElement;
   const isTextInput = focused && (focused.tagName === 'INPUT' && focused.type !== 'file');
-  if (isTextInput) return;
 
+  // Check if clipboard contains an image
   const items = e.clipboardData?.items;
   if (!items) return;
+  const hasImage = Array.from(items).some(item => item.type.startsWith('image/'));
+
+  // If no image in clipboard, let text paste through normally
+  if (!hasImage) return;
+  // If typing in text input and no image, don't intercept
+  if (isTextInput && !hasImage) return;
   for (const item of items) {
     if (item.type.startsWith('image/')) {
       e.preventDefault();
-      const targetQId = getActiveQuestionId();
-      if (!targetQId) return;
       const blob = item.getAsFile();
       const reader = new FileReader();
       reader.onload = function(ev) {
@@ -5440,9 +5894,25 @@ document.addEventListener('paste', function(e) {
           canvas.height = img.height * scale;
           canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
           const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+
+          // ── FREE-FORM: paste creëert nieuwe bevinding als geen active question ──
+          const project = getActiveProject();
+          if (project?.reviewType === 'free-form') {
+            const targetQId = getActiveQuestionId();
+            if (targetQId && targetQId.startsWith('ff-')) {
+              addScreenshot(targetQId, dataUrl);
+              renderFreeFormReview(project);
+            } else {
+              addFreeFormFinding(dataUrl);
+            }
+            return;
+          }
+
+          // ── BESTAAND: voeg toe aan actieve vraag ──
+          const targetQId = getActiveQuestionId();
+          if (!targetQId) return;
           saveCurrentAnswers();
           addScreenshot(targetQId, dataUrl);
-          // Flash the card to confirm paste
           const card = document.getElementById('card-' + targetQId);
           if (card) { card.style.boxShadow = '0 0 0 2px var(--accent)'; setTimeout(() => card.style.boxShadow = '', 800); }
           renderStep(currentStep, false);
@@ -5593,7 +6063,12 @@ async function capturePreviewScreenshot(qId) {
     // Store screenshot
     saveCurrentAnswers();
     addScreenshot(qId, dataUrl);
-    renderStep(currentStep, false);
+    const proj = getActiveProject();
+    if (proj?.reviewType === 'free-form') {
+      renderFreeFormReview(proj);
+    } else {
+      renderStep(currentStep, false);
+    }
 
   } catch (e) {
     if (e.name === 'NotAllowedError') {
@@ -5751,6 +6226,12 @@ async function runAutoScan() {
       console.log('[AutoScan] Pagina opgehaald via:', pageData.source, '— start DOM checks');
       domFilled = await runDomChecks(pageData, answers, autoFill);
       console.log('[AutoScan] DOM checks klaar:', domFilled, 'velden ingevuld');
+      // Run non-technical checks (storytelling, content, persuasion, IA, E-E-A-T)
+      try {
+        const nonTechFilled = await runNonTechAutoChecks(pageData.doc, pageData.css, autoFill, project.selectedTemplate);
+        domFilled += nonTechFilled;
+        console.log('[AutoScan] Non-tech checks klaar:', nonTechFilled, 'velden ingevuld');
+      } catch(e) { console.warn('[NonTechScan]', e); }
     } else {
       console.warn('[AutoScan] Geen pagina data — DOM checks overgeslagen!');
     }
@@ -8122,6 +8603,336 @@ async function runDomChecks(pageData, answers, autoFill) {
   return filled;
 }
 
+// ═══════════════ NON-TECH AUTO-SCAN (Storytelling, Content, Persuasion, IA, E-E-A-T) ═══════════════
+
+// ── Helper: syllable counter (vereenvoudigd, werkt voor NL en EN) ──
+function countSyllables(word) {
+  word = word.toLowerCase().replace(/[^a-zàáâãäåèéêëìíîïòóôõöùúûüý]/g, '');
+  if (word.length <= 3) return 1;
+  word = word.replace(/(?:[^laeiouy]es|ed|[^laeiouy]e)$/, '');
+  word = word.replace(/^y/, '');
+  const matches = word.match(/[aeiouy]{1,2}/g);
+  return matches ? Math.max(matches.length, 1) : 1;
+}
+
+async function runNonTechAutoChecks(doc, canCSS, autoFill, template) {
+  let filled = 0;
+
+  // Haal alle zichtbare tekst op
+  const bodyText = (doc.body?.innerText || '').trim();
+  const allText = bodyText;
+  const words = allText.split(/\s+/).filter(w => w.length > 0);
+  const sentences = allText.split(/[.!?]+/).filter(s => s.trim().length > 5);
+  const paragraphs = Array.from(doc.querySelectorAll('p')).map(p => p.innerText.trim()).filter(t => t.length > 10);
+
+  // ═══════════════════════════════════════════
+  // STORYTELLING CHECKS (auto)
+  // ═══════════════════════════════════════════
+  if (['qs-storytelling', 'qs-content', null].includes(template)) {
+
+    // st-you-vs-we: Ratio jij/je/u vs wij/ons
+    try {
+      const youWords = (allText.match(/\b(jij|je|jouw|u|uw|you|your|yours)\b/gi) || []).length;
+      const weWords = (allText.match(/\b(wij|we|ons|onze|our|us)\b/gi) || []).length;
+      const ratio = weWords > 0 ? (youWords / weWords).toFixed(1) : youWords > 0 ? '∞' : '0';
+      autoFill('st-you-vs-we',
+        youWords >= weWords * 2 ? 'good' : youWords >= weWords ? 'ok' : 'bad',
+        `"Jij/je/u": ${youWords}x | "Wij/ons": ${weWords}x | Ratio: ${ratio}:1. ${youWords < weWords ? 'De pagina praat meer over zichzelf dan over de bezoeker.' : ''}`
+      ); filled++;
+    } catch(e) {}
+
+    // st-headline-length: H1 lengte 5-12 woorden
+    try {
+      const h1 = doc.querySelector('h1');
+      if (h1) {
+        const h1Words = h1.innerText.trim().split(/\s+/).length;
+        autoFill('st-headline-length',
+          h1Words >= 5 && h1Words <= 12 ? 'good' : h1Words >= 3 && h1Words <= 15 ? 'ok' : 'bad',
+          `H1: "${h1.innerText.trim().substring(0, 80)}" — ${h1Words} woorden. ${h1Words < 5 ? 'Te kort, mist context.' : h1Words > 12 ? 'Te lang, moeilijk scanbaar.' : 'Goede lengte.'}`
+        ); filled++;
+      }
+    } catch(e) {}
+
+    // st-single-cta: Tel prominente CTA's in eerste viewport
+    try {
+      const allBtns = Array.from(doc.querySelectorAll('a, button, [role="button"], input[type="submit"]'));
+      const ctaBtns = allBtns.filter(el => {
+        const text = (el.innerText || el.value || '').toLowerCase().trim();
+        const isProminent = el.tagName === 'BUTTON' || el.classList.toString().includes('btn') || el.classList.toString().includes('cta') || el.getAttribute('role') === 'button';
+        const isCtaText = text.length > 2 && text.length < 40 && !['menu', 'zoeken', 'search', 'logo', 'home'].some(w => text.includes(w));
+        return isProminent && isCtaText;
+      });
+      const aboveFold = ctaBtns.filter(el => {
+        const rect = el.getBoundingClientRect ? el.getBoundingClientRect() : null;
+        return rect ? rect.top < 800 : true;
+      });
+      autoFill('st-single-cta',
+        aboveFold.length === 1 ? 'good' : aboveFold.length === 2 ? 'ok' : 'bad',
+        `${aboveFold.length} prominente CTA('s) boven de fold gevonden. ${aboveFold.length > 2 ? 'Te veel concurrerende acties — kies 1 primaire CTA.' : aboveFold.length === 0 ? 'Geen CTA boven de fold!' : ''}`
+      ); filled++;
+    } catch(e) {}
+
+    // st-heading-hierarchy: H1 > H2 > H3 grootte
+    if (canCSS) {
+      try {
+        const h1 = doc.querySelector('h1');
+        const h2 = doc.querySelector('h2');
+        const h3 = doc.querySelector('h3');
+        if (h1 && h2) {
+          const h1Size = parseFloat(doc.defaultView.getComputedStyle(h1).fontSize);
+          const h2Size = parseFloat(doc.defaultView.getComputedStyle(h2).fontSize);
+          const h3Size = h3 ? parseFloat(doc.defaultView.getComputedStyle(h3).fontSize) : 0;
+          const h1Bigger = h1Size > h2Size * 1.15;
+          const h2Bigger = h3Size === 0 || h2Size > h3Size * 1.1;
+          autoFill('st-heading-hierarchy',
+            h1Bigger && h2Bigger ? 'good' : h1Bigger || h2Bigger ? 'ok' : 'bad',
+            `H1: ${h1Size}px, H2: ${h2Size}px${h3 ? ', H3: ' + h3Size + 'px' : ''}. ${!h1Bigger ? 'H1 is niet duidelijk groter dan H2.' : ''}`
+          ); filled++;
+        }
+      } catch(e) {}
+    }
+  }
+
+  // ═══════════════════════════════════════════
+  // CONTENT QUALITY CHECKS (auto)
+  // ═══════════════════════════════════════════
+  if (['qs-content', 'qs-storytelling', null].includes(template)) {
+
+    // cq-readability: Flesch Reading Ease (vereenvoudigd)
+    try {
+      if (words.length > 50) {
+        const avgSentLen = words.length / Math.max(sentences.length, 1);
+        const syllables = words.reduce((sum, w) => sum + countSyllables(w), 0);
+        const avgSylPerWord = syllables / words.length;
+        const flesch = 206.835 - (1.015 * avgSentLen) - (84.6 * avgSylPerWord);
+        const fleschRound = Math.round(flesch);
+        autoFill('cq-readability',
+          fleschRound >= 60 ? 'good' : fleschRound >= 40 ? 'ok' : 'bad',
+          `Flesch Reading Ease: ${fleschRound}/100. ${fleschRound >= 60 ? 'Goed leesbaar.' : fleschRound >= 40 ? 'Redelijk, maar kan eenvoudiger.' : 'Te moeilijk — vereenvoudig zinnen en woordkeuze.'} (${words.length} woorden, ${sentences.length} zinnen)`
+        ); filled++;
+      }
+    } catch(e) {}
+
+    // cq-sentence-length
+    try {
+      if (sentences.length > 5) {
+        const avgLen = Math.round(words.length / sentences.length);
+        autoFill('cq-sentence-length',
+          avgLen <= 15 ? 'good' : avgLen <= 20 ? 'ok' : 'bad',
+          `Gemiddelde zinslengte: ${avgLen} woorden. ${avgLen > 20 ? 'Te lang — splits zinnen op. Optimaal is 10-15 woorden.' : 'Prima.'}`
+        ); filled++;
+      }
+    } catch(e) {}
+
+    // cq-paragraph-length
+    try {
+      if (paragraphs.length > 3) {
+        const longParas = paragraphs.filter(p => p.split(/\s+/).length > 100);
+        autoFill('cq-paragraph-length',
+          longParas.length === 0 ? 'good' : longParas.length <= 2 ? 'ok' : 'bad',
+          `${longParas.length} van ${paragraphs.length} paragrafen zijn langer dan 100 woorden. ${longParas.length > 0 ? 'Splits ze op voor betere scanbaarheid.' : 'Alle paragrafen zijn lekker kort.'}`
+        ); filled++;
+      }
+    } catch(e) {}
+
+    // cq-text-walls: Subheading elke 300 woorden
+    try {
+      const headings = Array.from(doc.querySelectorAll('h1,h2,h3,h4,h5,h6'));
+      if (words.length > 300 && headings.length > 0) {
+        const ratio = Math.round(words.length / headings.length);
+        autoFill('cq-text-walls',
+          ratio <= 300 ? 'good' : ratio <= 500 ? 'ok' : 'bad',
+          `${headings.length} headings voor ${words.length} woorden (1 heading per ~${ratio} woorden). ${ratio > 300 ? 'Voeg meer subheadings toe — maximaal 300 woorden per sectie.' : ''}`
+        ); filled++;
+      }
+    } catch(e) {}
+
+    // cq-passive-voice (vereenvoudigd NL)
+    try {
+      if (sentences.length > 5) {
+        const passivePatterns = /\b(wordt|worden|werd|werden|is|was|zijn|waren)\s+\w*(ge\w+d|ge\w+en|ge\w+t)\b/gi;
+        const passiveCount = (allText.match(passivePatterns) || []).length;
+        const passivePct = Math.round((passiveCount / sentences.length) * 100);
+        autoFill('cq-passive-voice',
+          passivePct <= 10 ? 'good' : passivePct <= 20 ? 'ok' : 'bad',
+          `~${passivePct}% passieve constructies (${passiveCount} van ${sentences.length} zinnen). ${passivePct > 15 ? 'Herschrijf passieve zinnen naar actief voor directere tekst.' : ''}`
+        ); filled++;
+      }
+    } catch(e) {}
+
+    // cq-cta-labels: Check op generieke button tekst
+    try {
+      const btns = Array.from(doc.querySelectorAll('button, input[type="submit"], [role="button"]'));
+      const genericLabels = ['submit', 'verstuur', 'verzend', 'klik hier', 'click here', 'ok', 'go', 'send'];
+      const genericBtns = btns.filter(b => {
+        const text = (b.innerText || b.value || '').toLowerCase().trim();
+        return genericLabels.some(g => text === g);
+      });
+      if (btns.length > 0) {
+        autoFill('cq-cta-labels',
+          genericBtns.length === 0 ? 'good' : genericBtns.length <= 1 ? 'ok' : 'bad',
+          genericBtns.length === 0
+            ? `Alle ${btns.length} knoppen hebben beschrijvende labels.`
+            : `${genericBtns.length} knop(pen) met generieke labels: ${genericBtns.map(b => '"' + (b.innerText || b.value).trim() + '"').join(', ')}. Gebruik actie + waarde.`
+        ); filled++;
+      }
+    } catch(e) {}
+
+    // cq-generic-links: Check op "Klik hier", "Lees meer" links
+    try {
+      const links = Array.from(doc.querySelectorAll('a'));
+      const genericTexts = ['klik hier', 'click here', 'lees meer', 'read more', 'meer info', 'learn more', 'hier'];
+      const genericLinks = links.filter(a => {
+        const text = (a.innerText || '').toLowerCase().trim();
+        return genericTexts.includes(text);
+      });
+      if (links.length > 0) {
+        autoFill('cq-generic-links',
+          genericLinks.length === 0 ? 'good' : genericLinks.length <= 2 ? 'ok' : 'bad',
+          genericLinks.length === 0
+            ? 'Geen generieke linktekst gevonden.'
+            : `${genericLinks.length} link(s) met generieke tekst: ${genericLinks.slice(0, 3).map(a => '"' + a.innerText.trim() + '"').join(', ')}. Gebruik beschrijvende link-tekst.`
+        ); filled++;
+      }
+    } catch(e) {}
+  }
+
+  // ═══════════════════════════════════════════
+  // PERSUASION & TRUST CHECKS (auto)
+  // ═══════════════════════════════════════════
+  if (['qs-persuasion', null].includes(template)) {
+
+    // ps-social-proof: Zoek testimonials, reviews, logo's
+    try {
+      const testimonials = doc.querySelectorAll('[class*="testimonial"], [class*="review"], [class*="quote"], blockquote, [class*="klant"], [class*="customer"]');
+      const logoBar = doc.querySelectorAll('[class*="logo"], [class*="client"], [class*="partner"], [class*="trusted"]');
+      const ratings = doc.querySelectorAll('[class*="rating"], [class*="star"], [itemprop="reviewCount"], [itemprop="ratingValue"]');
+      const types = [];
+      if (testimonials.length > 0) types.push('testimonials');
+      if (logoBar.length >= 3) types.push("logo's");
+      if (ratings.length > 0) types.push('ratings/reviews');
+      autoFill('ps-social-proof',
+        types.length >= 2 ? 'good' : types.length === 1 ? 'ok' : 'bad',
+        types.length >= 2
+          ? `${types.length} soorten social proof gevonden: ${types.join(', ')}.`
+          : types.length === 1
+            ? `Slechts 1 type social proof: ${types[0]}. Voeg minimaal 1 extra type toe.`
+            : "Geen social proof gevonden. Dit is kritiek — voeg testimonials, logo's, of reviews toe."
+      ); filled++;
+    } catch(e) {}
+
+    // ps-trust-badges
+    try {
+      const badges = doc.querySelectorAll('[class*="trust"], [class*="secure"], [class*="badge"], [class*="seal"], [class*="keurmerk"], [class*="certificate"], [alt*="secure" i], [alt*="trust" i], [alt*="ssl" i], [alt*="norton" i]');
+      autoFill('ps-trust-badges',
+        badges.length >= 2 ? 'good' : badges.length === 1 ? 'ok' : 'bad',
+        badges.length > 0
+          ? `${badges.length} vertrouwenssignaal/signalen gevonden.`
+          : 'Geen trust badges gevonden. Voeg beveiligings- of kwaliteitskeurmerken toe, vooral bij formulieren.'
+      ); filled++;
+    } catch(e) {}
+
+    // ps-contact-findable
+    try {
+      const tel = doc.querySelector('a[href^="tel:"]');
+      const mail = doc.querySelector('a[href^="mailto:"]');
+      const contactLink = doc.querySelector('a[href*="contact"], a[href*="kontakt"]');
+      const found = [tel && 'telefoon', mail && 'email', contactLink && 'contactpagina'].filter(Boolean);
+      autoFill('ps-contact-findable',
+        found.length >= 2 ? 'good' : found.length === 1 ? 'ok' : 'bad',
+        found.length > 0
+          ? `Contactmethodes gevonden: ${found.join(', ')}.`
+          : 'Geen direct bereikbare contactinfo gevonden. Voeg telefoon, email, of contactpagina link toe.'
+      ); filled++;
+    } catch(e) {}
+  }
+
+  // ═══════════════════════════════════════════
+  // INFORMATIE-ARCHITECTUUR CHECKS (auto)
+  // ═══════════════════════════════════════════
+  if (['qs-ia', null].includes(template)) {
+
+    // ia-nav-items
+    try {
+      const nav = doc.querySelector('nav, [role="navigation"]');
+      if (nav) {
+        const topLinks = Array.from(nav.querySelectorAll(':scope > ul > li > a, :scope > a, :scope > ul > li')).length;
+        const items = topLinks || Array.from(nav.querySelectorAll('a')).length;
+        autoFill('ia-nav-items',
+          items <= 7 ? 'good' : items <= 9 ? 'ok' : 'bad',
+          `${items} navigatie-items gevonden. ${items > 7 ? "Meer dan 7 items verhoogt de cognitieve belasting (Hick's Law)." : 'Goed aantal.'}`
+        ); filled++;
+      }
+    } catch(e) {}
+
+    // ia-logo-home
+    try {
+      const logoLink = doc.querySelector('a[href="/"] img, a[href="/"] svg, header a:first-child img, [class*="logo"] a, a[class*="logo"]');
+      const logoLinksHome = logoLink?.closest('a')?.getAttribute('href');
+      autoFill('ia-logo-home',
+        logoLinksHome === '/' || logoLinksHome === '/index.html' || logoLinksHome === '' ? 'good' : logoLink ? 'ok' : 'bad',
+        logoLink
+          ? `Logo gevonden, linkt naar "${logoLinksHome || '(geen href)'}". ${logoLinksHome !== '/' ? 'Zorg dat het logo linkt naar de homepage (/).' : ''}`
+          : 'Geen klikbaar logo gevonden in de header.'
+      ); filled++;
+    } catch(e) {}
+
+    // ia-breadcrumbs
+    try {
+      const breadcrumb = doc.querySelector('[class*="breadcrumb"], nav[aria-label*="breadcrumb" i], [itemtype*="BreadcrumbList"], ol[class*="bread"]');
+      autoFill('ia-breadcrumbs',
+        breadcrumb ? 'good' : 'bad',
+        breadcrumb ? 'Breadcrumbs aanwezig.' : "Geen breadcrumbs gevonden. Voeg ze toe op pagina's dieper dan niveau 1."
+      ); filled++;
+    } catch(e) {}
+
+    // ia-search
+    try {
+      const search = doc.querySelector('input[type="search"], [role="search"], input[name*="search"], input[name*="zoek"], input[placeholder*="zoek" i], input[placeholder*="search" i]');
+      autoFill('ia-search',
+        search ? 'good' : 'bad',
+        search ? 'Zoekfunctie gevonden.' : 'Geen zoekfunctie gevonden. Zoek-gebruikers converteren 1.8x vaker.'
+      ); filled++;
+    } catch(e) {}
+  }
+
+  // ═══════════════════════════════════════════
+  // E-E-A-T CHECKS (auto)
+  // ═══════════════════════════════════════════
+  if (['qs-eeat', null].includes(template)) {
+
+    // ee-about-page
+    try {
+      const aboutLink = doc.querySelector('a[href*="about"], a[href*="over-ons"], a[href*="about-us"], a[href*="over"]');
+      autoFill('ee-about-page',
+        aboutLink ? 'good' : 'bad',
+        aboutLink ? `Over ons-pagina gelinkt: "${aboutLink.getAttribute('href')}".` : 'Geen link naar een Over ons/About-pagina gevonden.'
+      ); filled++;
+    } catch(e) {}
+
+    // ee-privacy-terms
+    try {
+      const privacy = doc.querySelector('a[href*="privacy"], a[href*="privacybeleid"]');
+      const terms = doc.querySelector('a[href*="terms"], a[href*="voorwaarden"], a[href*="disclaimer"]');
+      autoFill('ee-privacy-terms',
+        privacy && terms ? 'good' : privacy || terms ? 'ok' : 'bad',
+        [privacy && 'privacy policy', terms && 'algemene voorwaarden'].filter(Boolean).join(' + ') || 'Geen privacy policy of voorwaarden gevonden in de footer.'
+      ); filled++;
+    } catch(e) {}
+
+    // ee-author-attribution
+    try {
+      const author = doc.querySelector('[class*="author"], [rel="author"], [itemprop="author"], [class*="auteur"], .byline, [class*="writer"]');
+      autoFill('ee-author-attribution',
+        author ? 'good' : 'bad',
+        author ? 'Auteur-attributie gevonden.' : 'Geen auteur-attributie gevonden op de pagina.'
+      ); filled++;
+    } catch(e) {}
+  }
+
+  return filled;
+}
+
 // ═══════════════ MULTI-SIGNAL DETECTION HELPERS ═══════════════
 function findAddToCart(doc) {
   const byClass = doc.querySelector('[class*="add-to-cart"], [class*="addtocart"], [class*="add_to_cart"], [class*="add-to-bag"]');
@@ -8676,6 +9487,36 @@ function showScorecard() { try {
   const answers = project ? project.answers : {};
   const container = document.getElementById('scorecardContent');
 
+  // ── Free-form: genereer reviewSteps uit bevindingen per categorie ──
+  if (project?.reviewType === 'free-form') {
+    const findings = Object.keys(answers)
+      .filter(k => k.startsWith('ff-'))
+      .sort((a, b) => (answers[a].findingOrder || 0) - (answers[b].findingOrder || 0));
+    const catMap = {};
+    const addedToStep = new Set(); // track welke findings al in minstens 1 categorie zitten
+    findings.forEach(fId => {
+      const cats = answers[fId].findingCategories || (answers[fId].findingCategory ? [answers[fId].findingCategory] : ['other']);
+      if (cats.length === 0) cats.push('other');
+      cats.forEach(cat => {
+        if (!catMap[cat]) catMap[cat] = [];
+        catMap[cat].push(fId);
+        addedToStep.add(fId);
+      });
+    });
+    reviewSteps = Object.entries(catMap).map(([catId, fIds]) => ({
+      id: 'ff-cat-' + catId,
+      title: (typeof FF_CAT_LABELS !== 'undefined' && FF_CAT_LABELS[catId]) || catId,
+      shortTitle: (typeof FF_CAT_LABELS !== 'undefined' && FF_CAT_LABELS[catId]) || catId,
+      impact: 'high',
+      desc: '',
+      questions: fIds.map(fId => ({
+        id: fId,
+        text: answers[fId].findingTitle || (answers[fId].notes || '').split('\n')[0].substring(0, 80) || 'Bevinding',
+        type: 'manual'
+      }))
+    }));
+  }
+
   const totalQ = reviewSteps.reduce((s, st) => s + st.questions.length, 0);
   // Only count answers matching current reviewSteps questions (prevent quick-scan counting all regular auto-checks)
   const stepQIds = new Set(reviewSteps.flatMap(s => s.questions.map(q => q.id)));
@@ -8739,7 +9580,14 @@ function showScorecard() { try {
       const a = answers[q.id];
       if (a && (a.score==='bad'||a.score==='ok')) {
         const shots = getScreenshots(q.id);
-        allIssues.push({ id: q.id, text: q.text, tip: questionTips[q.id]||'', score: a.score, impact: a.severity||step.impact||'low', notes: a.notes||'', category: step.shortTitle, screenshots: shots, screenshot: shots[0]||'' });
+        const issueText = q.id.startsWith('ff-') ? (a.findingTitle || (a.notes || '').split('\n')[0].substring(0, 80) || q.text) : q.text;
+        const ffCats = q.id.startsWith('ff-') ? (a.findingCategories || (a.findingCategory ? [a.findingCategory] : [])) : [];
+        const issueCat = q.id.startsWith('ff-')
+          ? (ffCats.length > 0 ? ffCats.map(c => FF_CAT_LABELS[c] || c).join(', ') : step.shortTitle)
+          : step.shortTitle;
+        // Dedup: skip als dit ff- ID al in allIssues zit
+        if (q.id.startsWith('ff-') && allIssues.some(i => i.id === q.id)) { return; }
+        allIssues.push({ id: q.id, text: issueText, tip: questionTips[q.id]||'', score: a.score, impact: a.severity||step.impact||'low', notes: a.notes||'', category: issueCat, screenshots: shots, screenshot: shots[0]||'' });
       }
     });
   });
