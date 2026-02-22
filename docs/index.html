@@ -2,7 +2,7 @@
 <html lang="nl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>BOLD700 — UX Review Platform</title>
 <style>
   :root {
@@ -507,6 +507,7 @@
     display: flex;
     flex-direction: column;
     height: 100vh;
+    height: 100dvh; /* Safari: respect dynamic viewport */
     background: var(--bg);
     overflow: hidden;
   }
@@ -663,6 +664,7 @@
   /* URL toolbar (full-width, very top) */
   .url-toolbar {
     display: flex; align-items: center; gap: 8px; padding: 6px 16px;
+    padding-top: calc(6px + env(safe-area-inset-top, 0px));
     background: var(--surface); border-bottom: 1px solid var(--border);
     position: sticky; top: 0; z-index: 101;
   }
@@ -694,7 +696,7 @@
   /* Navigation topbar (below URL bar) */
   .topbar {
     background: var(--surface); border-bottom: 1px solid var(--border);
-    position: sticky; top: 44px; z-index: 100;
+    position: sticky; top: calc(44px + env(safe-area-inset-top, 0px)); z-index: 100;
   }
   .topbar-row {
     display: flex; align-items: center; justify-content: space-between; padding: 6px 16px;
@@ -994,6 +996,9 @@
   .questions-area {
     flex: 1; overflow-y: auto; padding: 20px; min-width: 0;
   }
+  .questions-area.focus-mode {
+    display: flex; flex-direction: column;
+  }
   .questions-area::-webkit-scrollbar { width: 6px; }
   .questions-area::-webkit-scrollbar-track { background: transparent; }
   .questions-area::-webkit-scrollbar-thumb { background: var(--surface3); border-radius: 3px; }
@@ -1009,11 +1014,65 @@
 
   .question-card {
     background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius);
-    padding: 16px; margin-bottom: 12px; transition: border-color 0.2s;
+    padding: 20px; margin-bottom: 12px; transition: border-color 0.2s;
   }
+  /* Focus mode: hide all question cards, show only active at full height */
+  .focus-mode .question-card { display: none; }
+  .focus-mode .question-card.q-focus-active {
+    display: flex; flex-direction: column;
+    flex: 1; min-height: 0;
+    border: none; background: transparent; padding: 0;
+  }
+  .focus-mode .question-card.q-focus-active .question-label {
+    font-size: 15px; margin-bottom: 16px;
+  }
+  .focus-mode .question-card.q-focus-active .notes-input {
+    flex: 1; min-height: 120px; resize: none;
+  }
+  .focus-mode .question-card.q-focus-active .score-row {
+    margin-bottom: 14px;
+  }
+  .focus-mode .question-card.q-focus-active .score-btn {
+    padding: 10px 6px; font-size: 13px;
+  }
+  /* Compact category header in focus mode */
+  .focus-mode .score-summary {
+    padding: 8px 12px; margin-bottom: 12px;
+  }
+  .focus-mode .score-circle {
+    width: 36px; height: 36px; font-size: 14px; border-width: 2px;
+  }
+  .focus-mode .category-title { font-size: 15px; margin-bottom: 2px; }
+  .focus-mode .category-desc { font-size: 12px; margin-bottom: 12px; }
   .question-card:hover { border-color: #444; }
   .question-card.answered { border-color: rgba(34,197,94,0.3); }
   .question-card.answered-nvt { border-color: rgba(100,100,100,0.3); opacity: 0.55; }
+
+  /* Focus navigation bar */
+  .focus-nav {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 0; padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+    margin-top: auto; border-top: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .focus-nav-btn {
+    display: flex; align-items: center; gap: 6px;
+    padding: 8px 16px; border: 1px solid var(--border); border-radius: var(--radius);
+    background: var(--surface); color: var(--text); font-size: 13px; font-weight: 600;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .focus-nav-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .focus-nav-btn:disabled { opacity: 0.3; cursor: default; border-color: var(--border); color: var(--text-muted); }
+  .focus-nav-counter {
+    display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-muted);
+  }
+  .focus-dots { display: flex; gap: 4px; }
+  .focus-dot {
+    width: 8px; height: 8px; border-radius: 50%; background: var(--border); transition: all 0.15s; cursor: pointer;
+  }
+  .focus-dot.dot-active { background: var(--accent); transform: scale(1.25); }
+  .focus-dot.dot-answered { background: var(--green); }
+  .focus-dot.dot-nvt { background: #666; }
 
   .question-label { font-size: 13px; font-weight: 600; margin-bottom: 10px; line-height: 1.5; }
   .question-label .q-num { color: var(--accent); margin-right: 6px; }
@@ -1555,12 +1614,21 @@
   }
 
   @media (max-width: 768px) {
+    /* ─── Review topbar mobile ─── */
+    .url-toolbar { padding: 4px 10px; padding-top: calc(4px + env(safe-area-inset-top, 0px)); gap: 6px; }
+    .url-toolbar .url-bar { font-size: 12px; padding: 4px 8px; }
+    .url-toolbar .btn-open-ext { display: none; }
+    .topbar { top: calc(38px + env(safe-area-inset-top, 0px)); }
     .topbar-center { display: none; }
-    .topbar-row { justify-content: space-between; }
+    .topbar-row { justify-content: space-between; padding: 4px 8px; }
     .topbar-right .btn-icon { width: 28px; height: 28px; min-width: 28px; min-height: 28px; }
     .topbar-right .btn-icon i[data-lucide] { width: 14px; height: 14px; }
-    .topbar-right { gap: 4px; }
+    .topbar-right { gap: 3px; }
     .btn-nav { padding: 4px 10px; font-size: 12px; }
+    /* Verberg minder belangrijke knoppen op mobile */
+    #btnAutoScan { display: none; }
+    /* Review-mode: stepper verbergen op mobile */
+    .main.review-mode .step-stepper { display: none !important; }
 
     /* ─── Dashboard mobile fixes ─── */
     .dash-topbar { padding: 0 12px; height: 48px; }
@@ -1585,18 +1653,32 @@
     .project-card.new-project { padding: 20px; }
 
     /* ─── New Project wizard mobile ─── */
-    .np-topbar { padding: 0 16px; height: 52px; }
-    .np-topbar .logo { font-size: 18px; }
+    .np-topbar { padding: 0 12px; height: 48px; }
+    .np-topbar .logo { font-size: 16px; }
+    .np-topbar-close { width: 32px; height: 32px; }
     .np-stepper .np-step-label { display: none; }
-    .np-stepper .np-step-line { width: 28px; margin: 0 4px; }
-    .np-body { padding: 20px 16px; }
+    .np-stepper .np-step-dot { width: 24px; height: 24px; font-size: 11px; }
+    .np-stepper .np-step-line { width: 20px; margin: 0 3px; }
+    .np-body { padding: 16px; align-items: flex-start; }
     .np-content { max-width: 100%; }
-    .np-footer { padding: 0 16px; height: 60px; }
-    .np-footer .btn { min-width: 110px; font-size: 13px; }
+    .np-step-title { font-size: 16px; }
+    .np-step-desc { font-size: 12px; margin-bottom: 14px; }
+    .np-footer {
+      padding: 0 16px; height: auto;
+      padding-top: 12px; padding-bottom: calc(12px + env(safe-area-inset-bottom, 16px));
+    }
+    .np-footer .btn { min-width: 110px; font-size: 13px; padding: 10px 16px; }
     .mode-choice { grid-template-columns: 1fr; gap: 10px; }
+    .mode-option { padding: 14px 12px; }
+    .mode-option .mode-icon { font-size: 20px; margin-bottom: 4px; }
+    .mode-option .mode-name { font-size: 13px; }
+    .source-choice { grid-template-columns: 1fr 1fr; gap: 8px; }
+    .source-option { padding: 10px 8px; }
     .template-grid { grid-template-columns: repeat(2, 1fr); gap: 6px; }
     .template-card { padding: 8px 4px; }
     .template-card-name { font-size: 10px; }
+    .form-group { margin-bottom: 12px; }
+    .form-input, .form-select { padding: 10px 12px; font-size: 14px; }
 
     .modal { padding: 20px; width: 100%; max-width: 95vw; border-radius: 12px; }
 
@@ -1829,6 +1911,11 @@
     .ff-mobile-mode .score-btn { padding: 8px 14px; font-size: 13px; }
     .ff-mobile-mode .ff-add-btn { padding: 14px; font-size: 15px; }
     .ff-mobile-mode .ff-footer { flex-direction: column; gap: 12px; text-align: center; }
+
+    /* Focus nav mobile */
+    .focus-nav { padding: 10px 0; padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px)); }
+    .focus-nav-btn { padding: 8px 12px; font-size: 12px; }
+    .focus-dot { width: 6px; height: 6px; }
   }
 </style>
 <!-- Firebase SDK (compat for single-file usage) -->
@@ -5835,6 +5922,79 @@ function prevStep() {
 }
 
 // ═══════════════ RENDER STEP ═══════════════
+// ═══ FOCUS MODE: één vraag tegelijk ═══
+let _focusQIndex = 0;
+
+function updateFocusView(step) {
+  if (!step) { step = reviewSteps[currentStep]; }
+  if (!step) return;
+  const questions = step.questions;
+  const answers = getAnswers();
+
+  // Alle kaarten verbergen, alleen actieve tonen
+  questions.forEach((q, i) => {
+    const card = document.getElementById('card-' + q.id);
+    if (card) {
+      card.classList.toggle('q-focus-active', i === _focusQIndex);
+    }
+  });
+
+  // Dots updaten
+  const dotsEl = document.getElementById('focusDots');
+  if (dotsEl) {
+    dotsEl.innerHTML = questions.map((q, i) => {
+      const a = answers[q.id] || {};
+      let cls = 'focus-dot';
+      if (i === _focusQIndex) cls += ' dot-active';
+      else if (a.score === 'nvt') cls += ' dot-nvt';
+      else if (a.score) cls += ' dot-answered';
+      return `<div class="${cls}" onclick="focusGoTo(${i})" title="Vraag ${i+1}"></div>`;
+    }).join('');
+  }
+
+  // Knoppen disable
+  const prevBtn = document.getElementById('focusPrevBtn');
+  const nextBtn = document.getElementById('focusNextBtn');
+  if (prevBtn) prevBtn.disabled = _focusQIndex <= 0;
+  if (nextBtn) {
+    if (_focusQIndex >= questions.length - 1) {
+      nextBtn.innerHTML = 'Volgende stap <i data-lucide="chevrons-right" style="width:14px;height:14px"></i>';
+      nextBtn.onclick = () => nextStep();
+    } else {
+      nextBtn.innerHTML = 'Volgende <i data-lucide="chevron-right" style="width:14px;height:14px"></i>';
+      nextBtn.onclick = () => focusNextQ();
+    }
+    nextBtn.disabled = false;
+  }
+
+  // Scroll naar boven
+  const area = document.getElementById('questionsArea');
+  if (area) area.scrollTop = 0;
+
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+function focusNextQ() {
+  const step = reviewSteps[currentStep];
+  if (!step) return;
+  if (_focusQIndex < step.questions.length - 1) {
+    _focusQIndex++;
+    updateFocusView(step);
+  }
+}
+
+function focusPrevQ() {
+  if (_focusQIndex > 0) {
+    _focusQIndex--;
+    updateFocusView(reviewSteps[currentStep]);
+  }
+}
+
+function focusGoTo(index) {
+  _focusQIndex = index;
+  updateFocusView(reviewSteps[currentStep]);
+}
+
 function renderStep(stepIndex, resetScroll) { try {
   if (resetScroll === undefined) resetScroll = true;
   if (resetScroll) lastActiveQId = null; // reset paste target on step change
@@ -5942,10 +6102,30 @@ function renderStep(stepIndex, resetScroll) { try {
             </div>
           </div>` : ''}
         </div>`;
-    }).join('')}`;
+    }).join('')}
+    <div class="focus-nav" id="focusNav">
+      <button class="focus-nav-btn" id="focusPrevBtn" onclick="focusPrevQ()"><i data-lucide="chevron-left" style="width:14px;height:14px"></i> Vorige</button>
+      <div class="focus-nav-counter">
+        <div class="focus-dots" id="focusDots"></div>
+      </div>
+      <button class="focus-nav-btn" id="focusNextBtn" onclick="focusNextQ()">Volgende <i data-lucide="chevron-right" style="width:14px;height:14px"></i></button>
+    </div>`;
+
+  // Focus mode: altijd actief, toon 1 vraag tegelijk
+  area.classList.add('focus-mode');
 
   if (resetScroll) { area.scrollTop = 0; } else { area.scrollTop = prevScrollTop; }
   updateProgress();
+
+  // Focus: bij nieuwe stap → eerste onbeantwoorde, bij re-render → behoud huidige index
+  if (resetScroll) {
+    const firstUnanswered = step.questions.findIndex(q => !answers[q.id]?.score);
+    _focusQIndex = firstUnanswered >= 0 ? firstUnanswered : 0;
+  }
+  // Clamp index (veiligheid)
+  if (_focusQIndex >= step.questions.length) _focusQIndex = step.questions.length - 1;
+  if (_focusQIndex < 0) _focusQIndex = 0;
+  updateFocusView(step);
 
   const btnNext = document.getElementById('btnNext');
   if (stepIndex === reviewSteps.length - 1) {
@@ -5976,6 +6156,17 @@ function setScore(qId, score) {
   answers[qId].score = score;
   if (score === 'nvt' || score === 'good') { delete answers[qId].severity; }
   saveState();
+
+  // Auto-advance: bij 'goed' of 'nvt' → spring naar volgende onbeantwoorde vraag
+  if (score === 'good' || score === 'nvt') {
+    const nextUnanswered = step.questions.findIndex((q, i) => i > _focusQIndex && !answers[q.id]?.score);
+    if (nextUnanswered >= 0) {
+      _focusQIndex = nextUnanswered;
+    } else if (_focusQIndex < step.questions.length - 1) {
+      _focusQIndex++;
+    }
+  }
+
   renderStep(currentStep, false);
   buildStepper();
 }
