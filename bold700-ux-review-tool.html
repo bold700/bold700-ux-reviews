@@ -1784,21 +1784,6 @@
   .ff-scorecard-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
   /* ═══ HEATMAP SETUP OVERLAY ═══ */
-  .heatmap-overlay {
-    position: absolute; inset: 0; z-index: 20;
-    background: var(--bg); display: flex; flex-direction: column;
-  }
-  .heatmap-bar {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 6px 12px; background: var(--surface); border-bottom: 1px solid var(--border);
-    flex-shrink: 0;
-  }
-  .heatmap-close {
-    background: none; border: none; color: var(--text-muted); cursor: pointer;
-    padding: 4px; border-radius: 4px; display: flex; align-items: center;
-  }
-  .heatmap-close:hover { color: var(--text); background: var(--surface2); }
-  .btn-icon.heatmap-active { background: rgba(249, 115, 22, 0.12) !important; border-color: var(--orange, #f97316) !important; }
 
   /* Free-form scorecard issue cards & groups */
   .issues-section { margin-top: 8px; }
@@ -2121,7 +2106,6 @@
       </div>
       <div class="topbar-right">
         <input type="url" id="scanUrlInput" class="scan-url-input" placeholder="Pagina URL voor scan…" title="URL van de pagina die je wilt scannen">
-        <button class="btn-icon" onclick="toggleHeatmap()" id="btnHeatmap" style="border-color:var(--orange, #f97316);color:var(--orange, #f97316)" title="Heatmap"><i data-lucide="flame"></i></button>
         <button class="btn-icon" onclick="toggleContrastChecker()" style="border-color:var(--purple);color:var(--purple)" title="Contrast"><i data-lucide="contrast"></i></button>
         <button class="btn-icon" onclick="runAutoScan()" id="btnAutoScan" style="border-color:var(--blue);color:var(--blue)" title="Auto-Scan"><i data-lucide="zap"></i></button>
         <button class="btn-icon" onclick="showScorecard()" style="border-color:var(--green);color:var(--green)" title="Scorecard"><i data-lucide="check-circle"></i></button>
@@ -2152,7 +2136,6 @@
           <p>Voer een URL in om de website te bekijken</p>
         </div>
         <iframe id="previewFrame" class="hidden" sandbox="allow-scripts allow-same-origin allow-forms" loading="lazy"></iframe>
-        <div id="heatmapOverlay" class="heatmap-overlay hidden"></div>
       </div>
     </div>
   </div>
@@ -3458,15 +3441,13 @@ function renderAdminConfig() {
 
   const hasProxy = !!_aiProxyUrl;
 
-  const hasClarity = !!_clarityProjectId;
-
   el.innerHTML = `
     <div style="margin-top:24px">
       <h2 style="font-size:18px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px">
         <i data-lucide="settings" style="width:18px;height:18px;color:var(--accent)"></i> Platform Instellingen
       </h2>
 
-      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px;margin-bottom:12px">
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
           <div>
             <div style="font-size:13px;font-weight:700;margin-bottom:4px">AI Actieplan (Proxy URL)</div>
@@ -3476,20 +3457,6 @@ function renderAdminConfig() {
           <div style="display:flex;gap:6px">
             <input type="url" id="adminAiProxyInput" placeholder="https://bold700-ai.workers.dev" value="${_aiProxyUrl || ''}" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:6px 10px;font-size:12px;color:var(--text);width:320px;font-family:monospace;outline:none" />
             <button class="btn btn-accent btn-sm" onclick="saveAiConfig(document.getElementById('adminAiProxyInput').value.trim())">Opslaan</button>
-          </div>
-        </div>
-      </div>
-
-      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px">
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
-          <div>
-            <div style="font-size:13px;font-weight:700;margin-bottom:4px;display:flex;align-items:center;gap:6px"><i data-lucide="flame" style="width:14px;height:14px;color:#f97316"></i> Heatmap (Microsoft Clarity)</div>
-            <div style="font-size:11px;color:var(--text-muted)">${hasClarity ? `Actief · Project ID: ${_clarityProjectId}` : 'Niet ingesteld — Heatmap knop toont setup voor elke reviewer'}</div>
-            <div style="font-size:10px;color:var(--text-muted);margin-top:4px">Clarity Project ID (bijv. <code style="background:var(--surface);padding:1px 4px;border-radius:3px">vl9jrnf9p3</code>). Eenmalig instellen — werkt voor alle projecten.</div>
-          </div>
-          <div style="display:flex;gap:6px">
-            <input type="text" id="adminClarityInput" placeholder="vl9jrnf9p3" value="${_clarityProjectId || ''}" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:6px 10px;font-size:12px;color:var(--text);width:200px;font-family:monospace;outline:none" />
-            <button class="btn btn-accent btn-sm" onclick="saveClarityConfig(document.getElementById('adminClarityInput').value.trim())">Opslaan</button>
           </div>
         </div>
       </div>
@@ -5219,19 +5186,6 @@ function openProject(id) {
   }
   document.getElementById('urlInput').value = project.url;
 
-  // ── Heatmap button: toon als project een heatmap URL heeft ──
-  // ── Heatmap: altijd tonen, setup popup als nog niet gekoppeld ──
-  heatmapActive = false;
-  const hmOverlay = document.getElementById('heatmapOverlay');
-  if (hmOverlay) hmOverlay.classList.add('hidden');
-  const btnHm = document.getElementById('btnHeatmap');
-  if (btnHm) {
-    btnHm.classList.remove('hidden');
-    // Oranje highlight als Clarity platform-breed of per-project is ingesteld
-    const hasAnyHeatmap = !!_clarityProjectId || !!project.heatmapUrl;
-    btnHm.title = hasAnyHeatmap ? 'Heatmap bekijken' : 'Heatmap instellen';
-  }
-
   // ── Free-form review: andere UI ──
   if (project.reviewType === 'free-form') {
     renderFreeFormReview(project);
@@ -5700,124 +5654,6 @@ function loadUrl() {
 }
 
 let siteWindow = null;
-
-// ═══ HEATMAP ═══
-let heatmapActive = false;
-
-function toggleHeatmap() {
-  const project = getActiveProject();
-  if (!project) return;
-  const overlay = document.getElementById('heatmapOverlay');
-  const btn = document.getElementById('btnHeatmap');
-
-  // Als heatmap al open is → sluiten
-  if (heatmapActive) {
-    overlay.classList.add('hidden');
-    overlay.innerHTML = '';
-    heatmapActive = false;
-    if (btn) btn.classList.remove('heatmap-active');
-    return;
-  }
-
-  // 1. Platform-brede Clarity config (admin heeft dit ingesteld)
-  const clarityUrl = getClarityDashboardUrl();
-  if (clarityUrl) {
-    showHeatmapIframe(clarityUrl);
-    return;
-  }
-
-  // 2. Per-project URL (fallback)
-  if (project.heatmapUrl) {
-    showHeatmapIframe(project.heatmapUrl);
-    return;
-  }
-
-  // 3. Niks ingesteld → setup tonen
-  showHeatmapSetup();
-}
-
-function showHeatmapSetup() {
-  const project = getActiveProject();
-  if (!project) return;
-  const overlay = document.getElementById('heatmapOverlay');
-  const btn = document.getElementById('btnHeatmap');
-
-  overlay.innerHTML = `
-    <div class="heatmap-bar">
-      <div style="display:flex;align-items:center;gap:6px">
-        <i data-lucide="flame" style="width:14px;height:14px;color:var(--orange, #f97316)"></i>
-        <span style="font-weight:600;font-size:12px">Heatmap koppelen</span>
-      </div>
-      <button class="heatmap-close" onclick="toggleHeatmap()"><i data-lucide="x" style="width:14px;height:14px"></i></button>
-    </div>
-    <div style="padding:32px;display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;text-align:center;max-width:420px;margin:0 auto">
-      <div style="width:56px;height:56px;border-radius:16px;background:rgba(249,115,22,0.1);display:flex;align-items:center;justify-content:center;margin-bottom:16px">
-        <i data-lucide="flame" style="width:28px;height:28px;color:var(--orange, #f97316)"></i>
-      </div>
-      <h3 style="font-size:16px;margin-bottom:6px">Heatmap data bekijken</h3>
-      ${isAdmin ? `
-      <p style="font-size:13px;color:var(--text-muted);line-height:1.5;margin-bottom:20px">
-        Stel Clarity eenmalig in via <strong>Instellingen</strong>, dan werkt het voor alle projecten.
-        Of koppel een URL specifiek voor dit project.
-      </p>
-      <div style="display:flex;gap:8px;width:100%;margin-bottom:16px">
-        <button class="btn btn-primary" onclick="toggleHeatmap(); switchDashTab('settings')" style="flex:1"><i data-lucide="settings" style="width:14px;height:14px"></i> Naar Instellingen</button>
-      </div>
-      <div style="border-top:1px solid var(--border);padding-top:16px;width:100%;text-align:left;margin-bottom:16px">
-        <div style="font-size:11px;font-weight:600;color:var(--text-muted);margin-bottom:6px">Of: koppel alleen voor dit project</div>
-        <div style="display:flex;gap:6px;margin-top:8px">
-          <input type="url" id="heatmapSetupUrl" class="form-input" placeholder="https://clarity.microsoft.com/projects/view/..." style="flex:1;font-size:13px" value="${project.heatmapUrl || ''}">
-          <button class="btn btn-secondary" onclick="saveHeatmapUrl()">Koppel</button>
-        </div>
-      </div>
-      ` : `
-      <p style="font-size:13px;color:var(--text-muted);line-height:1.5;margin-bottom:20px">
-        Heatmap is nog niet ingesteld. Vraag je admin om Microsoft Clarity te koppelen via Platform Instellingen.
-      </p>
-      <p style="font-size:12px;color:var(--text-muted);line-height:1.5;margin-bottom:16px">
-        Of koppel een heatmap URL specifiek voor dit project:
-      </p>
-      <div style="width:100%;text-align:left;margin-bottom:16px">
-        <div style="display:flex;gap:6px">
-          <input type="url" id="heatmapSetupUrl" class="form-input" placeholder="https://clarity.microsoft.com/projects/view/..." style="flex:1;font-size:13px" value="${project.heatmapUrl || ''}">
-          <button class="btn btn-primary" onclick="saveHeatmapUrl()">Koppel</button>
-        </div>
-      </div>
-      `}
-      <div style="padding-top:12px;border-top:1px solid var(--border);width:100%;text-align:left">
-        <div style="font-size:11px;font-weight:600;color:var(--text-muted);margin-bottom:6px">Nog geen heatmap tool?</div>
-        <div style="font-size:12px;color:var(--text-muted);line-height:1.5">
-          1. Ga naar <a href="https://clarity.microsoft.com" target="_blank" style="color:var(--accent)">clarity.microsoft.com</a> en maak een gratis account<br>
-          2. Voeg het Clarity script toe aan de klantwebsite<br>
-          3. Stel het Project ID in bij Platform Instellingen
-        </div>
-      </div>
-    </div>
-  `;
-
-  overlay.classList.remove('hidden');
-  heatmapActive = true;
-  if (btn) btn.classList.add('heatmap-active');
-  if (typeof lucide !== 'undefined') lucide.createIcons();
-  setTimeout(() => { const inp = document.getElementById('heatmapSetupUrl'); if (inp) inp.focus(); }, 100);
-}
-
-function showHeatmapIframe(url) {
-  // Clarity (en de meeste heatmap tools) blokkeren iframes — open direct in nieuw tabblad
-  window.open(url, '_blank');
-}
-
-function saveHeatmapUrl() {
-  const project = getActiveProject();
-  if (!project) return;
-  const url = document.getElementById('heatmapSetupUrl')?.value?.trim();
-  if (!url) { alert('Voer een URL in.'); return; }
-  project.heatmapUrl = url;
-  saveState();
-  // Sluit setup overlay en open heatmap
-  toggleHeatmap(); // sluit overlay
-  window.open(url, '_blank');
-}
 
 function toggleSiteWindow() {
   const main = document.querySelector('.main');
@@ -10857,37 +10693,6 @@ async function saveAiConfig(proxyUrl) {
 
 function getAiProxyUrl() { return _aiProxyUrl || ''; }
 
-// ── Clarity Heatmap Config ──
-let _clarityProjectId = null;
-
-async function loadClarityConfig() {
-  try {
-    const doc = await db.collection('config').doc('clarity').get();
-    if (doc.exists && doc.data().projectId) {
-      _clarityProjectId = doc.data().projectId;
-    }
-  } catch(e) {
-    console.warn('[Clarity] Could not load config:', e.message);
-  }
-}
-
-async function saveClarityConfig(projectId) {
-  if (!isAdmin) return;
-  try {
-    await db.collection('config').doc('clarity').set({ projectId: projectId, updatedAt: new Date().toISOString() });
-    _clarityProjectId = projectId;
-    showScanToast('success', 'Clarity opgeslagen', projectId ? 'Heatmap is nu beschikbaar voor alle projecten.' : 'Heatmap uitgeschakeld.', 3000);
-    renderAdminConfig();
-  } catch(e) {
-    showScanToast('error', 'Opslaan mislukt', e.message, 4000);
-  }
-}
-
-function getClarityDashboardUrl() {
-  if (!_clarityProjectId) return null;
-  return 'https://clarity.microsoft.com/projects/view/' + _clarityProjectId + '/dashboard';
-}
-
 function isAiAvailable() {
   const project = getActiveProject();
   return project && project.mode === 'professional' && !!getAiProxyUrl();
@@ -11644,7 +11449,6 @@ auth.onAuthStateChanged(async (user) => {
 
   await loadState();
   await loadAiConfig(); // Load AI API key from Firestore (not in source code)
-  await loadClarityConfig(); // Load Clarity heatmap project ID
   document.body.style.cursor = '';
 
   // Hide auth screen
