@@ -502,30 +502,65 @@
   .project-card:hover .pc-delete { display: flex; }
   .pc-delete:hover { background: rgba(239,68,68,0.2); color: var(--red); }
 
-  /* ═══ SCREEN 2: NEW PROJECT ═══ */
+  /* ═══ SCREEN 2: NEW PROJECT (Full-screen wizard) ═══ */
   .new-project-screen {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    background: var(--bg);
+    overflow: hidden;
+  }
+
+  /* ── Topbar: logo + stepper + close ── */
+  .np-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 64px;
+    padding: 0 32px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    flex-shrink: 0;
+  }
+  .np-topbar .logo { font-size: 22px; margin: 0; }
+  .np-topbar-close {
+    width: 36px; height: 36px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: transparent; border: 1px solid var(--border);
+    color: var(--text-muted); cursor: pointer; transition: all 0.15s;
+  }
+  .np-topbar-close:hover { background: var(--surface2); color: var(--text); border-color: var(--text-muted); }
+
+  /* ── Body: centered content area ── */
+  .np-body {
+    flex: 1;
     display: flex;
     align-items: center;
     justify-content: center;
-    height: 100vh;
-    background: var(--bg);
     overflow-y: auto;
+    padding: 32px 24px;
   }
 
-  .np-card {
+  /* ── Content: max-width container ── */
+  .np-content {
+    max-width: 640px;
+    width: 100%;
+  }
+
+  /* ── Footer: navigation buttons ── */
+  .np-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 72px;
+    padding: 0 32px;
+    border-top: 1px solid var(--border);
     background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 48px;
-    width: 560px;
-    max-height: 90vh;
-    overflow-y: auto;
+    flex-shrink: 0;
   }
+  .np-footer .btn { min-width: 140px; justify-content: center; }
 
-  .np-card .logo { font-size: 28px; text-align: center; display: block; margin-bottom: 4px; }
-  .np-subtitle { color: var(--text-muted); font-size: 14px; text-align: center; margin-bottom: 32px; }
-
-  .np-card h2 { font-size: 22px; font-weight: 700; text-align: center; margin-bottom: 24px; }
+  .np-subtitle { color: var(--text-muted); font-size: 14px; text-align: center; margin-bottom: 32px; display: none; }
 
   /* Template grid for quick scan selection */
   .template-grid {
@@ -598,32 +633,26 @@
   .mode-option .mode-name { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
   .mode-option .mode-desc { font-size: 11px; color: var(--text-muted); line-height: 1.4; }
 
-  .np-actions {
-    display: flex;
-    gap: 12px;
-    margin-top: 8px;
-  }
+  .np-actions { display: none; /* moved to np-footer */ }
 
-  .np-actions .btn { flex: 1; justify-content: center; }
-
-  /* Wizard stepper */
-  .np-stepper { display:flex; align-items:center; justify-content:center; gap:0; margin-bottom:28px; }
-  .np-step { display:flex; flex-direction:column; align-items:center; gap:4px; }
+  /* Wizard stepper (in topbar) */
+  .np-stepper { display:flex; align-items:center; justify-content:center; gap:0; }
+  .np-step { display:flex; align-items:center; gap:6px; }
   .np-step-dot { width:28px; height:28px; border-radius:50%; border:2px solid var(--border); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; color:var(--text-muted); transition:all 0.2s; }
   .np-step.active .np-step-dot { border-color:var(--accent); background:var(--accent); color:#fff; }
   .np-step.done .np-step-dot { border-color:var(--green); background:var(--green); color:#fff; }
   .np-step.done .np-step-dot::after { content:'✓'; font-size:13px; }
   .np-step-num { display:inline; }
   .np-step.done .np-step-num { display:none; }
-  .np-step-label { font-size:11px; color:var(--text-muted); }
+  .np-step-label { font-size:12px; color:var(--text-muted); }
   .np-step.active .np-step-label { color:var(--accent); font-weight:600; }
   .np-step.done .np-step-label { color:var(--green); }
-  .np-step-line { width:48px; height:2px; background:var(--border); margin:0 8px; margin-bottom:18px; transition:background 0.2s; }
+  .np-step-line { width:48px; height:2px; background:var(--border); margin:0 8px; transition:background 0.2s; }
   .np-step-line.done { background:var(--green); }
 
   /* Hide/show form groups by wizard step */
-  .np-card [data-np-step] { display:none; }
-  .np-card [data-np-step].np-visible { display:block; }
+  .np-content [data-np-step] { display:none; }
+  .np-content [data-np-step].np-visible { display:block; }
 
   /* Step title within wizard */
   .np-step-title { font-size:18px; font-weight:700; margin-bottom:4px; }
@@ -1498,10 +1527,8 @@
 
   @media (max-width: 1200px) {
     .review-panel { width: 460px; min-width: 400px; }
-    .step-stepper { width: 44px; }
-    .stepper-label { display: none; }
-    .stepper-progress { display: none; }
-    .stepper-item { padding: 0 9px; }
+    .step-stepper { display: none !important; }
+    .stepper-module-header { display: none; }
     .topbar-subtitle { font-size: 10px; gap: 4px; }
     .topbar-center { flex: 0 1 auto; min-width: 0; }
     .topbar-title { font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -1519,11 +1546,12 @@
     .topbar-right { gap: 3px; }
     .topbar-right .btn-icon { width: 24px; height: 24px; font-size: 10px; min-width: 24px; min-height: 24px; }
     .topbar-right .btn-icon i[data-lucide] { width: 12px; height: 12px; }
-    /* Review mode stays full-width at small screens too */
+    /* Review mode: stepper terug, full-width panel */
     .main.review-mode .review-panel { width: 100%; min-width: 100%; }
-    .main.review-mode .step-stepper { width: 160px; }
+    .main.review-mode .step-stepper { display: block !important; width: 180px; }
     .main.review-mode .stepper-label { display: block; }
     .main.review-mode .stepper-progress { display: block; }
+    .main.review-mode .stepper-module-header { display: block; }
   }
 
   @media (max-width: 768px) {
@@ -1533,6 +1561,50 @@
     .topbar-right .btn-icon i[data-lucide] { width: 14px; height: 14px; }
     .topbar-right { gap: 4px; }
     .btn-nav { padding: 4px 10px; font-size: 12px; }
+
+    /* ─── Dashboard mobile fixes ─── */
+    .dash-topbar { padding: 0 12px; height: 48px; }
+    .dash-topbar-right { gap: 6px; }
+    .dash-topbar-right #dashUserEmail { display: none; }
+    .dash-topbar-right .role-badge { font-size: 9px; padding: 2px 6px; }
+    .dash-topbar-right .user-logout { font-size: 11px; padding: 4px 8px; }
+
+    .dash-content { padding: 20px 14px; }
+    .dash-hero { margin-bottom: 24px; }
+    .dash-hero h1 { font-size: 22px; }
+    .dash-hero p { font-size: 13px; }
+
+    .dash-tabs { gap: 0; overflow-x: auto; -webkit-overflow-scrolling: touch; flex-wrap: nowrap; scrollbar-width: none; }
+    .dash-tabs::-webkit-scrollbar { display: none; }
+    .dash-tab { padding: 8px 10px; font-size: 11px; gap: 3px; white-space: nowrap; flex-shrink: 0; }
+    .dash-tab i[data-lucide] { display: none; }
+
+    .dash-stats { grid-template-columns: repeat(2, 1fr); gap: 6px; }
+
+    .project-card { padding: 14px; }
+    .project-card.new-project { padding: 20px; }
+
+    /* ─── New Project wizard mobile ─── */
+    .np-topbar { padding: 0 16px; height: 52px; }
+    .np-topbar .logo { font-size: 18px; }
+    .np-stepper .np-step-label { display: none; }
+    .np-stepper .np-step-line { width: 28px; margin: 0 4px; }
+    .np-body { padding: 20px 16px; }
+    .np-content { max-width: 100%; }
+    .np-footer { padding: 0 16px; height: 60px; }
+    .np-footer .btn { min-width: 110px; font-size: 13px; }
+    .mode-choice { grid-template-columns: 1fr; gap: 10px; }
+    .template-grid { grid-template-columns: repeat(2, 1fr); gap: 6px; }
+    .template-card { padding: 8px 4px; }
+    .template-card-name { font-size: 10px; }
+
+    .modal { padding: 20px; width: 100%; max-width: 95vw; border-radius: 12px; }
+
+    /* ─── Stepper: verbergen op kleine schermen ─── */
+    .step-stepper { display: none !important; }
+    .main.review-mode .step-stepper { display: none !important; }
+    .review-panel { width: 100% !important; min-width: 100% !important; }
+    .main.review-mode .review-panel { width: 100% !important; min-width: 100% !important; }
   }
 
   /* ─ Scorecard Dashboard responsive ─ */
@@ -1711,6 +1783,45 @@
   .ff-scorecard-btn:hover { border-color: var(--accent); color: var(--accent); }
   .ff-scorecard-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
+  /* ═══ HEATMAP SETUP OVERLAY ═══ */
+  .heatmap-overlay {
+    position: absolute; inset: 0; z-index: 20;
+    background: var(--bg); display: flex; flex-direction: column;
+  }
+  .heatmap-bar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 6px 12px; background: var(--surface); border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .heatmap-close {
+    background: none; border: none; color: var(--text-muted); cursor: pointer;
+    padding: 4px; border-radius: 4px; display: flex; align-items: center;
+  }
+  .heatmap-close:hover { color: var(--text); background: var(--surface2); }
+  .btn-icon.heatmap-active { background: rgba(249, 115, 22, 0.12) !important; border-color: var(--orange, #f97316) !important; }
+
+  /* Free-form scorecard issue cards & groups */
+  .issues-section { margin-top: 8px; }
+  .issue-group { margin-bottom: 16px; }
+  .issue-group-title { font-size: 13px; font-weight: 700; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+  .ff-issue-card {
+    padding: 12px 16px; border: 1px solid var(--border); border-left: 3px solid var(--yellow);
+    border-radius: var(--radius); margin-bottom: 8px; background: var(--surface);
+  }
+  .ff-issue-card-top { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .ff-issue-badge { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 10px; }
+  .ff-issue-impact { font-size: 11px; font-weight: 600; }
+  .ff-issue-card-text { font-size: 13px; font-weight: 600; color: var(--text); line-height: 1.4; }
+  .ff-issue-card-notes { font-size: 12px; color: var(--text-muted); margin-top: 4px; line-height: 1.5; }
+  .ff-issue-cats { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
+  .ff-issue-cat-tag { font-size: 10px; padding: 2px 8px; border-radius: 10px; background: var(--bg); color: var(--text-muted); border: 1px solid var(--border); }
+  .ff-issue-shots { display: flex; gap: 6px; align-items: center; margin-top: 8px; }
+  .ff-issue-shot { width: 64px; height: 48px; object-fit: cover; border-radius: 4px; border: 1px solid var(--border); cursor: pointer; transition: opacity 0.15s; }
+  .ff-issue-shot:hover { opacity: 0.8; }
+  .issue-card { padding: 10px 14px; border: 1px solid var(--border); border-left: 3px solid var(--green); border-radius: var(--radius); margin-bottom: 6px; background: var(--surface); }
+  .issue-card-text { font-size: 13px; font-weight: 600; color: var(--text); }
+  .issue-card-notes { font-size: 12px; color: var(--text-muted); margin-top: 3px; }
+
   @media (max-width: 600px) {
     .ff-screenshot-large { width: 100% !important; height: auto !important; }
     .ff-category-row { gap: 3px; }
@@ -1851,12 +1962,9 @@
 
 <!-- ═══ SCREEN 2: NEW PROJECT ═══ -->
 <div id="newProjectScreen" class="new-project-screen hidden">
-  <div class="np-card">
+  <!-- ── Topbar ── -->
+  <div class="np-topbar">
     <span class="logo" id="npLogo"></span>
-    <div class="np-subtitle">UX Review Platform</div>
-    <h2>Nieuw Project</h2>
-
-    <!-- Wizard stepper -->
     <div class="np-stepper" id="npStepper">
       <div class="np-step active" data-step="1"><span class="np-step-dot"><span class="np-step-num">1</span></span><span class="np-step-label">Modus</span></div>
       <div class="np-step-line"></div>
@@ -1864,101 +1972,118 @@
       <div class="np-step-line"></div>
       <div class="np-step" data-step="3"><span class="np-step-dot"><span class="np-step-num">3</span></span><span class="np-step-label">Details</span></div>
     </div>
+    <button class="np-topbar-close" onclick="showDashboard()" title="Sluiten"><i data-lucide="x" style="width:18px;height:18px"></i></button>
+  </div>
 
-    <!-- ═══ STEP 1: Modus ═══ -->
-    <div data-np-step="1" class="np-visible">
-      <div class="np-step-title">Hoe wil je reviewen?</div>
-      <div class="np-step-desc">Kies of je zelf aan de slag gaat of een expert inschakelt.</div>
-      <div id="npModeFields">
-        <div class="mode-choice">
-          <div class="mode-option selected" onclick="selectMode('self-service', this)">
-            <div class="mode-icon"><i data-lucide="scan-search"></i></div>
-            <div class="mode-name">Self-Service</div>
-            <div class="mode-desc">Ik doe het zelf.</div>
-          </div>
-          <div class="mode-option" onclick="selectMode('professional', this)">
-            <div class="mode-icon"><i data-lucide="briefcase"></i></div>
-            <div class="mode-name">Professional</div>
-            <div class="mode-desc">Laat een expert dit doen.</div>
+  <!-- ── Body ── -->
+  <div class="np-body">
+    <div class="np-content">
+
+      <!-- ═══ STEP 1: Modus ═══ -->
+      <div data-np-step="1" class="np-visible">
+        <div class="np-step-title">Hoe wil je reviewen?</div>
+        <div class="np-step-desc">Kies of je zelf aan de slag gaat of een expert inschakelt.</div>
+        <div id="npModeFields">
+          <div class="mode-choice">
+            <div class="mode-option selected" onclick="selectMode('self-service', this)">
+              <div class="mode-icon"><i data-lucide="scan-search"></i></div>
+              <div class="mode-name">Self-Service</div>
+              <div class="mode-desc">Ik doe het zelf.</div>
+            </div>
+            <div class="mode-option" onclick="selectMode('professional', this)">
+              <div class="mode-icon"><i data-lucide="briefcase"></i></div>
+              <div class="mode-name">Professional</div>
+              <div class="mode-desc">Laat een expert dit doen.</div>
+            </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- ═══ STEP 2: Bron + Type ═══ -->
-    <div data-np-step="2">
-      <div class="np-step-title">Wat wil je reviewen?</div>
-      <div class="np-step-desc">Kies de bron en het type scan.</div>
-      <div class="form-group" style="margin-bottom:16px">
-        <label>Bron</label>
-        <div class="source-choice" id="sourceChoice">
-          <div class="source-option selected" onclick="selectSource('url', this)">
-            <div class="source-icon"><i data-lucide="globe" style="width:20px;height:20px"></i></div>
-            <div class="source-name">Website URL</div>
-            <div class="source-desc">Live website reviewen</div>
+      <!-- ═══ STEP 2: Bron + Type ═══ -->
+      <div data-np-step="2">
+        <div class="np-step-title">Wat wil je reviewen?</div>
+        <div class="np-step-desc">Kies de bron en het type scan.</div>
+        <div class="form-group" style="margin-bottom:16px">
+          <label>Bron</label>
+          <div class="source-choice" id="sourceChoice">
+            <div class="source-option selected" onclick="selectSource('url', this)">
+              <div class="source-icon"><i data-lucide="globe" style="width:20px;height:20px"></i></div>
+              <div class="source-name">Website URL</div>
+              <div class="source-desc">Live website reviewen</div>
+            </div>
+            <div class="source-option" onclick="selectSource('figma', this)">
+              <div class="source-icon"><i data-lucide="figma" style="width:20px;height:20px"></i></div>
+              <div class="source-name">Figma Design</div>
+              <div class="source-desc">Design file reviewen</div>
+            </div>
           </div>
-          <div class="source-option" onclick="selectSource('figma', this)">
-            <div class="source-icon"><i data-lucide="figma" style="width:20px;height:20px"></i></div>
-            <div class="source-name">Figma Design</div>
-            <div class="source-desc">Design file reviewen</div>
+        </div>
+        <div class="template-grid" id="templateGrid"></div>
+        <div id="autoDetectRow" style="display:none;margin-top:6px">
+          <button class="btn-detect" id="btnDetectType" onclick="detectPageType()">
+            <i data-lucide="search" style="width:12px;height:12px"></i> Auto-detecteer pagina-type
+          </button>
+          <span id="detectResult" style="font-size:11px;color:var(--text-muted);margin-left:8px"></span>
+        </div>
+      </div>
+
+      <!-- ═══ STEP 3: Details ═══ -->
+      <div data-np-step="3">
+        <div class="np-step-title">Project details</div>
+        <div class="np-step-desc">Vul de details in om te starten.</div>
+
+        <!-- Project selector: nieuw domein of toevoegen aan bestaand domein -->
+        <div class="form-group" id="npProjectSelectGroup">
+          <label>Toevoegen aan</label>
+          <select id="npProjectSelect" class="form-select" onchange="onNpProjectSelectChange()">
+            <option value="__new">+ Nieuw domein</option>
+          </select>
+        </div>
+
+        <div class="form-group" id="npUrlGroup">
+          <label>Website URL *</label>
+          <input type="url" id="npUrl" class="form-input" placeholder="https://jouwwebsite.nl" oninput="onNpUrlChange()">
+        </div>
+        <div class="form-group hidden" id="npFigmaGroup">
+          <label>Figma URL *</label>
+          <input type="url" id="npFigmaUrl" class="form-input" placeholder="https://www.figma.com/design/ABC123/..." oninput="onFigmaUrlChange()">
+          <div id="figmaFramePicker" class="hidden" style="margin-top:12px"></div>
+        </div>
+        <div class="form-group">
+          <label>Projectnaam <span style="font-weight:400;color:var(--text-muted)">(automatisch)</span></label>
+          <input type="text" id="npName" class="form-input" placeholder="Wordt ingevuld op basis van URL" oninput="onNpNameInput()">
+        </div>
+        <!-- Professional-only fields (shown conditionally) -->
+        <div class="form-group hidden" id="npClientGroup">
+          <label>Bedrijfsnaam klant *</label>
+          <input type="text" id="npClient" class="form-input" placeholder="bijv. Bakkerij de Goudkorst">
+        </div>
+        <div class="form-group hidden" id="npPackageGroup">
+          <label>Pakket</label>
+          <select id="npPackage" class="form-select">
+            <option value="quick">Quick Scan — €497</option>
+            <option value="deep">Deep Review — €997</option>
+            <option value="full">Full Audit + Redesign — €2.497</option>
+          </select>
+        </div>
+        <div class="form-group hidden" id="npProInfo">
+          <div class="pro-info-box">
+            <i data-lucide="info" style="width:14px;height:14px;flex-shrink:0;margin-top:1px"></i>
+            <div>
+              <strong>Hoe werkt het?</strong><br>
+              Na het indienen wordt je aanvraag beoordeeld en toegewezen aan een erkende UX auditor. Je ontvangt een volledig rapport met concrete verbeterpunten.
+            </div>
           </div>
         </div>
       </div>
-      <div class="template-grid" id="templateGrid"></div>
-      <div id="autoDetectRow" style="display:none;margin-top:6px">
-        <button class="btn-detect" id="btnDetectType" onclick="detectPageType()">
-          <i data-lucide="search" style="width:12px;height:12px"></i> Auto-detecteer pagina-type
-        </button>
-        <span id="detectResult" style="font-size:11px;color:var(--text-muted);margin-left:8px"></span>
-      </div>
-    </div>
 
-    <!-- ═══ STEP 3: Details ═══ -->
-    <div data-np-step="3">
-      <div class="np-step-title">Project details</div>
-      <div class="np-step-desc">Vul de details in om te starten.</div>
-      <div class="form-group" id="npUrlGroup">
-        <label>Website URL *</label>
-        <input type="url" id="npUrl" class="form-input" placeholder="https://jouwwebsite.nl" oninput="onNpUrlChange()">
-      </div>
-      <div class="form-group hidden" id="npFigmaGroup">
-        <label>Figma URL *</label>
-        <input type="url" id="npFigmaUrl" class="form-input" placeholder="https://www.figma.com/design/ABC123/..." oninput="onFigmaUrlChange()">
-        <div id="figmaFramePicker" class="hidden" style="margin-top:12px"></div>
-      </div>
-      <div class="form-group">
-        <label>Projectnaam *</label>
-        <input type="text" id="npName" class="form-input" placeholder="bijv. Webshop Review">
-      </div>
-      <!-- Professional-only fields (shown conditionally) -->
-      <div class="form-group hidden" id="npClientGroup">
-        <label>Bedrijfsnaam klant *</label>
-        <input type="text" id="npClient" class="form-input" placeholder="bijv. Bakkerij de Goudkorst">
-      </div>
-      <div class="form-group hidden" id="npPackageGroup">
-        <label>Pakket</label>
-        <select id="npPackage" class="form-select">
-          <option value="quick">Quick Scan — €497</option>
-          <option value="deep">Deep Review — €997</option>
-          <option value="full">Full Audit + Redesign — €2.497</option>
-        </select>
-      </div>
-      <div class="form-group hidden" id="npProInfo">
-        <div class="pro-info-box">
-          <i data-lucide="info" style="width:14px;height:14px;flex-shrink:0;margin-top:1px"></i>
-          <div>
-            <strong>Hoe werkt het?</strong><br>
-            Na het indienen wordt je aanvraag beoordeeld en toegewezen aan een erkende UX auditor. Je ontvangt een volledig rapport met concrete verbeterpunten.
-          </div>
-        </div>
-      </div>
     </div>
+  </div>
 
-    <!-- Wizard navigation buttons -->
-    <div class="np-actions">
-      <button class="btn btn-secondary" id="npBtnBack" onclick="npPrev()">Annuleer</button>
-      <button class="btn btn-primary btn-lg" id="npBtnNext" onclick="npNext()">Volgende →</button>
-    </div>
+  <!-- ── Footer ── -->
+  <div class="np-footer">
+    <button class="btn btn-secondary" id="npBtnBack" onclick="npPrev()">Annuleer</button>
+    <button class="btn btn-primary btn-lg" id="npBtnNext" onclick="npNext()">Volgende →</button>
   </div>
 </div>
 
@@ -1996,6 +2121,7 @@
       </div>
       <div class="topbar-right">
         <input type="url" id="scanUrlInput" class="scan-url-input" placeholder="Pagina URL voor scan…" title="URL van de pagina die je wilt scannen">
+        <button class="btn-icon" onclick="toggleHeatmap()" id="btnHeatmap" style="border-color:var(--orange, #f97316);color:var(--orange, #f97316)" title="Heatmap"><i data-lucide="flame"></i></button>
         <button class="btn-icon" onclick="toggleContrastChecker()" style="border-color:var(--purple);color:var(--purple)" title="Contrast"><i data-lucide="contrast"></i></button>
         <button class="btn-icon" onclick="runAutoScan()" id="btnAutoScan" style="border-color:var(--blue);color:var(--blue)" title="Auto-Scan"><i data-lucide="zap"></i></button>
         <button class="btn-icon" onclick="showScorecard()" style="border-color:var(--green);color:var(--green)" title="Scorecard"><i data-lucide="check-circle"></i></button>
@@ -2026,6 +2152,7 @@
           <p>Voer een URL in om de website te bekijken</p>
         </div>
         <iframe id="previewFrame" class="hidden" sandbox="allow-scripts allow-same-origin allow-forms" loading="lazy"></iframe>
+        <div id="heatmapOverlay" class="heatmap-overlay hidden"></div>
       </div>
     </div>
   </div>
@@ -3331,12 +3458,15 @@ function renderAdminConfig() {
 
   const hasProxy = !!_aiProxyUrl;
 
+  const hasClarity = !!_clarityProjectId;
+
   el.innerHTML = `
     <div style="margin-top:24px">
       <h2 style="font-size:18px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px">
         <i data-lucide="settings" style="width:18px;height:18px;color:var(--accent)"></i> Platform Instellingen
       </h2>
-      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px">
+
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px;margin-bottom:12px">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
           <div>
             <div style="font-size:13px;font-weight:700;margin-bottom:4px">AI Actieplan (Proxy URL)</div>
@@ -3346,6 +3476,20 @@ function renderAdminConfig() {
           <div style="display:flex;gap:6px">
             <input type="url" id="adminAiProxyInput" placeholder="https://bold700-ai.workers.dev" value="${_aiProxyUrl || ''}" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:6px 10px;font-size:12px;color:var(--text);width:320px;font-family:monospace;outline:none" />
             <button class="btn btn-accent btn-sm" onclick="saveAiConfig(document.getElementById('adminAiProxyInput').value.trim())">Opslaan</button>
+          </div>
+        </div>
+      </div>
+
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+          <div>
+            <div style="font-size:13px;font-weight:700;margin-bottom:4px;display:flex;align-items:center;gap:6px"><i data-lucide="flame" style="width:14px;height:14px;color:#f97316"></i> Heatmap (Microsoft Clarity)</div>
+            <div style="font-size:11px;color:var(--text-muted)">${hasClarity ? `Actief · Project ID: ${_clarityProjectId}` : 'Niet ingesteld — Heatmap knop toont setup voor elke reviewer'}</div>
+            <div style="font-size:10px;color:var(--text-muted);margin-top:4px">Clarity Project ID (bijv. <code style="background:var(--surface);padding:1px 4px;border-radius:3px">vl9jrnf9p3</code>). Eenmalig instellen — werkt voor alle projecten.</div>
+          </div>
+          <div style="display:flex;gap:6px">
+            <input type="text" id="adminClarityInput" placeholder="vl9jrnf9p3" value="${_clarityProjectId || ''}" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:6px 10px;font-size:12px;color:var(--text);width:200px;font-family:monospace;outline:none" />
+            <button class="btn btn-accent btn-sm" onclick="saveClarityConfig(document.getElementById('adminClarityInput').value.trim())">Opslaan</button>
           </div>
         </div>
       </div>
@@ -4127,6 +4271,7 @@ function showNewProject() {
   newProjectMode = 'self-service';
   selectedTemplate = null;
   npStep = 1;
+  _npNameManuallyEdited = false;
   // Reset source choice to URL
   projectSource = 'url';
   selectedFigmaFrames = [];
@@ -4152,7 +4297,7 @@ function showNewProject() {
 function showNpStep(step) {
   npStep = step;
   // Show/hide step content
-  document.querySelectorAll('.np-card [data-np-step]').forEach(el => {
+  document.querySelectorAll('.np-content [data-np-step]').forEach(el => {
     el.classList.toggle('np-visible', el.getAttribute('data-np-step') == step);
   });
   // Update stepper dots
@@ -4165,7 +4310,7 @@ function showNpStep(step) {
   document.querySelectorAll('.np-stepper .np-step-line').forEach((line, i) => {
     line.classList.toggle('done', (i + 1) < step);
   });
-  // Update buttons
+  // Update footer buttons
   const btnBack = document.getElementById('npBtnBack');
   const btnNext = document.getElementById('npBtnNext');
   if (step === 1) {
@@ -4184,6 +4329,11 @@ function showNpStep(step) {
     const isPro = newProjectMode === 'professional';
     btnNext.textContent = isPro ? 'Aanvraag versturen →' : 'Start Review →';
     btnNext.onclick = () => createProject();
+    // Populate existing project dropdown
+    populateProjectDropdown();
+    _npSelectedExistingProject = null;
+    const pSel = document.getElementById('npProjectSelect');
+    if (pSel) pSel.value = '__new';
     // Show/hide professional fields
     updateNewProjectForm();
   }
@@ -4241,10 +4391,94 @@ function selectTemplate(bundleId) {
   }
 }
 
+let _npNameManuallyEdited = false;
+let _npSelectedExistingProject = null; // null = nieuw project
+
+function populateProjectDropdown() {
+  const sel = document.getElementById('npProjectSelect');
+  if (!sel) return;
+  sel.innerHTML = '<option value="__new">+ Nieuw project</option>';
+
+  // Groepeer bestaande projecten per domein (zelfde logica als dashboard)
+  const userProjects = projects.filter(p => p.userId === (currentUser ? currentUser.uid : null));
+  const domainMap = new Map();
+  userProjects.forEach(p => {
+    const domain = typeof getProjectGroup === 'function' ? getProjectGroup(p) : extractDomain(p.url);
+    if (!domainMap.has(domain)) domainMap.set(domain, []);
+    domainMap.get(domain).push(p);
+  });
+
+  // Sorteer op meeste reviews, dan meest recent
+  const sorted = Array.from(domainMap.entries()).sort((a, b) => {
+    if (b[1].length !== a[1].length) return b[1].length - a[1].length;
+    return new Date(b[1][0].createdAt || 0) - new Date(a[1][0].createdAt || 0);
+  });
+
+  sorted.forEach(([domain, domainProjects]) => {
+    const count = domainProjects.length;
+    // Gebruik het eerste project als "hoofd-project" voor de groep
+    const mainProject = domainProjects[0];
+    const label = domain + (count > 1 ? ` (${count} reviews)` : '');
+    sel.innerHTML += `<option value="${mainProject.id}">${label}</option>`;
+  });
+}
+
+function onNpProjectSelectChange() {
+  const sel = document.getElementById('npProjectSelect');
+  const val = sel ? sel.value : '__new';
+  const isExisting = val !== '__new';
+  _npSelectedExistingProject = isExisting ? val : null;
+
+  // Verberg/toon velden op basis van keuze
+  const nameGroup = document.getElementById('npName')?.closest('.form-group');
+  const urlGroup = document.getElementById('npUrlGroup');
+  const btnNext = document.getElementById('npBtnNext');
+
+  if (isExisting) {
+    // Bestaand domein → naam en URL verbergen (wordt automatisch overgenomen)
+    if (nameGroup) nameGroup.style.display = 'none';
+    if (urlGroup) urlGroup.style.display = 'none';
+    if (btnNext) btnNext.textContent = 'Review starten →';
+  } else {
+    // Nieuw domein → alles tonen
+    if (nameGroup) nameGroup.style.display = '';
+    if (urlGroup) urlGroup.style.display = '';
+    if (btnNext) {
+      const isPro = newProjectMode === 'professional';
+      btnNext.textContent = isPro ? 'Aanvraag versturen →' : 'Start Review →';
+    }
+    updateNewProjectForm();
+  }
+}
+
 function onNpUrlChange() {
   const url = document.getElementById('npUrl').value.trim();
   const row = document.getElementById('autoDetectRow');
   if (row) row.style.display = url.length > 5 ? 'flex' : 'none';
+
+  // Auto-fill projectnaam op basis van domein (alleen als gebruiker het niet handmatig heeft aangepast)
+  const npName = document.getElementById('npName');
+  if (!npName || _npNameManuallyEdited) return;
+  const domain = extractDomain(url);
+  if (domain) {
+    // Capitalize first letter, bijv. "bold700.com" → "Bold700.com"
+    npName.value = domain.charAt(0).toUpperCase() + domain.slice(1);
+  }
+}
+
+function extractDomain(url) {
+  try {
+    let u = url.trim();
+    if (!u) return '';
+    if (!/^https?:\/\//i.test(u)) u = 'https://' + u;
+    const hostname = new URL(u).hostname.replace(/^www\./, '');
+    return hostname || '';
+  } catch(e) { return ''; }
+}
+
+function onNpNameInput() {
+  // Als de gebruiker handmatig typt, stop met auto-fill
+  _npNameManuallyEdited = true;
 }
 
 // ═══════════════ FIGMA INTEGRATION ═══════════════
@@ -4680,8 +4914,41 @@ function updateNewProjectForm() {
   if (proInfo) proInfo.classList.toggle('hidden', !isPro);
 }
 
+function addUrlToExistingProject() {
+  // Maak een NIEUW project aan, maar gebruik de naam/url van het bestaande domein
+  const existingProject = projects.find(p => p.id === _npSelectedExistingProject);
+  if (!existingProject) { alert('Project niet gevonden.'); return; }
+
+  // Gebruik de URL uit het formulier, of fallback naar het bestaande project
+  const newUrl = projectSource === 'figma'
+    ? (document.getElementById('npFigmaUrl')?.value.trim() || '')
+    : (document.getElementById('npUrl')?.value.trim() || '');
+  const url = newUrl || existingProject.url;
+  if (!url) { alert('Vul een URL in.'); return; }
+
+  // Neem de naam over van het bestaande domein
+  const name = existingProject.name || extractDomain(url) || 'Review';
+
+  // Vul de verborgen velden in zodat createProject() ze kan lezen
+  const npUrl = document.getElementById('npUrl');
+  const npName = document.getElementById('npName');
+  if (npUrl) npUrl.value = url;
+  if (npName) npName.value = name;
+
+  // Reset de selector zodat createProject() normaal doorgaat (als nieuw project)
+  _npSelectedExistingProject = null;
+
+  // Laat createProject() het werk doen met de geselecteerde template en modus
+  createProject();
+}
+
 function createProject() {
-  const name = document.getElementById('npName').value.trim();
+  // ── Check: toevoegen aan bestaand project? ──
+  if (_npSelectedExistingProject) {
+    return addUrlToExistingProject();
+  }
+
+  let name = document.getElementById('npName').value.trim();
   const client = document.getElementById('npClient').value.trim();
   const pkg = document.getElementById('npPackage').value;
 
@@ -4689,12 +4956,15 @@ function createProject() {
   let url;
   if (projectSource === 'figma') {
     url = document.getElementById('npFigmaUrl').value.trim();
-    if (!url || !name) { alert('Vul een Figma URL en projectnaam in.'); return; }
+    if (!url) { alert('Vul een Figma URL in.'); return; }
     if (!parseFigmaUrl(url)) { alert('Ongeldige Figma URL.'); return; }
     if (selectedFigmaFrames.length === 0) { alert('Selecteer minimaal één frame om te reviewen.'); return; }
+    if (!name) name = figmaFileData ? figmaFileData.name : extractDomain(url) || 'Figma Review';
   } else {
     url = document.getElementById('npUrl').value.trim();
-    if (!url || !name) { alert('Vul minimaal een URL en projectnaam in.'); return; }
+    if (!url) { alert('Vul een URL in.'); return; }
+    // Auto-generate naam als die leeg is
+    if (!name) name = extractDomain(url) || 'Review';
   }
 
   // Check free limit only for self-service mode (professional requests are always allowed)
@@ -4716,7 +4986,7 @@ function createProject() {
 
   const project = {
     id: projectId,
-    name, url, client: newProjectMode === 'professional' ? client : '',
+    name, url, urls: [url], client: newProjectMode === 'professional' ? client : '',
     package: newProjectMode === 'professional' ? pkg : 'self-service',
     mode: newProjectMode,
     sourceType: projectSource || 'url',
@@ -4908,7 +5178,12 @@ function openProject(id) {
     // Free-form: no predefined steps, generate dynamically
     reviewSteps = [];
   } else if (typeof buildReviewSteps === 'function') {
-    reviewSteps = buildReviewSteps(project.moduleConfig || (typeof getDefaultModuleConfig === 'function' ? getDefaultModuleConfig() : null));
+    try {
+      reviewSteps = buildReviewSteps(project.moduleConfig || (typeof getDefaultModuleConfig === 'function' ? getDefaultModuleConfig() : null));
+    } catch(e) {
+      console.error('[openProject] buildReviewSteps fout:', e);
+      reviewSteps = typeof LEGACY_STEPS_BACKUP !== 'undefined' ? LEGACY_STEPS_BACKUP : [];
+    }
   } else if (reviewSteps.length === 0) {
     reviewSteps = LEGACY_STEPS_BACKUP;
   }
@@ -4944,15 +5219,26 @@ function openProject(id) {
   }
   document.getElementById('urlInput').value = project.url;
 
+  // ── Heatmap button: toon als project een heatmap URL heeft ──
+  // ── Heatmap: altijd tonen, setup popup als nog niet gekoppeld ──
+  heatmapActive = false;
+  const hmOverlay = document.getElementById('heatmapOverlay');
+  if (hmOverlay) hmOverlay.classList.add('hidden');
+  const btnHm = document.getElementById('btnHeatmap');
+  if (btnHm) {
+    btnHm.classList.remove('hidden');
+    // Oranje highlight als Clarity platform-breed of per-project is ingesteld
+    const hasAnyHeatmap = !!_clarityProjectId || !!project.heatmapUrl;
+    btnHm.title = hasAnyHeatmap ? 'Heatmap bekijken' : 'Heatmap instellen';
+  }
+
   // ── Free-form review: andere UI ──
   if (project.reviewType === 'free-form') {
     renderFreeFormReview(project);
-    document.getElementById('prevBtn').style.display = 'none';
-    document.getElementById('nextBtn').style.display = 'none';
+    document.querySelectorAll('.btn-prev, .btn-next').forEach(b => b.style.display = 'none');
   } else {
     // Restore nav buttons (might be hidden from previous free-form project)
-    document.getElementById('prevBtn').style.display = '';
-    document.getElementById('nextBtn').style.display = '';
+    document.querySelectorAll('.btn-prev, .btn-next').forEach(b => b.style.display = '');
     buildStepper();
     renderStep(currentStep);
   }
@@ -5415,6 +5701,124 @@ function loadUrl() {
 
 let siteWindow = null;
 
+// ═══ HEATMAP ═══
+let heatmapActive = false;
+
+function toggleHeatmap() {
+  const project = getActiveProject();
+  if (!project) return;
+  const overlay = document.getElementById('heatmapOverlay');
+  const btn = document.getElementById('btnHeatmap');
+
+  // Als heatmap al open is → sluiten
+  if (heatmapActive) {
+    overlay.classList.add('hidden');
+    overlay.innerHTML = '';
+    heatmapActive = false;
+    if (btn) btn.classList.remove('heatmap-active');
+    return;
+  }
+
+  // 1. Platform-brede Clarity config (admin heeft dit ingesteld)
+  const clarityUrl = getClarityDashboardUrl();
+  if (clarityUrl) {
+    showHeatmapIframe(clarityUrl);
+    return;
+  }
+
+  // 2. Per-project URL (fallback)
+  if (project.heatmapUrl) {
+    showHeatmapIframe(project.heatmapUrl);
+    return;
+  }
+
+  // 3. Niks ingesteld → setup tonen
+  showHeatmapSetup();
+}
+
+function showHeatmapSetup() {
+  const project = getActiveProject();
+  if (!project) return;
+  const overlay = document.getElementById('heatmapOverlay');
+  const btn = document.getElementById('btnHeatmap');
+
+  overlay.innerHTML = `
+    <div class="heatmap-bar">
+      <div style="display:flex;align-items:center;gap:6px">
+        <i data-lucide="flame" style="width:14px;height:14px;color:var(--orange, #f97316)"></i>
+        <span style="font-weight:600;font-size:12px">Heatmap koppelen</span>
+      </div>
+      <button class="heatmap-close" onclick="toggleHeatmap()"><i data-lucide="x" style="width:14px;height:14px"></i></button>
+    </div>
+    <div style="padding:32px;display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;text-align:center;max-width:420px;margin:0 auto">
+      <div style="width:56px;height:56px;border-radius:16px;background:rgba(249,115,22,0.1);display:flex;align-items:center;justify-content:center;margin-bottom:16px">
+        <i data-lucide="flame" style="width:28px;height:28px;color:var(--orange, #f97316)"></i>
+      </div>
+      <h3 style="font-size:16px;margin-bottom:6px">Heatmap data bekijken</h3>
+      ${isAdmin ? `
+      <p style="font-size:13px;color:var(--text-muted);line-height:1.5;margin-bottom:20px">
+        Stel Clarity eenmalig in via <strong>Instellingen</strong>, dan werkt het voor alle projecten.
+        Of koppel een URL specifiek voor dit project.
+      </p>
+      <div style="display:flex;gap:8px;width:100%;margin-bottom:16px">
+        <button class="btn btn-primary" onclick="toggleHeatmap(); switchDashTab('settings')" style="flex:1"><i data-lucide="settings" style="width:14px;height:14px"></i> Naar Instellingen</button>
+      </div>
+      <div style="border-top:1px solid var(--border);padding-top:16px;width:100%;text-align:left;margin-bottom:16px">
+        <div style="font-size:11px;font-weight:600;color:var(--text-muted);margin-bottom:6px">Of: koppel alleen voor dit project</div>
+        <div style="display:flex;gap:6px;margin-top:8px">
+          <input type="url" id="heatmapSetupUrl" class="form-input" placeholder="https://clarity.microsoft.com/projects/view/..." style="flex:1;font-size:13px" value="${project.heatmapUrl || ''}">
+          <button class="btn btn-secondary" onclick="saveHeatmapUrl()">Koppel</button>
+        </div>
+      </div>
+      ` : `
+      <p style="font-size:13px;color:var(--text-muted);line-height:1.5;margin-bottom:20px">
+        Heatmap is nog niet ingesteld. Vraag je admin om Microsoft Clarity te koppelen via Platform Instellingen.
+      </p>
+      <p style="font-size:12px;color:var(--text-muted);line-height:1.5;margin-bottom:16px">
+        Of koppel een heatmap URL specifiek voor dit project:
+      </p>
+      <div style="width:100%;text-align:left;margin-bottom:16px">
+        <div style="display:flex;gap:6px">
+          <input type="url" id="heatmapSetupUrl" class="form-input" placeholder="https://clarity.microsoft.com/projects/view/..." style="flex:1;font-size:13px" value="${project.heatmapUrl || ''}">
+          <button class="btn btn-primary" onclick="saveHeatmapUrl()">Koppel</button>
+        </div>
+      </div>
+      `}
+      <div style="padding-top:12px;border-top:1px solid var(--border);width:100%;text-align:left">
+        <div style="font-size:11px;font-weight:600;color:var(--text-muted);margin-bottom:6px">Nog geen heatmap tool?</div>
+        <div style="font-size:12px;color:var(--text-muted);line-height:1.5">
+          1. Ga naar <a href="https://clarity.microsoft.com" target="_blank" style="color:var(--accent)">clarity.microsoft.com</a> en maak een gratis account<br>
+          2. Voeg het Clarity script toe aan de klantwebsite<br>
+          3. Stel het Project ID in bij Platform Instellingen
+        </div>
+      </div>
+    </div>
+  `;
+
+  overlay.classList.remove('hidden');
+  heatmapActive = true;
+  if (btn) btn.classList.add('heatmap-active');
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+  setTimeout(() => { const inp = document.getElementById('heatmapSetupUrl'); if (inp) inp.focus(); }, 100);
+}
+
+function showHeatmapIframe(url) {
+  // Clarity (en de meeste heatmap tools) blokkeren iframes — open direct in nieuw tabblad
+  window.open(url, '_blank');
+}
+
+function saveHeatmapUrl() {
+  const project = getActiveProject();
+  if (!project) return;
+  const url = document.getElementById('heatmapSetupUrl')?.value?.trim();
+  if (!url) { alert('Voer een URL in.'); return; }
+  project.heatmapUrl = url;
+  saveState();
+  // Sluit setup overlay en open heatmap
+  toggleHeatmap(); // sluit overlay
+  window.open(url, '_blank');
+}
+
 function toggleSiteWindow() {
   const main = document.querySelector('.main');
   const isReviewMode = main && main.classList.contains('review-mode');
@@ -5599,6 +6003,7 @@ function renderStep(stepIndex, resetScroll) { try {
   if (resetScroll === undefined) resetScroll = true;
   if (resetScroll) lastActiveQId = null; // reset paste target on step change
   const step = reviewSteps[stepIndex];
+  if (!step) { console.warn('[renderStep] Geen step gevonden voor index', stepIndex); return; }
   const answers = getAnswers();
   const area = document.getElementById('questionsArea');
   const prevScrollTop = area.scrollTop;
@@ -9629,9 +10034,178 @@ function showScorecard() { try {
   const notNow = allIssues.filter(i => i.impact==='low' && i.score==='bad');
 
   // Lead gate no longer needed — email is captured at the landing page
-  const isSelfService = project && project.mode === 'self-service';
+  // Free-form = altijd expert modus, nooit self-service lock
+  const isSelfService = project && project.mode === 'self-service' && project.reviewType !== 'free-form';
   const hasProvidedEmail = project && project.leadEmail;
   const showLeadGate = false; // Email already captured at landing
+
+  // ── Helper: render een issue card voor free-form scorecard ──
+  function renderFfIssueCard(issue, answers) {
+    const a = answers[issue.id] || {};
+    const scoreColor = issue.score === 'bad' ? 'var(--red)' : 'var(--yellow)';
+    const scoreLabel = issue.score === 'bad' ? 'Niet OK' : 'Matig';
+    const impactLabel = issue.impact === 'high' ? 'Hoge impact' : 'Lage impact';
+    const shots = issue.screenshots || [];
+    const cats = a.findingCategories || (a.findingCategory ? [a.findingCategory] : []);
+    const catLabels = cats.map(c => FF_CAT_LABELS[c] || c).filter(Boolean);
+
+    return `<div class="ff-issue-card" style="border-left-color:${scoreColor}">
+      <div class="ff-issue-card-top">
+        <span class="ff-issue-badge" style="background:${scoreColor}15;color:${scoreColor}">${scoreLabel}</span>
+        <span class="ff-issue-impact" style="color:${issue.impact === 'high' ? 'var(--red)' : 'var(--text-muted)'}">${impactLabel}</span>
+      </div>
+      <div class="ff-issue-card-text">${esc(issue.text)}</div>
+      ${a.notes ? `<div class="ff-issue-card-notes">${esc(a.notes).substring(0, 300).replace(/\n/g, '<br>')}</div>` : ''}
+      ${catLabels.length > 0 ? `<div class="ff-issue-cats">${catLabels.map(l => '<span class="ff-issue-cat-tag">' + esc(l) + '</span>').join('')}</div>` : ''}
+      ${shots.length > 0 ? `<div class="ff-issue-shots">${shots.slice(0, 2).map((s, idx) => '<img class="ff-issue-shot" src="' + s + '" onclick="showLightbox(\'' + issue.id + '\',' + idx + ')" title="Screenshot">').join('')}${shots.length > 2 ? '<span style="font-size:11px;color:var(--text-muted)">+' + (shots.length - 2) + ' meer</span>' : ''}</div>` : ''}
+    </div>`;
+  }
+
+  // ── FREE-FORM: aparte scorecard zonder cijfer ──
+  if (project?.reviewType === 'free-form') {
+    const ffFindings = Object.keys(answers).filter(k => k.startsWith('ff-'))
+      .sort((a, b) => (answers[a].findingOrder || 0) - (answers[b].findingOrder || 0));
+    const ffBad = ffFindings.filter(f => answers[f]?.score === 'bad');
+    const ffOk = ffFindings.filter(f => answers[f]?.score === 'ok');
+    const ffGood = ffFindings.filter(f => answers[f]?.score === 'good');
+    const ffUnscored = ffFindings.filter(f => !answers[f]?.score);
+
+    // Topbar
+    document.getElementById('scorecardTopbar').innerHTML = `
+      <div class="dash-topbar">
+        <div class="dash-topbar-left">
+          <button class="back-btn" onclick="backToDashboardFromScorecard()" title="Dashboard"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1.5" y="1.5" width="5" height="5.5" rx="1"/><rect x="9.5" y="1.5" width="5" height="3.5" rx="1"/><rect x="1.5" y="9.5" width="5" height="3.5" rx="1"/><rect x="9.5" y="7.5" width="5" height="5.5" rx="1"/></svg></button>
+          <span class="logo">${brandLogo('18px', true)}</span>
+          <div class="dash-topbar-title">${esc(project?.name || 'Vrije Review')}${project?.client ? ' — ' + esc(project.client) : ''}</div>
+        </div>
+        <div class="dash-topbar-right">
+          <div class="dash-topbar-meta">${new Date().toLocaleDateString('nl-NL')} · ${ffFindings.length} bevindingen</div>
+          <button class="btn-icon" onclick="closeScorecard()"><i data-lucide="chevron-left" style="width:14px;height:14px"></i> Terug</button>
+          <button class="btn-icon" onclick="exportResults()" style="border-color:var(--accent);color:var(--accent)"><i data-lucide="download" style="width:14px;height:14px"></i> Exporteer</button>
+        </div>
+      </div>`;
+
+    // Groepeer per categorie voor overzicht
+    const ffCatSummary = {};
+    ffFindings.forEach(fId => {
+      const a = answers[fId];
+      const cats = a.findingCategories || (a.findingCategory ? [a.findingCategory] : []);
+      if (cats.length === 0) cats.push('other');
+      cats.forEach(cat => {
+        if (!ffCatSummary[cat]) ffCatSummary[cat] = { bad: 0, ok: 0, good: 0 };
+        if (a.score === 'bad') ffCatSummary[cat].bad++;
+        else if (a.score === 'ok') ffCatSummary[cat].ok++;
+        else if (a.score === 'good') ffCatSummary[cat].good++;
+      });
+    });
+
+    container.innerHTML = `
+      <div class="kpi-strip">
+        <div class="kpi-card">
+          <div class="kpi-label">Bevindingen</div>
+          <div class="kpi-value">${ffFindings.length}</div>
+          <div class="kpi-sub">totaal genoteerd</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Niet OK</div>
+          <div class="kpi-value" style="color:var(--red)">${ffBad.length}</div>
+          <div class="kpi-sub">${strategic.length} strategisch · ${notNow.length} niet nu</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Matig</div>
+          <div class="kpi-value" style="color:var(--yellow)">${ffOk.length}</div>
+          <div class="kpi-sub">${quickWins.length} quick win${quickWins.length !== 1 ? 's' : ''}</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Goed</div>
+          <div class="kpi-value" style="color:var(--green)">${ffGood.length}</div>
+          <div class="kpi-sub">positieve punten</div>
+        </div>
+      </div>
+
+      ${Object.keys(ffCatSummary).length > 0 ? `
+      <div style="margin-bottom:24px">
+        <h3 style="font-size:14px;margin-bottom:12px;color:var(--text-muted)">Per categorie</h3>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(200px, 1fr));gap:8px">
+          ${Object.entries(ffCatSummary).map(([catId, counts]) => {
+            const catInfo = FF_CATEGORIES.find(c => c.id === catId) || { label: catId, color: '#6b7280', icon: 'more-horizontal' };
+            const total = counts.bad + counts.ok + counts.good;
+            return `<div style="padding:12px 16px;border:1px solid var(--border);border-radius:var(--radius);display:flex;align-items:center;gap:10px">
+              <i data-lucide="${catInfo.icon}" style="width:16px;height:16px;color:${catInfo.color};flex-shrink:0"></i>
+              <div style="flex:1;min-width:0">
+                <div style="font-size:13px;font-weight:600">${catInfo.label}</div>
+                <div style="font-size:11px;color:var(--text-muted)">${counts.bad > 0 ? '<span style="color:var(--red)">' + counts.bad + ' niet ok</span> · ' : ''}${counts.ok > 0 ? '<span style="color:var(--yellow)">' + counts.ok + ' matig</span> · ' : ''}${counts.good > 0 ? '<span style="color:var(--green)">' + counts.good + ' goed</span>' : ''}</div>
+              </div>
+              <div style="font-size:18px;font-weight:700;color:var(--text-muted)">${total}</div>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>` : ''}
+
+      <div class="dash-grid">
+        <div class="ai-plan-section" id="aiPlanSection">
+          <div class="ai-plan-header">
+            <h3><i data-lucide="sparkles"></i> AI Actieplan</h3>
+            <div style="display:flex;gap:8px;align-items:center">
+              ${isSelfService ? `
+                <span style="font-size:12px;color:var(--text-muted)"><i data-lucide="lock" style="width:13px;height:13px"></i> Professional</span>
+              ` : `
+                <button class="ai-plan-generate" onclick="generateAiPlan()" id="btnAiPlan"><i data-lucide="sparkles"></i> ${project?.aiPlan ? 'Opnieuw' : 'Genereer'}</button>
+              `}
+            </div>
+          </div>
+          <div class="ai-plan-body" id="aiPlanBody">
+            ${isSelfService ? '<div class="ai-plan-empty"><i data-lucide="lock" style="width:32px;height:32px;opacity:0.3;margin-bottom:12px;display:block;margin-inline:auto"></i><strong>AI Actieplan — Professional Feature</strong></div>' : '<div class="ai-plan-empty"><i data-lucide="sparkles" style="width:32px;height:32px;opacity:0.3;margin-bottom:12px;display:block;margin-inline:auto"></i>Klik op Genereer om een actieplan te maken op basis van je bevindingen.</div>'}
+          </div>
+        </div>
+
+        ${allIssues.length > 0 ? `
+        <div class="issues-section">
+          <h3 style="margin-bottom:12px"><i data-lucide="alert-triangle" style="color:var(--yellow)"></i> Verbeterpunten (${allIssues.length})</h3>
+
+          ${strategic.length > 0 ? `
+          <div class="issue-group">
+            <div class="issue-group-title"><i data-lucide="target" style="color:var(--red)"></i> Strategisch (${strategic.length})</div>
+            ${strategic.map(i => renderFfIssueCard(i, answers)).join('')}
+          </div>` : ''}
+
+          ${quickWins.length > 0 ? `
+          <div class="issue-group">
+            <div class="issue-group-title"><i data-lucide="zap" style="color:var(--green)"></i> Quick Wins (${quickWins.length})</div>
+            ${quickWins.map(i => renderFfIssueCard(i, answers)).join('')}
+          </div>` : ''}
+
+          ${notNow.length > 0 ? `
+          <div class="issue-group">
+            <div class="issue-group-title"><i data-lucide="pause" style="color:var(--text-muted)"></i> Niet Nu (${notNow.length})</div>
+            ${notNow.map(i => renderFfIssueCard(i, answers)).join('')}
+          </div>` : ''}
+
+          ${fillers.length > 0 ? `
+          <div class="issue-group">
+            <div class="issue-group-title"><i data-lucide="archive" style="color:var(--text-muted)"></i> Opvuller (${fillers.length})</div>
+            ${fillers.map(i => renderFfIssueCard(i, answers)).join('')}
+          </div>` : ''}
+        </div>` : ''}
+
+        ${ffGood.length > 0 ? `
+        <div class="issues-section" style="margin-top:16px">
+          <h3 style="margin-bottom:12px"><i data-lucide="check-circle" style="color:var(--green)"></i> Sterke punten (${ffGood.length})</h3>
+          ${ffGood.map(fId => {
+            const a = answers[fId];
+            const label = a.findingTitle || (a.notes || '').split('\\n')[0].substring(0, 80) || 'Bevinding';
+            return '<div class="issue-card" style="border-left-color:var(--green)"><div class="issue-card-text">' + esc(label) + '</div>' + (a.notes ? '<div class="issue-card-notes">' + esc(a.notes).substring(0, 200) + '</div>' : '') + '</div>';
+          }).join('')}
+        </div>` : ''}
+      </div>
+    `;
+
+    // Show scorecard screen
+    document.getElementById('reviewScreen').classList.add('hidden');
+    document.getElementById('scorecardScreen').classList.remove('hidden');
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+    return;
+  }
 
   // Render full-width topbar separately
   document.getElementById('scorecardTopbar').innerHTML = `
@@ -10283,6 +10857,37 @@ async function saveAiConfig(proxyUrl) {
 
 function getAiProxyUrl() { return _aiProxyUrl || ''; }
 
+// ── Clarity Heatmap Config ──
+let _clarityProjectId = null;
+
+async function loadClarityConfig() {
+  try {
+    const doc = await db.collection('config').doc('clarity').get();
+    if (doc.exists && doc.data().projectId) {
+      _clarityProjectId = doc.data().projectId;
+    }
+  } catch(e) {
+    console.warn('[Clarity] Could not load config:', e.message);
+  }
+}
+
+async function saveClarityConfig(projectId) {
+  if (!isAdmin) return;
+  try {
+    await db.collection('config').doc('clarity').set({ projectId: projectId, updatedAt: new Date().toISOString() });
+    _clarityProjectId = projectId;
+    showScanToast('success', 'Clarity opgeslagen', projectId ? 'Heatmap is nu beschikbaar voor alle projecten.' : 'Heatmap uitgeschakeld.', 3000);
+    renderAdminConfig();
+  } catch(e) {
+    showScanToast('error', 'Opslaan mislukt', e.message, 4000);
+  }
+}
+
+function getClarityDashboardUrl() {
+  if (!_clarityProjectId) return null;
+  return 'https://clarity.microsoft.com/projects/view/' + _clarityProjectId + '/dashboard';
+}
+
 function isAiAvailable() {
   const project = getActiveProject();
   return project && project.mode === 'professional' && !!getAiProxyUrl();
@@ -10306,37 +10911,63 @@ function buildAiPromptData() {
 
   const issues = [];
   const strengths = [];
-  reviewSteps.forEach(step => {
-    step.questions.forEach(q => {
-      const a = answers[q.id];
-      if (!a || !a.score || a.score === 'nvt') return;
+
+  // ── FREE-FORM: lees direct uit answers in plaats van reviewSteps ──
+  if (project.reviewType === 'free-form') {
+    Object.keys(answers).filter(k => k.startsWith('ff-')).forEach(fId => {
+      const a = answers[fId];
+      if (!a || !a.score) return;
+      const cats = a.findingCategories || (a.findingCategory ? [a.findingCategory] : []);
+      const catLabel = cats.map(c => FF_CAT_LABELS[c] || c).join(', ') || 'Overig';
+      const label = a.findingTitle || (a.notes || '').split('\n')[0].substring(0, 80) || 'Bevinding';
       const item = {
-        category: step.shortTitle,
-        question: q.text,
+        category: catLabel,
+        question: label,
         score: a.score,
-        impact: a.severity || step.impact || 'low',
-        notes: (a.notes || '').replace(/\[Auto-scan\]\s*/g, '').trim(),
-        tip: questionTips[q.id] || ''
+        impact: a.severity || 'low',
+        notes: (a.notes || '').trim(),
+        tip: ''
       };
       if (a.score === 'bad' || a.score === 'ok') issues.push(item);
       else strengths.push(item);
     });
-  });
+  } else {
+    reviewSteps.forEach(step => {
+      step.questions.forEach(q => {
+        const a = answers[q.id];
+        if (!a || !a.score || a.score === 'nvt') return;
+        const item = {
+          category: step.shortTitle,
+          question: q.text,
+          score: a.score,
+          impact: a.severity || step.impact || 'low',
+          notes: (a.notes || '').replace(/\[Auto-scan\]\s*/g, '').trim(),
+          tip: questionTips[q.id] || ''
+        };
+        if (a.score === 'bad' || a.score === 'ok') issues.push(item);
+        else strengths.push(item);
+      });
+    });
+  }
 
   // Sort: high impact first
   issues.sort((a, b) => (a.impact === 'high' ? 0 : 1) - (b.impact === 'high' ? 0 : 1));
+
+  const totalQ = project.reviewType === 'free-form'
+    ? Object.keys(answers).filter(k => k.startsWith('ff-')).length
+    : reviewSteps.reduce((s, st) => s + st.questions.length, 0);
 
   return {
     project: { name: project.name, client: project.client, url: project.url },
     issues,
     strengths: strengths.length,
-    totalQuestions: reviewSteps.reduce((s, st) => s + st.questions.length, 0)
+    totalQuestions: totalQ
   };
 }
 
 async function generateAiPlan() {
   const project = getActiveProject();
-  if (!project || project.mode === 'self-service') { upgradeForAi(); return; }
+  if (!project || (project.mode === 'self-service' && project.reviewType !== 'free-form')) { upgradeForAi(); return; }
 
   const proxyUrl = getAiProxyUrl();
   if (!proxyUrl) { alert('AI Actieplan is momenteel niet beschikbaar. Neem contact op met BOLD700.'); return; }
@@ -10368,9 +10999,12 @@ async function generateAiPlan() {
 
 Je doel: maak een kort, helder actieplan dat de klant overtuigt om te investeren in verbeteringen. Focus op RESULTAAT en BUSINESS IMPACT, niet op technische details.`;
 
-  const userPrompt = `Hier zijn de resultaten van een UX review van ${data.project.url || 'een website'}${data.project.name ? ' ('+data.project.name+')' : ''}${data.project.client ? ' voor '+data.project.client : ''}.
+  const isFreeForm = project?.reviewType === 'free-form';
+  const userPrompt = `Hier zijn de resultaten van een ${isFreeForm ? 'vrije expert review' : 'UX review'} van ${data.project.url || 'een website'}${data.project.name ? ' ('+data.project.name+')' : ''}${data.project.client ? ' voor '+data.project.client : ''}.
 
-Van de ${data.totalQuestions} beoordeelde punten zijn er ${data.issues.length} verbeterpunten gevonden en ${data.strengths} punten goed beoordeeld.
+${isFreeForm
+  ? `De reviewer heeft ${data.totalQuestions} bevindingen genoteerd: ${data.issues.length} verbeterpunten en ${data.strengths} sterke punten. Dit is een vrije review — de bevindingen zijn door de expert zelf gekozen, niet uit een checklist.`
+  : `Van de ${data.totalQuestions} beoordeelde punten zijn er ${data.issues.length} verbeterpunten gevonden en ${data.strengths} punten goed beoordeeld.`}
 
 VERBETERPUNTEN:
 ${issuesSummary}
@@ -11010,6 +11644,7 @@ auth.onAuthStateChanged(async (user) => {
 
   await loadState();
   await loadAiConfig(); // Load AI API key from Firestore (not in source code)
+  await loadClarityConfig(); // Load Clarity heatmap project ID
   document.body.style.cursor = '';
 
   // Hide auth screen

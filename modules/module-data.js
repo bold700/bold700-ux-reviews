@@ -14536,7 +14536,8 @@ function buildReviewSteps(moduleConfig) {
   let activeModules = null;
   let includeChecks = null;
   if (moduleConfig && moduleConfig._modules) {
-    activeModules = moduleConfig._modules;
+    const rawMods = moduleConfig._modules;
+    activeModules = Array.isArray(rawMods) && rawMods.length > 0 ? rawMods : null;
     includeChecks = moduleConfig._includeChecks || null;
     moduleConfig = null; // clear so the forEach logic below works
   }
