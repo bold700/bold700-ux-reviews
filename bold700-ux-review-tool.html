@@ -2176,7 +2176,6 @@
   <div class="topbar">
     <div class="topbar-row">
       <div class="topbar-left">
-        <button class="btn-nav btn-prev" onclick="prevStep()"><i data-lucide="chevron-left"></i> Vorige</button>
       </div>
       <div class="topbar-center">
         <div class="topbar-title">UX Review <span id="topbarProjectName" style="opacity:0.5;font-weight:400"> </span></div>
@@ -2197,7 +2196,6 @@
         <button class="btn-icon" onclick="runAutoScan()" id="btnAutoScan" style="border-color:var(--blue);color:var(--blue)" title="Auto-Scan"><i data-lucide="zap"></i></button>
         <button class="btn-icon" onclick="showScorecard()" style="border-color:var(--green);color:var(--green)" title="Scorecard"><i data-lucide="check-circle"></i></button>
         <button class="btn-icon" onclick="exportResults()" title="Exporteer"><i data-lucide="download"></i></button>
-        <button class="btn-nav btn-next" id="btnNext" onclick="nextStep()">Volgende →</button>
       </div>
     </div>
   </div>
@@ -2338,17 +2336,23 @@ function esc(s) {
 const SEVERITY_WEIGHTS = { critical: 3, high: 2, medium: 1, low: 1 };
 
 function calcWeightedScore(questions, answers) {
-  let weightedSum = 0, totalWeight = 0, skipped = 0;
+  let weightedSum = 0, totalWeight = 0, skipped = 0, answered = 0;
   questions.forEach(q => {
     const a = answers[q.id];
-    if (!a?.score || a.score === 'nvt') { skipped++; return; }
     const weight = SEVERITY_WEIGHTS[q.severity || q.priority || 'medium'] || 1;
+    if (!a?.score || a.score === 'nvt') {
+      // Onbeantwoord/nvt: telt WEL mee in totaal (als 0 punten), behalve nvt
+      if (a?.score === 'nvt') { skipped++; }
+      else { totalWeight += weight * 10; /* 0 punten, telt mee */ }
+      return;
+    }
+    answered++;
     const value = a.score === 'good' ? 10 : a.score === 'ok' ? 5 : 0;
     weightedSum += value * weight;
     totalWeight += weight * 10;
   });
-  if (totalWeight === 0) return { score: 0, answered: 0, total: questions.length, skipped };
-  return { score: (weightedSum / totalWeight) * 10, answered: questions.length - skipped, total: questions.length, skipped };
+  if (totalWeight === 0) return { score: 0, answered, total: questions.length, skipped };
+  return { score: (weightedSum / totalWeight) * 10, answered, total: questions.length, skipped };
 }
 
 // ═══════════════ ERROR BOUNDARY HELPER ═══════════════
@@ -5958,10 +5962,18 @@ function updateFocusView(step) {
   if (prevBtn) prevBtn.disabled = _focusQIndex <= 0;
   if (nextBtn) {
     if (_focusQIndex >= questions.length - 1) {
-      nextBtn.innerHTML = 'Volgende stap <i data-lucide="chevrons-right" style="width:14px;height:14px"></i>';
+      const isLastStep = currentStep >= reviewSteps.length - 1;
+      if (isLastStep) {
+        nextBtn.innerHTML = '<i data-lucide="check-circle" style="width:14px;height:14px"></i> Voltooi Review';
+        nextBtn.style.background = 'var(--green)'; nextBtn.style.borderColor = 'var(--green)'; nextBtn.style.color = '#fff';
+      } else {
+        nextBtn.innerHTML = 'Volgende stap <i data-lucide="chevrons-right" style="width:14px;height:14px"></i>';
+        nextBtn.style.background = ''; nextBtn.style.borderColor = ''; nextBtn.style.color = '';
+      }
       nextBtn.onclick = () => nextStep();
     } else {
       nextBtn.innerHTML = 'Volgende <i data-lucide="chevron-right" style="width:14px;height:14px"></i>';
+      nextBtn.style.background = ''; nextBtn.style.borderColor = ''; nextBtn.style.color = '';
       nextBtn.onclick = () => focusNextQ();
     }
     nextBtn.disabled = false;
@@ -6127,16 +6139,6 @@ function renderStep(stepIndex, resetScroll) { try {
   if (_focusQIndex < 0) _focusQIndex = 0;
   updateFocusView(step);
 
-  const btnNext = document.getElementById('btnNext');
-  if (stepIndex === reviewSteps.length - 1) {
-    btnNext.innerHTML = '<i data-lucide="check-circle"></i> Voltooi Review'; lucide.createIcons({nodes:[btnNext]});
-    btnNext.style.background = 'var(--green)';
-    btnNext.style.borderColor = 'var(--green)';
-  } else {
-    btnNext.innerHTML = 'Volgende <i data-lucide="chevron-right"></i>';
-    btnNext.style.background = 'var(--accent)';
-    btnNext.style.borderColor = 'var(--accent)';
-  }
   if (typeof lucide !== 'undefined') lucide.createIcons();
 } catch(e) { console.error('[RenderError] renderStep:', e); const el = document.getElementById('questionsArea'); if (el) el.innerHTML = `<div style="padding:24px;text-align:center;color:var(--red)"><p style="font-weight:600">Er ging iets mis bij het laden.</p><p style="font-size:12px;color:var(--text-muted);margin-top:8px">${esc(e.message)}</p><button class="btn btn-secondary" onclick="location.reload()" style="margin-top:12px">Herlaad pagina</button></div>`; } }
 
