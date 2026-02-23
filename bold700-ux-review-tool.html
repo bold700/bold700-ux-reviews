@@ -229,6 +229,10 @@
     margin-bottom: 24px;
     border-bottom: 2px solid var(--border);
     padding-bottom: 0;
+    position: sticky;
+    top: 0;
+    background: var(--bg);
+    z-index: 20;
   }
   .dash-tab {
     display: flex;
@@ -510,6 +514,8 @@
     height: 100dvh; /* Safari: respect dynamic viewport */
     background: var(--bg);
     overflow: hidden;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
   }
 
   /* ── Topbar: logo + stepper + close ── */
@@ -1044,6 +1050,10 @@
   }
   .focus-mode .category-title { font-size: 15px; margin-bottom: 2px; }
   .focus-mode .category-desc { font-size: 12px; margin-bottom: 12px; }
+  /* Free-form focus mode: zelfde stijl als template reviews */
+  .focus-mode .ff-card.q-focus-active .notes-input { flex: 1; min-height: 120px; resize: none; }
+  .focus-mode .ff-card.q-focus-active .ff-delete-btn { opacity: 0.5; }
+  .focus-mode .ff-card.q-focus-active .question-label { display: flex; align-items: center; }
   .question-card:hover { border-color: #444; }
   .question-card.answered { border-color: rgba(34,197,94,0.3); }
   .question-card.answered-nvt { border-color: rgba(100,100,100,0.3); opacity: 0.55; }
@@ -1642,7 +1652,7 @@
     .dash-hero h1 { font-size: 22px; }
     .dash-hero p { font-size: 13px; }
 
-    .dash-tabs { gap: 0; overflow-x: auto; -webkit-overflow-scrolling: touch; flex-wrap: nowrap; scrollbar-width: none; }
+    .dash-tabs { gap: 0; overflow-x: auto; -webkit-overflow-scrolling: touch; flex-wrap: nowrap; scrollbar-width: none; padding-top: env(safe-area-inset-top, 0px); }
     .dash-tabs::-webkit-scrollbar { display: none; }
     .dash-tab { padding: 8px 10px; font-size: 11px; gap: 3px; white-space: nowrap; flex-shrink: 0; }
     .dash-tab i[data-lucide] { display: none; }
@@ -1665,7 +1675,7 @@
     .np-step-desc { font-size: 12px; margin-bottom: 14px; }
     .np-footer {
       padding: 0 16px; height: auto;
-      padding-top: 12px; padding-bottom: calc(12px + env(safe-area-inset-bottom, 16px));
+      padding-top: 12px; padding-bottom: 12px;
     }
     .np-footer .btn { min-width: 110px; font-size: 13px; padding: 10px 16px; }
     .mode-choice { grid-template-columns: 1fr; gap: 10px; }
@@ -5323,25 +5333,40 @@ const FF_CATEGORIES = [
 const FF_CAT_LABELS = {};
 FF_CATEGORIES.forEach(c => FF_CAT_LABELS[c.id] = c.label);
 
-function renderFreeFormReview(project) {
+let _ffFocusIndex = 0;
+
+function renderFreeFormReview(project, keepIndex) {
   const answers = project.answers || {};
   const findings = Object.keys(answers)
     .filter(k => k.startsWith('ff-'))
     .sort((a, b) => (answers[a].findingOrder || 0) - (answers[b].findingOrder || 0));
 
   const area = document.getElementById('questionsArea');
+  if (!area) return;
+
+  // Focus mode: zelfde layout als template reviews
+  area.classList.add('focus-mode');
+
+  // Zorg dat er altijd minstens 1 bevinding is
+  if (findings.length === 0) {
+    addFreeFormFinding();
+    return;
+  }
+
+  // Clamp index
+  if (!keepIndex) _ffFocusIndex = Math.max(0, findings.length - 1);
+  if (_ffFocusIndex >= findings.length) _ffFocusIndex = findings.length - 1;
+  if (_ffFocusIndex < 0) _ffFocusIndex = 0;
 
   // Update step indicator
-  document.getElementById('stepIndicator').textContent = `Vrije Review · ${findings.length} bevinding${findings.length !== 1 ? 'en' : ''}`;
+  document.getElementById('stepIndicator').textContent = `Vrije Review · ${_ffFocusIndex + 1} / ${findings.length}`;
 
   // Stats
   const goodCount = findings.filter(f => answers[f]?.score === 'good').length;
   const okCount = findings.filter(f => answers[f]?.score === 'ok').length;
   const badCount = findings.filter(f => answers[f]?.score === 'bad').length;
-  const unscoredCount = findings.filter(f => !answers[f]?.score).length;
-  const scoredCount = findings.length - unscoredCount;
 
-  // Build stepper for free-form (overview, geen voortgang%)
+  // Build stepper for free-form (sidebar overzicht)
   const stepper = document.getElementById('stepStepper');
   if (stepper) {
     stepper.innerHTML = `
@@ -5350,8 +5375,9 @@ function renderFreeFormReview(project) {
         ${findings.map((fId, i) => {
           const a = answers[fId] || {};
           const scoreColor = a.score === 'good' ? 'var(--score-good)' : a.score === 'ok' ? 'var(--score-ok)' : a.score === 'bad' ? 'var(--score-bad)' : 'var(--border)';
-          const label = a.findingTitle || (a.notes || '').split('\n')[0].substring(0, 40) || 'Bevinding ' + (i+1);
-          return `<div style="padding:6px 8px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12px;border-radius:6px;margin-bottom:2px;display:flex;align-items:center;gap:8px" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''" onclick="document.getElementById('card-${fId}')?.scrollIntoView({behavior:'smooth',block:'center'})"><span style="width:8px;height:8px;border-radius:50%;background:${scoreColor};flex-shrink:0"></span>${esc(label)}</div>`;
+          const label = (a.notes || '').split('\n')[0].substring(0, 40) || 'Bevinding ' + (i+1);
+          const isActive = i === _ffFocusIndex;
+          return `<div style="padding:6px 8px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12px;border-radius:6px;margin-bottom:2px;display:flex;align-items:center;gap:8px;${isActive ? 'background:var(--surface2);font-weight:600' : ''}" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='${isActive ? 'var(--surface2)' : ''}'" onclick="ffFocusGoTo(${i})"><span style="width:8px;height:8px;border-radius:50%;background:${scoreColor};flex-shrink:0"></span>${esc(label)}</div>`;
         }).join('')}
         <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);font-size:11px;color:var(--text-muted)">
           ${badCount > 0 ? `<span style="color:var(--score-bad)">${badCount} niet ok</span> · ` : ''}${okCount > 0 ? `<span style="color:var(--score-ok)">${okCount} matig</span> · ` : ''}${goodCount > 0 ? `<span style="color:var(--score-good)">${goodCount} goed</span>` : ''}
@@ -5359,112 +5385,135 @@ function renderFreeFormReview(project) {
       </div>`;
   }
 
+  // Render alle kaarten maar toon alleen de actieve (via focus-mode CSS)
   area.innerHTML = `
-    <div class="ff-header">
-      <div class="ff-stats">
-        <span class="ff-stat"><span class="dot dot-bad"></span> ${badCount} Niet OK</span>
-        <span class="ff-stat"><span class="dot dot-ok"></span> ${okCount} Matig</span>
-        <span class="ff-stat"><span class="dot dot-good"></span> ${goodCount} Goed</span>
-        ${unscoredCount > 0 ? `<span class="ff-stat"><span class="dot dot-unscored"></span> ${unscoredCount} Onbeoordeeld</span>` : ''}
+    ${findings.map((fId, idx) => renderFindingCard(fId, answers[fId], idx)).join('')}
+
+    <div class="focus-nav" id="ffFocusNav">
+      <button class="focus-nav-btn" onclick="ffFocusPrev()" ${_ffFocusIndex <= 0 ? 'disabled' : ''}>
+        <i data-lucide="chevron-left" style="width:14px;height:14px"></i> Vorige
+      </button>
+      <div class="focus-nav-counter">
+        <div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap;justify-content:center" id="ffFocusDots">
+          ${findings.map((fId, i) => {
+            const a = answers[fId] || {};
+            let cls = 'focus-dot';
+            if (i === _ffFocusIndex) cls += ' dot-active';
+            else if (a.score) cls += ' dot-answered';
+            return `<div class="${cls}" onclick="ffFocusGoTo(${i})" title="Bevinding ${i+1}"></div>`;
+          }).join('')}
+        </div>
       </div>
-    </div>
-
-    <div id="ff-findings-list">
-      ${findings.map((fId, idx) => renderFindingCard(fId, answers[fId], idx)).join('')}
-    </div>
-
-    <button class="ff-add-btn" onclick="addFreeFormFinding()">
-      <i data-lucide="plus-circle"></i> Nieuwe bevinding toevoegen
-    </button>
-
-    <div class="ff-paste-zone" id="ffPasteZone">
-      <i data-lucide="clipboard"></i>
-      <span>Plak een screenshot (Ctrl+V) om direct een nieuwe bevinding te starten</span>
-    </div>
-
-    <div class="ff-footer">
-      <div class="ff-footer-info">
-        ${findings.length} bevinding${findings.length !== 1 ? 'en' : ''}${scoredCount > 0 ? ` · ${scoredCount} beoordeeld` : ''}
-      </div>
-      <button class="ff-scorecard-btn" onclick="showScorecard()" ${findings.length === 0 ? 'disabled' : ''}>
-        <i data-lucide="bar-chart-3"></i> Resultaat bekijken
+      <button class="focus-nav-btn" id="ffFocusNextBtn" onclick="ffFocusNext()">
+        ${_ffFocusIndex >= findings.length - 1 ? '<i data-lucide="plus-circle" style="width:14px;height:14px"></i> Nieuwe bevinding' : 'Volgende <i data-lucide="chevron-right" style="width:14px;height:14px"></i>'}
       </button>
     </div>
   `;
 
+  // Activeer de juiste kaart
+  findings.forEach((fId, i) => {
+    const card = document.getElementById('card-' + fId);
+    if (card) card.classList.toggle('q-focus-active', i === _ffFocusIndex);
+  });
+
   if (typeof lucide !== 'undefined') lucide.createIcons();
+
+  // Focus notes input van actieve kaart
+  setTimeout(() => {
+    const activeNotes = document.getElementById('notes-' + findings[_ffFocusIndex]);
+    if (activeNotes && !activeNotes.value) activeNotes.focus();
+  }, 50);
+}
+
+function ffFocusNext() {
+  const project = getActiveProject();
+  if (!project) return;
+  const findings = Object.keys(project.answers || {}).filter(k => k.startsWith('ff-'));
+  if (_ffFocusIndex >= findings.length - 1) {
+    // Laatste bevinding → maak nieuwe aan
+    addFreeFormFinding();
+  } else {
+    _ffFocusIndex++;
+    renderFreeFormReview(project, true);
+  }
+}
+
+function ffFocusPrev() {
+  if (_ffFocusIndex <= 0) return;
+  _ffFocusIndex--;
+  const project = getActiveProject();
+  if (project) renderFreeFormReview(project, true);
+}
+
+function ffFocusGoTo(idx) {
+  _ffFocusIndex = idx;
+  const project = getActiveProject();
+  if (project) renderFreeFormReview(project, true);
 }
 
 function renderFindingCard(fId, finding, index) {
   const a = finding || {};
   const shots = a.screenshots || (a.screenshot ? [a.screenshot] : []);
+  const cats = a.findingCategories || (a.findingCategory ? [a.findingCategory] : []);
 
+  // Zelfde volgorde als template review cards:
+  // 1. Label/titel  2. Score knoppen  3. Severity  4. Categorie tags  5. Notes  6. Screenshots + capture
   return `
-    <div class="question-card ff-card ${a.score ? 'answered' : ''}" id="card-${fId}" onclick="setActiveQuestion('${fId}')" draggable="true" ondragstart="ffDragStart(event,'${fId}')" ondragover="ffDragOver(event)" ondrop="ffDrop(event,'${fId}')">
+    <div class="question-card ff-card ${a.score ? 'answered' : ''}" id="card-${fId}" onclick="setActiveQuestion('${fId}')">
 
-      <div class="ff-card-header">
-        <span class="ff-card-number">${index + 1}</span>
-        <div class="ff-card-spacer"></div>
-        <button class="ff-delete-btn" onclick="event.stopPropagation(); deleteFinding('${fId}')" title="Verwijder bevinding">
+      <div class="question-label">
+        <span class="q-num">${index + 1}.</span> Bevinding ${index + 1}
+        <button class="ff-delete-btn" onclick="event.stopPropagation(); deleteFinding('${fId}')" title="Verwijder" style="margin-left:auto;opacity:0.5">
           <i data-lucide="trash-2" style="width:14px;height:14px"></i>
         </button>
       </div>
 
-      <textarea class="notes-input ff-notes-main" id="notes-${fId}"
-        placeholder="Beschrijf je bevinding, probleem, of aanbeveling..."
+      <div class="score-row" onclick="event.stopPropagation()">
+        <button class="score-btn score-bad ${a.score==='bad'?'selected':''}" onclick="setFfScore('${fId}','bad')"><i data-lucide="x"></i> Niet OK</button>
+        <button class="score-btn score-ok ${a.score==='ok'?'selected':''}" onclick="setFfScore('${fId}','ok')">~ Matig</button>
+        <button class="score-btn score-good ${a.score==='good'?'selected':''}" onclick="setFfScore('${fId}','good')"><i data-lucide="check"></i> Goed</button>
+      </div>
+
+      ${a.score === 'ok' || a.score === 'bad' ? `
+        <div class="severity-row" onclick="event.stopPropagation()">
+          ${a.score === 'ok' ? `
+            <button class="sev-btn sev-quickwin ${a.severity==='high'?'selected':''}" onclick="setFfSeverity('${fId}','high')"><i data-lucide="zap"></i> Quick Win</button>
+            <button class="sev-btn sev-filler ${a.severity!=='high'?'selected':''}" onclick="setFfSeverity('${fId}','low')"><i data-lucide="archive"></i> Opvuller</button>
+          ` : `
+            <button class="sev-btn sev-strategic ${a.severity==='high'?'selected':''}" onclick="setFfSeverity('${fId}','high')"><i data-lucide="target"></i> Strategisch</button>
+            <button class="sev-btn sev-notnow ${a.severity!=='high'?'selected':''}" onclick="setFfSeverity('${fId}','low')"><i data-lucide="pause"></i> Niet Nu</button>
+          `}
+        </div>
+      ` : ''}
+
+      <div class="ff-category-row" onclick="event.stopPropagation()" style="margin-bottom:8px">
+        ${FF_CATEGORIES.map(c => {
+          const isSel = cats.includes(c.id);
+          return `<button class="ff-cat-tag ${isSel ? 'selected' : ''}"
+            style="${isSel ? 'background:' + c.color + '22;border-color:' + c.color + '44;color:' + c.color : ''}"
+            onclick="toggleFindingCategory('${fId}', '${c.id}')">
+            <i data-lucide="${c.icon}" style="width:12px;height:12px"></i> ${c.label}
+          </button>`;
+        }).join('')}
+      </div>
+
+      <textarea class="notes-input" id="notes-${fId}"
+        placeholder="Notities, bevindingen, aanbevelingen..."
         oninput="updateFindingNotes('${fId}', this.value)"
         onclick="event.stopPropagation()"
       >${a.notes || ''}</textarea>
 
-      ${shots.length > 0 ? `
-        <div class="ff-screenshots">
-          ${shots.map((src, si) => `
-            <div class="screenshot-thumb">
-              <img class="screenshot-preview ff-screenshot-large" src="${src}" onclick="showLightbox('${fId}',${si})" title="Klik om te vergroten">
-              <button class="screenshot-remove" onclick="event.stopPropagation(); removeScreenshot('${fId}',${si})" title="Verwijder">&times;</button>
-            </div>
-          `).join('')}
-        </div>
-      ` : ''}
-
-      <div class="ff-bottom-row" onclick="event.stopPropagation()">
-        <div class="ff-category-row">
-          ${FF_CATEGORIES.map(c => {
-            const cats = a.findingCategories || (a.findingCategory ? [a.findingCategory] : []);
-            const isSel = cats.includes(c.id);
-            return `
-            <button class="ff-cat-tag ${isSel ? 'selected' : ''}"
-              style="${isSel ? 'background:' + c.color + '22;border-color:' + c.color + '44;color:' + c.color : ''}"
-              onclick="toggleFindingCategory('${fId}', '${c.id}')">
-              <i data-lucide="${c.icon}" style="width:12px;height:12px"></i> ${c.label}
-            </button>`;
-          }).join('')}
-        </div>
-
-        <div class="screenshot-row">
-          <button class="screenshot-btn capture-primary" id="capBtn-${fId}" onclick="capturePreviewScreenshot('${fId}')" title="Capture preview"><i data-lucide="camera"></i><span class="btn-label"> Capture</span></button>
-          <button class="screenshot-btn" onclick="document.getElementById('file-${fId}').click()" title="Upload"><i data-lucide="upload"></i><span class="btn-label"> Upload</span></button>
-          <span class="screenshot-hint"><i data-lucide="clipboard" style="width:11px;height:11px"></i> Ctrl+V</span>
-          <input type="file" id="file-${fId}" accept="image/*" style="display:none" onchange="handleScreenshot('${fId}', this)">
-        </div>
-
-        <div class="score-row">
-          <button class="score-btn score-bad ${a.score==='bad'?'selected':''}" onclick="setFfScore('${fId}','bad')"><i data-lucide="x"></i> Niet OK</button>
-          <button class="score-btn score-ok ${a.score==='ok'?'selected':''}" onclick="setFfScore('${fId}','ok')">~ Matig</button>
-          <button class="score-btn score-good ${a.score==='good'?'selected':''}" onclick="setFfScore('${fId}','good')"><i data-lucide="check"></i> Goed</button>
-        </div>
-
-        ${a.score === 'ok' || a.score === 'bad' ? `
-          <div class="severity-row">
-            ${a.score === 'ok' ? `
-              <button class="sev-btn sev-quickwin ${a.severity==='high'?'selected':''}" onclick="setFfSeverity('${fId}','high')"><i data-lucide="zap"></i> Quick Win</button>
-              <button class="sev-btn sev-filler ${a.severity!=='high'?'selected':''}" onclick="setFfSeverity('${fId}','low')"><i data-lucide="archive"></i> Opvuller</button>
-            ` : `
-              <button class="sev-btn sev-strategic ${a.severity==='high'?'selected':''}" onclick="setFfSeverity('${fId}','high')"><i data-lucide="target"></i> Strategisch</button>
-              <button class="sev-btn sev-notnow ${a.severity!=='high'?'selected':''}" onclick="setFfSeverity('${fId}','low')"><i data-lucide="pause"></i> Niet Nu</button>
-            `}
+      <div class="screenshot-row" onclick="event.stopPropagation()">
+        ${shots.map((src, si) => `
+          <div class="screenshot-thumb">
+            <img class="screenshot-preview" src="${src}" onclick="showLightbox('${fId}',${si})" title="Klik om te vergroten">
+            <button class="screenshot-remove" onclick="event.stopPropagation(); removeScreenshot('${fId}',${si})" title="Verwijder">&times;</button>
           </div>
-        ` : ''}
+        `).join('')}
+        <button class="screenshot-btn capture-primary" id="capBtn-${fId}" onclick="capturePreviewScreenshot('${fId}')" title="Capture preview"><i data-lucide="camera"></i><span class="btn-label"> Capture</span></button>
+        <button class="screenshot-btn" onclick="document.getElementById('file-${fId}').click()" title="Upload"><i data-lucide="upload"></i><span class="btn-label"> Upload</span></button>
+        <span class="screenshot-hint"><i data-lucide="clipboard" style="width:11px;height:11px"></i> Ctrl+V</span>
+        <input type="file" id="file-${fId}" accept="image/*" style="display:none" onchange="handleScreenshot('${fId}', this)">
       </div>
     </div>
   `;
@@ -5490,16 +5539,12 @@ function addFreeFormFinding(initialScreenshot) {
     screenshots: initialScreenshot ? [initialScreenshot] : []
   };
 
+  // Focus op de nieuwe bevinding
+  _ffFocusIndex = existingCount;
+
   saveState();
   saveCurrentAnswers();
-  renderFreeFormReview(project);
-
-  setTimeout(() => {
-    const card = document.getElementById('card-' + fId);
-    if (card) card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    const notesInput = document.getElementById('notes-' + fId);
-    if (notesInput) notesInput.focus();
-  }, 100);
+  renderFreeFormReview(project, true);
 }
 
 function deleteFinding(fId) {
@@ -5511,9 +5556,11 @@ function deleteFinding(fId) {
     .filter(k => k.startsWith('ff-'))
     .sort((a, b) => (project.answers[a].findingOrder || 0) - (project.answers[b].findingOrder || 0));
   remaining.forEach((k, i) => project.answers[k].findingOrder = i);
+  // Clamp focus index na delete
+  if (_ffFocusIndex >= remaining.length) _ffFocusIndex = Math.max(0, remaining.length - 1);
   saveState();
   saveCurrentAnswers();
-  renderFreeFormReview(project);
+  renderFreeFormReview(project, true);
 }
 
 function updateFindingTitle(fId, value) {
@@ -5552,7 +5599,7 @@ function toggleFindingCategory(fId, catId) {
   lastActiveQId = fId;
   saveState();
   saveCurrentAnswers();
-  renderFreeFormReview(project);
+  renderFreeFormReview(project, true);
 }
 
 function setFfScore(fId, score) {
@@ -5570,7 +5617,7 @@ function setFfScore(fId, score) {
   lastActiveQId = fId;
   saveState();
   saveCurrentAnswers();
-  renderFreeFormReview(project);
+  renderFreeFormReview(project, true);
 }
 
 function setFfSeverity(fId, severity) {
@@ -5580,7 +5627,7 @@ function setFfSeverity(fId, severity) {
   lastActiveQId = fId;
   saveState();
   saveCurrentAnswers();
-  renderFreeFormReview(project);
+  renderFreeFormReview(project, true);
 }
 
 // ── Drag & drop herordenen ──
@@ -5619,7 +5666,7 @@ function ffDrop(e, targetId) {
   ffDraggedId = null;
   saveState();
   saveCurrentAnswers();
-  renderFreeFormReview(project);
+  renderFreeFormReview(project, true);
 }
 
 // ═══════════════ URL & DEVICE ═══════════════
@@ -6224,7 +6271,7 @@ function handleScreenshot(qId, input) {
       addScreenshot(qId, dataUrl);
       const proj = getActiveProject();
       if (proj?.reviewType === 'free-form') {
-        renderFreeFormReview(proj);
+        renderFreeFormReview(proj, true);
       } else {
         renderStep(currentStep, false);
       }
@@ -6277,7 +6324,7 @@ function removeScreenshot(qId, idx) {
   saveCurrentAnswers();
   const proj = getActiveProject();
   if (proj?.reviewType === 'free-form') {
-    renderFreeFormReview(proj);
+    renderFreeFormReview(proj, true);
   } else {
     renderStep(currentStep, false);
   }
@@ -6365,7 +6412,7 @@ document.addEventListener('paste', function(e) {
             const targetQId = getActiveQuestionId();
             if (targetQId && targetQId.startsWith('ff-')) {
               addScreenshot(targetQId, dataUrl);
-              renderFreeFormReview(project);
+              renderFreeFormReview(project, true);
             } else {
               addFreeFormFinding(dataUrl);
             }
@@ -6529,7 +6576,7 @@ async function capturePreviewScreenshot(qId) {
     addScreenshot(qId, dataUrl);
     const proj = getActiveProject();
     if (proj?.reviewType === 'free-form') {
-      renderFreeFormReview(proj);
+      renderFreeFormReview(proj, true);
     } else {
       renderStep(currentStep, false);
     }
