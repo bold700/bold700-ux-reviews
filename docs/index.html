@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>BOLD700 — UX Review Platform</title>
+<title>BOLD700 — UX Review & Conversion Audits</title>
 <style>
   :root {
     --bg: #0a0a0a;
@@ -1942,7 +1942,7 @@
   <div class="auth-card">
     <div class="logo" id="authLogo"></div>
     <h1><span>Gratis</span> UX Review</h1>
-    <p class="auth-sub">Ontdek in 15 minuten waarom je website niet converteert.<br>Ontvang direct je score en verbeterpunten.</p>
+    <p class="auth-sub">Scan je website in 15 minuten en ontdek waar je conversie lekt.<br>Gebruik de gratis review als startpunt, of upgrade naar een betaalde conversion audit met concrete fixes.</p>
 
     <div id="authFormLogin">
       <div class="form-group">
@@ -1981,8 +1981,8 @@
   </div>
   <div class="dash-content">
     <div class="dash-hero">
-      <h1><span>UX</span> Review Platform</h1>
-      <p>Ontdek waarom je website niet converteert. Doorloop een professionele UX audit.</p>
+      <h1><span>UX</span> Reviews die doorverkopen</h1>
+      <p>Start gratis, vind conversielekken, en zet reviews om naar betaalde audits met concrete businessimpact.</p>
     </div>
 
     <div class="dash-stats" id="dashStats"></div>
@@ -2143,9 +2143,9 @@
         <div class="form-group hidden" id="npPackageGroup">
           <label>Pakket</label>
           <select id="npPackage" class="form-select">
-            <option value="quick">Quick Scan — €497</option>
-            <option value="deep">Deep Review — €997</option>
-            <option value="full">Full Audit + Redesign — €2.497</option>
+            <option value="quick">Conversion Audit — €750</option>
+            <option value="deep">Growth Audit — €1.500</option>
+            <option value="full">Audit + UX Redesign Sprint — €3.500</option>
           </select>
         </div>
         <div class="form-group hidden" id="npProInfo">
@@ -2153,7 +2153,7 @@
             <i data-lucide="info" style="width:14px;height:14px;flex-shrink:0;margin-top:1px"></i>
             <div>
               <strong>Hoe werkt het?</strong><br>
-              Na het indienen wordt je aanvraag beoordeeld en toegewezen aan een erkende UX auditor. Je ontvangt een volledig rapport met concrete verbeterpunten.
+              Na je aanvraag bekijken we je website en leveren we een conversion audit met concrete verbeterpunten, businessimpact en een heldere prioriteitenlijst. Geen vaag rapport, maar fixes waar je direct mee verder kunt.
             </div>
           </div>
         </div>
@@ -10325,13 +10325,13 @@ function showScorecard() { try {
 
     ${isSelfService && overallAvg > 0 && overallAvg < 7 ? `
     <div class="upsell-card" style="margin-bottom:16px">
-      <div class="upsell-tag">Hulp nodig?</div>
-      <h2>Wij helpen je van een ${overallAvg.toFixed(1)} naar een 8+</h2>
-      <p>Ons team van UX experts maakt een volledig rapport met wireframes en een implementatieplan. Inclusief een strategie call.</p>
+      <div class="upsell-tag">Betaalde volgende stap</div>
+      <h2>Maak van deze review een conversion audit</h2>
+      <p>Je score laat zien waar omzet lekt. Wij vertalen dit naar de 5 belangrijkste fixes, inclusief businessimpact, prioriteit en concrete aanbevelingen die direct uitvoerbaar zijn.</p>
       <div class="upsell-benefits">
-        <span>Expert analyse</span>
-        <span>Concreet actieplan</span>
-        <span>Gratis intake call</span>
+        <span>Top 5 conversielekken</span>
+        <span>Prioriteit + impact</span>
+        <span>Snelle doorvertaling naar actie</span>
       </div>
     </div>` : ''}
 
