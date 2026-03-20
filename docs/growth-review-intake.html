@@ -488,6 +488,21 @@
 
   @keyframes spin { to { transform: rotate(360deg); } }
 </style>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyDPQdEZk574PO7ft7aHTSPjzxwgSXFtf-o",
+    authDomain: "bold700-ux-reviews.firebaseapp.com",
+    projectId: "bold700-ux-reviews",
+    storageBucket: "bold700-ux-reviews.firebasestorage.app",
+    messagingSenderId: "61806362887",
+    appId: "1:61806362887:web:8e0667d1d01119279fc5a2",
+    measurementId: "G-94SCL9W7X3"
+  };
+  if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+</script>
 </head>
 <body>
 <div class="topbar">
@@ -688,6 +703,7 @@
 
 <script>
   const DASHBOARD_KEY = 'bold700_reviews';
+  const COLLECTION = 'projects';
 
   function generateId() {
     return 'gr_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
@@ -703,22 +719,38 @@
     return data;
   }
 
-  function saveIntake(data) {
-    const reviews = JSON.parse(localStorage.getItem(DASHBOARD_KEY) || '[]');
+  async function saveIntake(data) {
     const entry = {
       id: generateId(),
+      name: data.company_name || data.full_name || 'Growth Review',
+      client: data.company_name || '',
+      userId: 'growth-review-public',
+      mode: 'professional',
+      source: 'growth-review-intake',
       product_name: 'BOLD700 Growth Review',
       amount: 998,
       payment_status: 'paid',
       intake_status: 'received',
       review_status: 'ready_for_review',
+      auditStatus: 'pending',
+      status: 'pending',
       payment_provider: 'mollie',
       payment_id: new URLSearchParams(window.location.search).get('payment_id') || null,
+      createdAt: new Date().toISOString(),
       created_at: new Date().toISOString(),
       ...data
     };
+
+    const reviews = JSON.parse(localStorage.getItem(DASHBOARD_KEY) || '[]');
     reviews.unshift(entry);
     localStorage.setItem(DASHBOARD_KEY, JSON.stringify(reviews));
+
+    try {
+      await db.collection(COLLECTION).doc(entry.id).set(entry, { merge: true });
+    } catch (e) {
+      console.error('Firestore save failed', e);
+    }
+
     return entry;
   }
 
@@ -748,9 +780,9 @@
     btn.disabled = true;
     btn.innerHTML = 'Bezig...';
 
-    setTimeout(() => {
+    setTimeout(async () => {
       const data = getFormData();
-      saveIntake(data);
+      await saveIntake(data);
       document.getElementById('formPage').style.display = 'none';
       document.getElementById('successScreen').style.display = 'block';
       window.scrollTo({ top: 0, behavior: 'smooth' });

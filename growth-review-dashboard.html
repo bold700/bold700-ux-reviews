@@ -208,6 +208,21 @@
   @media (max-width: 900px) { .sidebar { display: none; } .stats-row { grid-template-columns: 1fr 1fr; } .content { padding: 20px 16px; } .topbar { padding: 14px 16px; } }
   @media (max-width: 600px) { .stats-row { grid-template-columns: 1fr; } }
 </style>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyDPQdEZk574PO7ft7aHTSPjzxwgSXFtf-o",
+    authDomain: "bold700-ux-reviews.firebaseapp.com",
+    projectId: "bold700-ux-reviews",
+    storageBucket: "bold700-ux-reviews.firebasestorage.app",
+    messagingSenderId: "61806362887",
+    appId: "1:61806362887:web:8e0667d1d01119279fc5a2",
+    measurementId: "G-94SCL9W7X3"
+  };
+  if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+</script>
 </head>
 <body>
 <nav class="sidebar">
@@ -277,15 +292,28 @@
 </div>
 <script>
   const STORAGE_KEY = 'bold700_reviews';
+  const COLLECTION = 'projects';
   let allReviews = [];
   let currentFilter = 'all';
   let openId = null;
 
-  function loadReviews() {
-    try { allReviews = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
-    catch { allReviews = []; }
+  async function loadReviews() {
+    let local = [];
+    try { local = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch {}
+    try {
+      const snap = await db.collection(COLLECTION).where('source','==','growth-review-intake').get();
+      const remote = snap.docs.map(d => ({ ...d.data(), id: d.id }));
+      const merged = [...remote];
+      for (const item of local) if (!merged.find(x => x.id === item.id)) merged.push(item);
+      merged.sort((a,b) => String(b.createdAt || b.created_at || '').localeCompare(String(a.createdAt || a.created_at || '')));
+      allReviews = merged;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+    } catch (e) {
+      console.error('Firestore load failed', e);
+      allReviews = local;
+    }
   }
-  function saveReviews() { localStorage.setItem(STORAGE_KEY, JSON.stringify(allReviews)); }
+  async function saveReviews() { localStorage.setItem(STORAGE_KEY, JSON.stringify(allReviews)); }
   function getStatusLabel(s) {
     return { paid:'Betaald', intake_received:'Intake ontvangen', ready_for_review:'Klaar voor review', in_review:'In review', done:'Afgerond' }[s] || s;
   }
@@ -296,8 +324,8 @@
     if (!iso) return '';
     return new Date(iso).toLocaleDateString('nl-NL', { day:'numeric', month:'short', year:'numeric' });
   }
-  function render() {
-    loadReviews();
+  async function render() {
+    await loadReviews();
     const filtered = currentFilter === 'all' ? allReviews : allReviews.filter(r => r.review_status === currentFilter || r.payment_status === currentFilter);
     document.getElementById('statTotal').textContent = allReviews.length;
     document.getElementById('statRevenue').textContent = '€' + (allReviews.length * 998).toLocaleString('nl-NL');
@@ -354,12 +382,13 @@
     document.getElementById('detailPanel').classList.remove('open');
     openId = null;
   }
-  function updateStatus() {
+  async function updateStatus() {
     if (!openId) return;
     const idx = allReviews.findIndex(r => r.id === openId);
     if (idx === -1) return;
     allReviews[idx].review_status = document.getElementById('panelStatusSelect').value;
-    saveReviews();
+    await saveReviews();
+    try { await db.collection(COLLECTION).doc(allReviews[idx].id).set({ review_status: allReviews[idx].review_status, auditStatus: allReviews[idx].review_status }, { merge: true }); } catch(e) { console.error('status sync failed', e); }
     render();
   }
   function exportCSV() {
@@ -381,7 +410,7 @@
     };
     allReviews.unshift(entry); saveReviews(); render();
   }
-  loadReviews(); render();
+  render();
 </script>
 </body>
 </html>
