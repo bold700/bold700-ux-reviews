@@ -92,6 +92,8 @@
     display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 10;
   }
   .topbar h1 { font-family: var(--serif); font-size: 22px; font-weight: 400; }
+  .topbar-brand { font-weight: 600; font-size: 14px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink); text-decoration: none; }
+  .topbar-brand span { color: var(--accent); }
   .topbar-actions { display: flex; align-items: center; gap: 12px; }
   .btn-sm {
     display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 5px;
@@ -199,9 +201,9 @@
 </nav>
 <div class="main">
   <div class="topbar">
-    <h1>BOLD700 Growth Review</h1>
+    <a href="/bold700-ux-review-landingpage.html" class="topbar-brand">BOLD<span>700</span></a>
     <div class="topbar-actions">
-      <button class="btn-sm btn-sm-outline" onclick="exportCSV()">Exporteer CSV</button>
+      <a href="/growth-review-intake.html" class="btn-sm btn-sm-outline">Intake</a>
       <button class="btn-sm btn-sm-primary" onclick="addDemoEntry()">Voeg demo toe</button>
     </div>
   </div>

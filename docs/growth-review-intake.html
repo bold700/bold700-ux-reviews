@@ -63,6 +63,23 @@
     color: rgba(255,255,255,0.6);
   }
 
+  .topbar-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 14px;
+    border: 1px solid rgba(255,255,255,0.18);
+    border-radius: 6px;
+    color: rgba(255,255,255,0.86);
+    text-decoration: none;
+    font-size: 13px;
+  }
+
+  .topbar-link:hover {
+    color: #fff;
+    border-color: rgba(255,255,255,0.34);
+  }
+
   .status-dot {
     width: 7px;
     height: 7px;
@@ -449,7 +466,7 @@
 <body>
 <div class="topbar">
   <a href="#" class="topbar-logo">BOLD<span>700</span></a>
-  <div class="topbar-status"><span class="status-dot"></span>BOLD700 Growth Review</div>
+  <a href="/growth-review-dashboard.html" class="topbar-link">Dashboard</a>
 </div>
 
 <div class="page" id="formPage">
