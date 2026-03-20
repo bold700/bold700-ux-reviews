@@ -259,6 +259,7 @@
     <div class="table-header">
       <div class="filter-pills">
         <button class="filter-pill active" onclick="filterByStatus('all', this)">Alle</button>
+        <button class="filter-pill" onclick="filterByStatus('pending_payment', this)">Wacht op betaling</button>
         <button class="filter-pill" onclick="filterByStatus('paid', this)">Betaald</button>
         <button class="filter-pill" onclick="filterByStatus('intake_received', this)">Intake</button>
         <button class="filter-pill" onclick="filterByStatus('ready_for_review', this)">Klaar</button>
@@ -288,7 +289,7 @@
 <div class="detail-panel" id="detailPanel">
   <div class="panel-header"><div><h2 id="panelName">Naam klant</h2><p id="panelMeta">Bedrijf</p></div><button class="close-btn" onclick="closePanel()">X</button></div>
   <div class="panel-body" id="panelBody"></div>
-  <div class="panel-footer"><select class="status-select" id="panelStatusSelect" onchange="updateStatus()"><option value="paid">Betaald</option><option value="intake_received">Intake ontvangen</option><option value="ready_for_review">Klaar voor review</option><option value="in_review">In review</option><option value="done">Afgerond</option></select></div>
+  <div class="panel-footer"><select class="status-select" id="panelStatusSelect" onchange="updateStatus()"><option value="pending_payment">Wacht op betaling</option><option value="paid">Betaald</option><option value="intake_received">Intake ontvangen</option><option value="ready_for_review">Klaar voor review</option><option value="in_review">In review</option><option value="done">Afgerond</option></select></div>
 </div>
 <script>
   const STORAGE_KEY = 'bold700_reviews';
@@ -315,7 +316,7 @@
   }
   async function saveReviews() { localStorage.setItem(STORAGE_KEY, JSON.stringify(allReviews)); }
   function getStatusLabel(s) {
-    return { paid:'Betaald', intake_received:'Intake ontvangen', ready_for_review:'Klaar voor review', in_review:'In review', done:'Afgerond' }[s] || s;
+    return { pending_payment:'Wacht op betaling', paid:'Betaald', intake_received:'Intake ontvangen', ready_for_review:'Klaar voor review', in_review:'In review', done:'Afgerond' }[s] || s;
   }
   function getGoalLabel(g) {
     return { meer_leads:'Meer leads', meer_calls:'Meer calls', meer_offertes:'Meer offertes', meer_verkopen:'Meer verkopen', anders:'Anders' }[g] || '';
@@ -328,7 +329,7 @@
     await loadReviews();
     const filtered = currentFilter === 'all' ? allReviews : allReviews.filter(r => r.review_status === currentFilter || r.payment_status === currentFilter);
     document.getElementById('statTotal').textContent = allReviews.length;
-    document.getElementById('statRevenue').textContent = '€' + (allReviews.length * 998).toLocaleString('nl-NL');
+    document.getElementById('statRevenue').textContent = '€' + (allReviews.filter(r => r.payment_status === 'paid').length * 998).toLocaleString('nl-NL');
     document.getElementById('statReady').textContent = allReviews.filter(r => r.review_status === 'ready_for_review').length;
     document.getElementById('statDone').textContent = allReviews.filter(r => r.review_status === 'done').length;
     document.getElementById('sidebarCount').textContent = allReviews.length;

@@ -507,7 +507,7 @@
 <body>
 <div class="topbar">
   <a href="#" class="topbar-logo">BOLD<span>700</span></a>
-  <a href="/growth-review-dashboard.html" class="topbar-link">Dashboard</a>
+  <a href="https://payment-links.mollie.com/payment/2j2RgBM2fubzTHtgqpmLw" class="topbar-link">Betalen</a>
 </div>
 
 <div class="page" id="formPage">
@@ -516,10 +516,10 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
         <polyline points="20 6 9 17 4 12"></polyline>
       </svg>
-      Betaling geslaagd
+      Intake
     </div>
-    <h1>Bedankt. Je Growth Review staat klaar.</h1>
-    <p>Beantwoord nog even deze korte vragen, dan kunnen we gericht aan de slag. Dit duurt ongeveer 2 minuten.</p>
+    <h1>Vertel kort waar je site nu kansen laat liggen.</h1>
+    <p>Vul eerst deze korte intake in. Daarna ga je direct door naar betaling.</p>
   </div>
 
   <div class="progress-bar">
@@ -684,13 +684,13 @@
       <polyline points="20 6 9 17 4 12"></polyline>
     </svg>
   </div>
-  <h2>Top. We hebben je intake ontvangen.</h2>
-  <p>Je review wordt nu voorbereid. Je ontvangt de volgende stap per mail. Je kunt nu ook direct door naar het dashboard.</p>
+  <h2>Top. Je intake is ontvangen.</h2>
+  <p>Je gaat nu door naar betaling om je Growth Review definitief te maken.</p>
   <div class="success-steps">
     <div class="success-step"><span class="s-dot" style="background:var(--accent)">1</span>Intake ontvangen</div>
-    <div class="success-step"><span class="s-dot">2</span>Review wordt klaargezet</div>
-    <div class="success-step"><span class="s-dot">3</span>Je ontvangt het rapport per mail</div>
-    <div class="success-step"><span class="s-dot">4</span>Presentatie inplannen</div>
+    <div class="success-step"><span class="s-dot">2</span>Doorgaan naar betaling</div>
+    <div class="success-step"><span class="s-dot">3</span>Na betaling komt je aanvraag in het dashboard</div>
+    <div class="success-step"><span class="s-dot">4</span>Daarna plannen we de review</div>
   </div>
 </div>
 
@@ -729,11 +729,11 @@
       source: 'growth-review-intake',
       product_name: 'BOLD700 Growth Review',
       amount: 998,
-      payment_status: 'paid',
+      payment_status: 'pending_payment',
       intake_status: 'received',
-      review_status: 'ready_for_review',
-      auditStatus: 'pending',
-      status: 'pending',
+      review_status: 'pending_payment',
+      auditStatus: 'pending_payment',
+      status: 'pending_payment',
       payment_provider: 'mollie',
       payment_id: new URLSearchParams(window.location.search).get('payment_id') || null,
       createdAt: new Date().toISOString(),
@@ -786,7 +786,7 @@
       document.getElementById('formPage').style.display = 'none';
       document.getElementById('successScreen').style.display = 'block';
       window.scrollTo({ top: 0, behavior: 'smooth' });
-      setTimeout(() => { window.location.href = '/growth-review-dashboard.html'; }, 1800);
+      setTimeout(() => { window.location.href = 'https://payment-links.mollie.com/payment/2j2RgBM2fubzTHtgqpmLw'; }, 1800);
     }, 800);
   }
 </script>
