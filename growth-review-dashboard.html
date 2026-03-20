@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BOLD700 Dashboard - Growth Reviews</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --ink: #0e0e0d;
+    --paper: #f5f2ec;
+    --warm-white: #faf8f4;
+    --accent: #c8521a;
+    --accent-light: #e8703a;
+    --mid: #6b6560;
+    --border: #ddd8d0;
+    --sidebar: #111110;
+    --serif: 'Instrument Serif', Georgia, serif;
+    --sans: 'DM Sans', system-ui, sans-serif;
+    --status-paid: #c8521a;
+    --status-intake: #7c3aed;
+    --status-ready: #0369a1;
+    --status-review: #b45309;
+    --status-done: #166534;
+  }
+  html { height: 100%; }
+  body {
+    font-family: var(--sans);
+    background: var(--paper);
+    color: var(--ink);
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+    display: flex;
+  }
+  .sidebar {
+    width: 220px;
+    flex-shrink: 0;
+    background: var(--sidebar);
+    min-height: 100vh;
+    padding: 28px 0;
+    display: flex;
+    flex-direction: column;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+  }
+  .sidebar-logo {
+    font-weight: 600;
+    font-size: 14px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #fff;
+    padding: 0 24px 28px;
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+    margin-bottom: 20px;
+    text-decoration: none;
+    display: block;
+  }
+  .sidebar-logo span { color: var(--accent); }
+  .sidebar-section { padding: 0 12px; margin-bottom: 6px; }
+  .sidebar-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.25);
+    padding: 0 12px;
+    margin-bottom: 4px;
+  }
+  .sidebar-item {
+    display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 6px;
+    color: rgba(255,255,255,0.55); font-size: 14px; text-decoration: none; cursor: pointer;
+    transition: all 0.15s; border: none; background: none; width: 100%; font-family: var(--sans);
+  }
+  .sidebar-item:hover { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.9); }
+  .sidebar-item.active { background: rgba(200,82,26,0.15); color: #fff; }
+  .sidebar-badge {
+    margin-left: auto; background: var(--accent); color: #fff; font-size: 11px; font-weight: 600;
+    padding: 2px 7px; border-radius: 100px; min-width: 20px; text-align: center;
+  }
+  .sidebar-footer { margin-top: auto; padding: 20px 24px 0; border-top: 1px solid rgba(255,255,255,0.07); }
+  .sidebar-footer p { font-size: 12px; color: rgba(255,255,255,0.2); line-height: 1.5; }
+  .main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .topbar {
+    background: var(--warm-white); border-bottom: 1px solid var(--border); padding: 16px 32px;
+    display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 10;
+  }
+  .topbar h1 { font-family: var(--serif); font-size: 22px; font-weight: 400; }
+  .topbar-actions { display: flex; align-items: center; gap: 12px; }
+  .btn-sm {
+    display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 5px;
+    font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.15s; text-decoration: none;
+    font-family: var(--sans); border: none;
+  }
+  .btn-sm-outline { background: transparent; border: 1.5px solid var(--border); color: var(--mid); }
+  .btn-sm-outline:hover { border-color: var(--ink); color: var(--ink); }
+  .btn-sm-primary { background: var(--accent); color: #fff; }
+  .btn-sm-primary:hover { background: var(--accent-light); }
+  .content { padding: 28px 32px; flex: 1; }
+  .demo-notice {
+    background: rgba(200,82,26,0.06); border: 1.5px dashed rgba(200,82,26,0.3); border-radius: 8px;
+    padding: 14px 18px; display: flex; align-items: center; gap: 12px; margin-bottom: 20px; font-size: 13px; color: var(--mid);
+  }
+  .demo-notice strong { color: var(--ink); }
+  .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px; }
+  .stat-card { background: var(--warm-white); border: 1.5px solid var(--border); border-radius: 8px; padding: 20px 22px; }
+  .stat-label { font-size: 12px; color: var(--mid); font-weight: 500; margin-bottom: 8px; }
+  .stat-value { font-family: var(--serif); font-size: 30px; line-height: 1; margin-bottom: 4px; }
+  .stat-sub { font-size: 12px; color: var(--mid); }
+  .stat-accent { color: var(--accent); }
+  .table-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .filter-pills { display: flex; gap: 6px; flex-wrap: wrap; }
+  .filter-pill {
+    padding: 6px 14px; border-radius: 100px; font-size: 12px; font-weight: 500; cursor: pointer;
+    border: 1.5px solid var(--border); background: var(--warm-white); color: var(--mid); transition: all 0.15s; font-family: var(--sans);
+  }
+  .filter-pill.active { background: var(--ink); border-color: var(--ink); color: #fff; }
+  .table-wrap { background: var(--warm-white); border: 1.5px solid var(--border); border-radius: 10px; overflow: hidden; }
+  table { width: 100%; border-collapse: collapse; }
+  thead th {
+    background: var(--paper); padding: 12px 16px; text-align: left; font-size: 11px; font-weight: 600;
+    letter-spacing: 0.08em; text-transform: uppercase; color: var(--mid); border-bottom: 1px solid var(--border); white-space: nowrap;
+  }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background 0.12s; cursor: pointer; }
+  tbody tr:hover { background: var(--paper); }
+  td { padding: 14px 16px; vertical-align: middle; }
+  .td-name { font-weight: 500; font-size: 14px; }
+  .td-sub { font-size: 12px; color: var(--mid); margin-top: 2px; }
+  .td-url {
+    font-size: 13px; color: var(--accent); text-decoration: none; max-width: 160px; display: block;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .badge { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 100px; font-size: 11px; font-weight: 600; }
+  .badge::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+  .badge-paid { background: rgba(200,82,26,0.1); color: var(--status-paid); }
+  .badge-intake_received { background: rgba(124,58,237,0.1); color: var(--status-intake); }
+  .badge-ready_for_review { background: rgba(3,105,161,0.1); color: var(--status-ready); }
+  .badge-in_review { background: rgba(180,83,9,0.1); color: var(--status-review); }
+  .badge-done { background: rgba(22,101,52,0.1); color: var(--status-done); }
+  .amount-cell { font-family: var(--serif); font-size: 16px; }
+  .td-date { font-size: 12px; color: var(--mid); white-space: nowrap; }
+  .empty-state { text-align: center; padding: 80px 24px; }
+  .empty-state h3 { font-family: var(--serif); font-size: 22px; font-weight: 400; margin-bottom: 10px; }
+  .panel-overlay {
+    position: fixed; inset: 0; background: rgba(14,14,13,0.4); z-index: 50; display: none; backdrop-filter: blur(2px);
+  }
+  .panel-overlay.open { display: block; }
+  .detail-panel {
+    position: fixed; top: 0; right: 0; bottom: 0; width: min(540px, 100vw); background: var(--warm-white);
+    z-index: 51; transform: translateX(100%); transition: transform 0.3s; overflow-y: auto; display: flex; flex-direction: column;
+  }
+  .detail-panel.open { transform: translateX(0); }
+  .panel-header {
+    padding: 24px 28px; border-bottom: 1px solid var(--border); display: flex; align-items: start; justify-content: space-between;
+    gap: 16px; position: sticky; top: 0; background: var(--warm-white); z-index: 1;
+  }
+  .panel-header h2 { font-family: var(--serif); font-size: 20px; font-weight: 400; margin-bottom: 4px; }
+  .panel-header p { font-size: 13px; color: var(--mid); }
+  .close-btn {
+    width: 32px; height: 32px; border-radius: 6px; border: 1.5px solid var(--border); background: transparent; cursor: pointer;
+  }
+  .panel-body { padding: 24px 28px; flex: 1; }
+  .panel-section { margin-bottom: 28px; }
+  .panel-section-label {
+    font-size: 10px; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; color: var(--mid);
+    margin-bottom: 14px; padding-bottom: 8px; border-bottom: 1px solid var(--border);
+  }
+  .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .detail-field label { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--mid); display: block; margin-bottom: 4px; }
+  .detail-field p { font-size: 14px; word-break: break-word; }
+  .detail-field.full { grid-column: 1 / -1; }
+  .status-select { width: 100%; padding: 10px 12px; border: 1.5px solid var(--border); border-radius: 6px; background: var(--paper); }
+  .panel-footer { padding: 20px 28px; border-top: 1px solid var(--border); background: var(--warm-white); position: sticky; bottom: 0; }
+  @media (max-width: 900px) { .sidebar { display: none; } .stats-row { grid-template-columns: 1fr 1fr; } .content { padding: 20px 16px; } .topbar { padding: 14px 16px; } }
+  @media (max-width: 600px) { .stats-row { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<nav class="sidebar">
+  <a href="#" class="sidebar-logo">BOLD<span>700</span></a>
+  <div class="sidebar-section">
+    <p class="sidebar-label">Overzicht</p>
+    <button class="sidebar-item active">Growth Reviews <span class="sidebar-badge" id="sidebarCount">0</span></button>
+  </div>
+  <div class="sidebar-section">
+    <p class="sidebar-label">Status</p>
+    <button class="sidebar-item" onclick="filterByStatus('paid')">Betaald</button>
+    <button class="sidebar-item" onclick="filterByStatus('intake_received')">Intake ontvangen</button>
+    <button class="sidebar-item" onclick="filterByStatus('ready_for_review')">Klaar voor review</button>
+    <button class="sidebar-item" onclick="filterByStatus('done')">Afgerond</button>
+  </div>
+  <div class="sidebar-footer"><p>BOLD700 BV<br>Intern dashboard</p></div>
+</nav>
+<div class="main">
+  <div class="topbar">
+    <h1>Growth Reviews</h1>
+    <div class="topbar-actions">
+      <button class="btn-sm btn-sm-outline" onclick="exportCSV()">Exporteer CSV</button>
+      <button class="btn-sm btn-sm-primary" onclick="addDemoEntry()">Voeg demo toe</button>
+    </div>
+  </div>
+  <div class="content">
+    <div class="demo-notice"><span><strong>Demo modus.</strong> Intake en dashboard gebruiken nu dezelfde localStorage, zodat de flow direct testbaar is.</span></div>
+    <div class="stats-row">
+      <div class="stat-card"><div class="stat-label">Totaal aanvragen</div><div class="stat-value" id="statTotal">0</div><div class="stat-sub">Growth Reviews</div></div>
+      <div class="stat-card"><div class="stat-label">Omzet</div><div class="stat-value stat-accent" id="statRevenue">€0</div><div class="stat-sub">Betaald x €998</div></div>
+      <div class="stat-card"><div class="stat-label">Klaar voor review</div><div class="stat-value" id="statReady">0</div><div class="stat-sub">Intake ontvangen</div></div>
+      <div class="stat-card"><div class="stat-label">Afgerond</div><div class="stat-value" id="statDone">0</div><div class="stat-sub">Reviews</div></div>
+    </div>
+    <div class="table-header">
+      <div class="filter-pills">
+        <button class="filter-pill active" onclick="filterByStatus('all', this)">Alle</button>
+        <button class="filter-pill" onclick="filterByStatus('paid', this)">Betaald</button>
+        <button class="filter-pill" onclick="filterByStatus('intake_received', this)">Intake</button>
+        <button class="filter-pill" onclick="filterByStatus('ready_for_review', this)">Klaar</button>
+        <button class="filter-pill" onclick="filterByStatus('in_review', this)">In review</button>
+        <button class="filter-pill" onclick="filterByStatus('done', this)">Afgerond</button>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table id="reviewTable">
+        <thead><tr><th>Klant</th><th>Website</th><th>Status</th><th>Doel</th><th>Bedrag</th><th>Datum</th></tr></thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+      <div class="empty-state" id="emptyState" style="display:none;">
+        <h3>Nog geen aanvragen</h3>
+        <p>Aanvragen verschijnen hier zodra klanten de intake invullen na betaling.</p>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="panel-overlay" id="overlay" onclick="closePanel()"></div>
+<div class="detail-panel" id="detailPanel">
+  <div class="panel-header"><div><h2 id="panelName">Naam klant</h2><p id="panelMeta">Bedrijf</p></div><button class="close-btn" onclick="closePanel()">X</button></div>
+  <div class="panel-body" id="panelBody"></div>
+  <div class="panel-footer"><select class="status-select" id="panelStatusSelect" onchange="updateStatus()"><option value="paid">Betaald</option><option value="intake_received">Intake ontvangen</option><option value="ready_for_review">Klaar voor review</option><option value="in_review">In review</option><option value="done">Afgerond</option></select></div>
+</div>
+<script>
+  const STORAGE_KEY = 'bold700_reviews';
+  let allReviews = [];
+  let currentFilter = 'all';
+  let openId = null;
+
+  function loadReviews() {
+    try { allReviews = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
+    catch { allReviews = []; }
+  }
+  function saveReviews() { localStorage.setItem(STORAGE_KEY, JSON.stringify(allReviews)); }
+  function getStatusLabel(s) {
+    return { paid:'Betaald', intake_received:'Intake ontvangen', ready_for_review:'Klaar voor review', in_review:'In review', done:'Afgerond' }[s] || s;
+  }
+  function getGoalLabel(g) {
+    return { meer_leads:'Meer leads', meer_calls:'Meer calls', meer_offertes:'Meer offertes', meer_verkopen:'Meer verkopen', anders:'Anders' }[g] || '';
+  }
+  function formatDate(iso) {
+    if (!iso) return '';
+    return new Date(iso).toLocaleDateString('nl-NL', { day:'numeric', month:'short', year:'numeric' });
+  }
+  function render() {
+    loadReviews();
+    const filtered = currentFilter === 'all' ? allReviews : allReviews.filter(r => r.review_status === currentFilter || r.payment_status === currentFilter);
+    document.getElementById('statTotal').textContent = allReviews.length;
+    document.getElementById('statRevenue').textContent = '€' + (allReviews.length * 998).toLocaleString('nl-NL');
+    document.getElementById('statReady').textContent = allReviews.filter(r => r.review_status === 'ready_for_review').length;
+    document.getElementById('statDone').textContent = allReviews.filter(r => r.review_status === 'done').length;
+    document.getElementById('sidebarCount').textContent = allReviews.length;
+    const body = document.getElementById('tableBody');
+    if (!filtered.length) {
+      body.innerHTML = '';
+      document.getElementById('emptyState').style.display = '';
+      document.getElementById('reviewTable').style.display = 'none';
+      return;
+    }
+    document.getElementById('emptyState').style.display = 'none';
+    document.getElementById('reviewTable').style.display = '';
+    body.innerHTML = filtered.map(r => `
+      <tr onclick="openPanel('${r.id}')">
+        <td><div class="td-name">${r.full_name || ''}</div><div class="td-sub">${r.company_name || ''}</div></td>
+        <td><a class="td-url" href="${r.website_url || '#'}" target="_blank" onclick="event.stopPropagation()">${(r.website_url || '').replace('https://','')}</a></td>
+        <td><span class="badge badge-${r.review_status || 'paid'}">${getStatusLabel(r.review_status || 'paid')}</span></td>
+        <td style="font-size:13px;color:var(--mid)">${getGoalLabel(r.primary_goal)}</td>
+        <td class="amount-cell">€${r.amount || 998}</td>
+        <td class="td-date">${formatDate(r.created_at)}</td>
+      </tr>
+    `).join('');
+  }
+  function filterByStatus(status, btn) {
+    currentFilter = status;
+    document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    render();
+  }
+  function openPanel(id) {
+    const r = allReviews.find(x => x.id === id);
+    if (!r) return;
+    openId = id;
+    document.getElementById('panelName').textContent = r.full_name || 'Onbekend';
+    document.getElementById('panelMeta').textContent = (r.company_name || '') + ' • ' + formatDate(r.created_at);
+    document.getElementById('panelStatusSelect').value = r.review_status || 'paid';
+    document.getElementById('panelBody').innerHTML = `
+      <div class="panel-section"><p class="panel-section-label">Contact</p><div class="detail-grid">
+        <div class="detail-field"><label>E-mail</label><p>${r.email || ''}</p></div>
+        <div class="detail-field"><label>Website</label><p>${r.website_url || ''}</p></div>
+        <div class="detail-field full"><label>Doelgroep</label><p>${r.audience || 'Niet ingevuld'}</p></div>
+        <div class="detail-field"><label>Primair doel</label><p>${getGoalLabel(r.primary_goal) || '-'}</p></div>
+        <div class="detail-field"><label>Probleem</label><p>${r.main_problem || '-'}</p></div>
+        <div class="detail-field full"><label>Extra opmerkingen</label><p>${r.extra_notes || 'Geen'}</p></div>
+      </div></div>`;
+    document.getElementById('overlay').classList.add('open');
+    document.getElementById('detailPanel').classList.add('open');
+  }
+  function closePanel() {
+    document.getElementById('overlay').classList.remove('open');
+    document.getElementById('detailPanel').classList.remove('open');
+    openId = null;
+  }
+  function updateStatus() {
+    if (!openId) return;
+    const idx = allReviews.findIndex(r => r.id === openId);
+    if (idx === -1) return;
+    allReviews[idx].review_status = document.getElementById('panelStatusSelect').value;
+    saveReviews();
+    render();
+  }
+  function exportCSV() {
+    const cols = ['id','full_name','email','company_name','website_url','primary_goal','main_problem','priority_page','audience','desired_outcome','extra_notes','implementation_help','review_status','amount','payment_provider','payment_id','created_at'];
+    const rows = [cols.join(',')];
+    allReviews.forEach(r => rows.push(cols.map(c => '"' + (r[c] || '').toString().replace(/"/g, '""') + '"').join(',')));
+    const blob = new Blob([rows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'growth-reviews.csv'; a.click();
+  }
+  function addDemoEntry() {
+    const entry = {
+      id: 'gr_' + Date.now(), product_name: 'BOLD700 Growth Review', amount: 998, payment_status: 'paid', intake_status: 'received',
+      review_status: 'ready_for_review', payment_provider: 'mollie', payment_id: 'tr_demo_' + Math.random().toString(36).slice(2, 8),
+      full_name: 'Demo klant', email: 'demo@bold700.com', company_name: 'Demo BV', website_url: 'https://demo.nl',
+      primary_goal: 'meer_leads', main_problem: 'te_weinig_aanvragen', priority_page: 'homepage', audience: 'MKB',
+      desired_outcome: 'prioriteiten_verbetering', extra_notes: 'Demo intake', implementation_help: 'misschien', created_at: new Date().toISOString()
+    };
+    allReviews.unshift(entry); saveReviews(); render();
+  }
+  loadReviews(); render();
+</script>
+</body>
+</html>
