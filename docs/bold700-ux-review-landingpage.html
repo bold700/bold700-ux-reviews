@@ -1,0 +1,1098 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BOLD700 Growth Review</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --ink: #0e0e0d;
+    --paper: #f5f2ec;
+    --warm-white: #faf8f4;
+    --accent: #c8521a;
+    --accent-light: #e8703a;
+    --mid: #6b6560;
+    --border: #ddd8d0;
+    --section-gap: 120px;
+    --serif: 'Instrument Serif', Georgia, serif;
+    --sans: 'DM Sans', system-ui, sans-serif;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: var(--sans);
+    background: var(--warm-white);
+    color: var(--ink);
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* NAV */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    padding: 20px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(250,248,244,0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .logo {
+    font-family: var(--sans);
+    font-weight: 600;
+    font-size: 15px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink);
+    text-decoration: none;
+  }
+
+  .logo span { color: var(--accent); }
+
+  nav a.nav-cta {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ink);
+    text-decoration: none;
+    padding: 9px 20px;
+    border: 1.5px solid var(--ink);
+    border-radius: 4px;
+    transition: all 0.2s;
+  }
+
+  nav a.nav-cta:hover {
+    background: var(--ink);
+    color: var(--warm-white);
+  }
+
+  /* HERO */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    padding: 120px 40px 80px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -20%;
+    right: -10%;
+    width: 60vw;
+    height: 60vw;
+    background: radial-gradient(ellipse at center, rgba(200, 82, 26, 0.07) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .hero-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 80px;
+    align-items: center;
+  }
+
+  .hero-label {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 24px;
+  }
+
+  .hero h1 {
+    font-family: var(--serif);
+    font-size: clamp(44px, 5.5vw, 68px);
+    line-height: 1.08;
+    font-weight: 400;
+    color: var(--ink);
+    margin-bottom: 28px;
+  }
+
+  .hero h1 em {
+    font-style: italic;
+    color: var(--accent);
+  }
+
+  .hero-sub {
+    font-size: 18px;
+    line-height: 1.65;
+    color: var(--mid);
+    max-width: 500px;
+    margin-bottom: 40px;
+    font-weight: 300;
+  }
+
+  .hero-cta-group {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--accent);
+    color: #fff;
+    padding: 16px 30px;
+    border-radius: 5px;
+    font-size: 15px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.2s;
+    border: none;
+    cursor: pointer;
+  }
+
+  .btn-primary:hover { background: var(--accent-light); transform: translateY(-1px); }
+
+  .btn-secondary {
+    font-size: 14px;
+    color: var(--mid);
+    text-decoration: none;
+    font-weight: 400;
+  }
+
+  .btn-secondary:hover { color: var(--ink); }
+
+  .hero-trust {
+    font-size: 13px;
+    color: var(--mid);
+    margin-top: 20px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .hero-trust::before {
+    content: '';
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #4caf50;
+    flex-shrink: 0;
+  }
+
+  /* PRICE CARD in hero */
+  .hero-card {
+    background: var(--ink);
+    color: var(--warm-white);
+    border-radius: 12px;
+    padding: 40px 36px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero-card::before {
+    content: '';
+    position: absolute;
+    top: -40px; right: -40px;
+    width: 150px; height: 150px;
+    background: radial-gradient(circle, rgba(200,82,26,0.25) 0%, transparent 70%);
+  }
+
+  .hero-card-label {
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.45);
+    margin-bottom: 8px;
+  }
+
+  .hero-card-title {
+    font-family: var(--serif);
+    font-size: 22px;
+    font-weight: 400;
+    margin-bottom: 32px;
+    line-height: 1.3;
+  }
+
+  .price-block {
+    margin-bottom: 28px;
+  }
+
+  .pilot-badge {
+    display: inline-block;
+    background: var(--accent);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 3px;
+    margin-bottom: 12px;
+  }
+
+  .price-main {
+    font-family: var(--serif);
+    font-size: 52px;
+    line-height: 1;
+    color: #fff;
+  }
+
+  .price-later {
+    font-size: 13px;
+    color: rgba(255,255,255,0.4);
+    margin-top: 6px;
+    text-decoration: line-through;
+  }
+
+  .card-includes {
+    list-style: none;
+    margin-bottom: 32px;
+  }
+
+  .card-includes li {
+    font-size: 14px;
+    color: rgba(255,255,255,0.75);
+    padding: 7px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .card-includes li::before {
+    content: '✓';
+    color: var(--accent);
+    font-weight: 600;
+    font-size: 13px;
+    flex-shrink: 0;
+  }
+
+  .card-cta {
+    display: block;
+    text-align: center;
+    background: var(--accent);
+    color: #fff;
+    padding: 15px;
+    border-radius: 5px;
+    font-weight: 500;
+    font-size: 15px;
+    text-decoration: none;
+    transition: background 0.2s;
+  }
+
+  .card-cta:hover { background: var(--accent-light); }
+
+  .card-note {
+    font-size: 12px;
+    color: rgba(255,255,255,0.35);
+    text-align: center;
+    margin-top: 12px;
+  }
+
+  /* SECTIONS */
+  section { padding: var(--section-gap) 40px; }
+
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .container-narrow {
+    max-width: 760px;
+    margin: 0 auto;
+  }
+
+  .section-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 20px;
+  }
+
+  h2 {
+    font-family: var(--serif);
+    font-size: clamp(32px, 4vw, 48px);
+    font-weight: 400;
+    line-height: 1.15;
+    margin-bottom: 20px;
+  }
+
+  .section-intro {
+    font-size: 18px;
+    color: var(--mid);
+    line-height: 1.7;
+    font-weight: 300;
+    margin-bottom: 48px;
+  }
+
+  /* VOOR WIE */
+  .voor-wie { background: var(--paper); }
+
+  .bullets-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+
+  .bullet-item {
+    background: var(--warm-white);
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    padding: 28px 28px 28px 24px;
+    position: relative;
+    padding-left: 56px;
+  }
+
+  .bullet-item::before {
+    content: attr(data-num);
+    position: absolute;
+    left: 22px;
+    top: 28px;
+    font-family: var(--serif);
+    font-size: 28px;
+    color: var(--accent);
+    line-height: 1;
+    font-style: italic;
+  }
+
+  .bullet-item p {
+    font-size: 16px;
+    line-height: 1.55;
+    color: var(--ink);
+  }
+
+  /* WAT JE KRIJGT */
+  .deliverables-list {
+    display: grid;
+    gap: 0;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .deliverable {
+    display: grid;
+    grid-template-columns: 56px 1fr;
+    align-items: start;
+    padding: 28px 32px 28px 0;
+    border-bottom: 1px solid var(--border);
+    gap: 0;
+    transition: background 0.15s;
+  }
+
+  .deliverable:last-child { border-bottom: none; }
+  .deliverable:hover { background: var(--paper); }
+
+  .deliverable-num {
+    font-family: var(--serif);
+    font-size: 13px;
+    color: rgba(14,14,13,0.3);
+    padding: 2px 0 0 32px;
+    font-style: italic;
+  }
+
+  .deliverable-content h3 {
+    font-size: 16px;
+    font-weight: 500;
+    margin-bottom: 4px;
+    color: var(--ink);
+  }
+
+  .deliverable-content p {
+    font-size: 14px;
+    color: var(--mid);
+    line-height: 1.5;
+  }
+
+  /* WAAROM WERKT HET */
+  .why-section { background: var(--ink); color: var(--warm-white); }
+  .why-section h2 { color: #fff; }
+  .why-section .section-label { color: var(--accent); }
+  .why-section .section-intro { color: rgba(255,255,255,0.55); }
+
+  .why-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .why-item {
+    background: rgba(255,255,255,0.03);
+    padding: 36px 32px;
+    transition: background 0.2s;
+  }
+
+  .why-item:hover { background: rgba(255,255,255,0.06); }
+
+  .why-num {
+    font-family: var(--serif);
+    font-size: 42px;
+    color: var(--accent);
+    font-style: italic;
+    line-height: 1;
+    margin-bottom: 16px;
+  }
+
+  .why-item h3 {
+    font-size: 16px;
+    font-weight: 500;
+    color: #fff;
+    margin-bottom: 10px;
+  }
+
+  .why-item p {
+    font-size: 14px;
+    color: rgba(255,255,255,0.5);
+    line-height: 1.6;
+  }
+
+  /* PILOT */
+  .pilot-section { background: var(--paper); }
+
+  .pilot-box {
+    background: var(--warm-white);
+    border: 2px solid var(--ink);
+    border-radius: 10px;
+    padding: 60px 56px;
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 60px;
+    align-items: center;
+  }
+
+  .pilot-box h2 { margin-bottom: 16px; }
+
+  .pilot-details {
+    font-size: 15px;
+    color: var(--mid);
+    line-height: 1.7;
+    margin-bottom: 0;
+  }
+
+  .pilot-price-side { text-align: center; }
+
+  .pilot-badge-lg {
+    display: inline-block;
+    background: var(--accent);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 6px 14px;
+    border-radius: 4px;
+    margin-bottom: 20px;
+  }
+
+  .pilot-price {
+    font-family: var(--serif);
+    font-size: 64px;
+    color: var(--ink);
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+
+  .pilot-later {
+    font-size: 14px;
+    color: rgba(14,14,13,0.35);
+    text-decoration: line-through;
+    margin-bottom: 24px;
+  }
+
+  .pilot-cta {
+    display: block;
+    background: var(--accent);
+    color: #fff;
+    padding: 15px 28px;
+    border-radius: 5px;
+    font-weight: 500;
+    font-size: 15px;
+    text-decoration: none;
+    transition: background 0.2s;
+    text-align: center;
+  }
+
+  .pilot-cta:hover { background: var(--accent-light); }
+
+  .pilot-spots {
+    font-size: 12px;
+    color: var(--mid);
+    margin-top: 10px;
+    text-align: center;
+  }
+
+  /* PROCESS */
+  .process-section {}
+
+  .process-steps {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0;
+    position: relative;
+  }
+
+  .process-steps::before {
+    content: '';
+    position: absolute;
+    top: 24px;
+    left: 10%;
+    right: 10%;
+    height: 1px;
+    background: var(--border);
+    z-index: 0;
+  }
+
+  .process-step {
+    text-align: center;
+    padding: 0 16px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .step-circle {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--warm-white);
+    border: 2px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+    font-family: var(--serif);
+    font-size: 18px;
+    color: var(--accent);
+    font-style: italic;
+    font-weight: 400;
+    transition: all 0.2s;
+  }
+
+  .process-step:hover .step-circle {
+    border-color: var(--accent);
+    background: var(--accent);
+    color: #fff;
+  }
+
+  .process-step h4 {
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: var(--ink);
+  }
+
+  .process-step p {
+    font-size: 12px;
+    color: var(--mid);
+    line-height: 1.5;
+  }
+
+  /* FAQ */
+  .faq-section { background: var(--paper); }
+
+  .faq-list { display: grid; gap: 0; }
+
+  .faq-item {
+    border-bottom: 1px solid var(--border);
+  }
+
+  .faq-question {
+    width: 100%;
+    background: none;
+    border: none;
+    text-align: left;
+    padding: 22px 0;
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--ink);
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    font-family: var(--sans);
+  }
+
+  .faq-question:hover { color: var(--accent); }
+
+  .faq-icon {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    position: relative;
+    opacity: 0.4;
+    transition: opacity 0.2s;
+  }
+
+  .faq-icon::before, .faq-icon::after {
+    content: '';
+    position: absolute;
+    background: currentColor;
+    border-radius: 1px;
+  }
+
+  .faq-icon::before { width: 12px; height: 1.5px; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+  .faq-icon::after { width: 1.5px; height: 12px; top: 50%; left: 50%; transform: translate(-50%, -50%); transition: transform 0.2s; }
+
+  .faq-item.open .faq-icon { opacity: 1; }
+  .faq-item.open .faq-icon::after { transform: translate(-50%, -50%) rotate(90deg); }
+  .faq-item.open .faq-question { color: var(--accent); }
+
+  .faq-answer {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease, padding 0.3s;
+  }
+
+  .faq-answer-inner {
+    padding-bottom: 22px;
+    font-size: 15px;
+    color: var(--mid);
+    line-height: 1.7;
+    max-width: 680px;
+  }
+
+  .faq-item.open .faq-answer { max-height: 300px; }
+
+  /* FINAL CTA */
+  .final-cta {
+    background: var(--ink);
+    padding: 100px 40px;
+    text-align: center;
+  }
+
+  .final-cta h2 {
+    font-family: var(--serif);
+    font-size: clamp(36px, 5vw, 58px);
+    color: #fff;
+    font-weight: 400;
+    margin-bottom: 20px;
+    max-width: 700px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .final-cta h2 em { color: var(--accent); font-style: italic; }
+
+  .final-cta p {
+    font-size: 17px;
+    color: rgba(255,255,255,0.5);
+    margin-bottom: 40px;
+    font-weight: 300;
+  }
+
+  .final-cta .btn-primary {
+    font-size: 16px;
+    padding: 18px 38px;
+  }
+
+  .final-note {
+    font-size: 13px;
+    color: rgba(255,255,255,0.3);
+    margin-top: 18px;
+  }
+
+  /* FOOTER */
+  footer {
+    padding: 32px 40px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 13px;
+    color: var(--mid);
+  }
+
+  /* FADE IN */
+  .fade-up {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+
+  .fade-up.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* RESPONSIVE */
+  @media (max-width: 900px) {
+    :root { --section-gap: 80px; }
+    nav { padding: 16px 20px; }
+    section { padding: var(--section-gap) 20px; }
+    .hero { padding: 100px 20px 60px; }
+
+    .hero-inner { grid-template-columns: 1fr; gap: 48px; }
+    .hero-card { order: -1; }
+
+    .bullets-grid { grid-template-columns: 1fr; }
+    .why-grid { grid-template-columns: 1fr; }
+    .process-steps { grid-template-columns: 1fr 1fr; gap: 24px; }
+    .process-steps::before { display: none; }
+
+    .pilot-box {
+      grid-template-columns: 1fr;
+      padding: 40px 28px;
+      gap: 40px;
+    }
+
+    footer { flex-direction: column; gap: 8px; text-align: center; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="logo">BOLD<span>700</span></a>
+  <a href="https://payment-links.mollie.com/payment/2j2RgBM2fubzTHtgqpmLw" class="nav-cta" target="_blank" rel="noopener">Reserveer een plek</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-inner">
+    <div class="hero-left">
+      <p class="hero-label fade-up">BOLD700 Growth Review</p>
+      <h1 class="fade-up">Je website haalt meer uit<br>je bezoekers <em>dan je denkt.</em><br>Maar levert ze niet op.</h1>
+      <p class="hero-sub fade-up">Een persoonlijke website-review die laat zien waar je kansen laat liggen en wat je als eerste moet aanpakken om meer aanvragen te krijgen.</p>
+      <div class="hero-cta-group fade-up">
+        <a href="https://payment-links.mollie.com/payment/2j2RgBM2fubzTHtgqpmLw" class="btn-primary" target="_blank" rel="noopener">Reserveer je Growth Review</a>
+        <a href="#wat-je-krijgt" class="btn-secondary">Zie wat je krijgt &darr;</a>
+      </div>
+      <p class="hero-trust fade-up">Nog 3 pilotplekken beschikbaar in april</p>
+    </div>
+
+    <div class="hero-card fade-up">
+      <p class="hero-card-label">Pilotaanbod</p>
+      <p class="hero-card-title">BOLD700<br>Growth Review</p>
+      <div class="price-block">
+        <span class="pilot-badge">Pilotprijs</span>
+        <div class="price-main">€998</div>
+        <div class="price-later">Reguliere prijs: €1.500</div>
+      </div>
+      <ul class="card-includes">
+        <li>Persoonlijke expert review</li>
+        <li>Rapport met prioriteiten</li>
+        <li>Concrete actiepunten</li>
+        <li>Presentatie van de uitkomsten</li>
+        <li>Eenmalige vaste prijs</li>
+      </ul>
+      <a href="https://payment-links.mollie.com/payment/2j2RgBM2fubzTHtgqpmLw" class="card-cta" target="_blank" rel="noopener">Claim een pilotplek</a>
+      <p class="card-note">Betalen gaat vooraf. Intake volgt daarna.</p>
+    </div>
+  </div>
+</section>
+
+<!-- VOOR WIE -->
+<section class="voor-wie">
+  <div class="container">
+    <div class="container-narrow" style="max-width:640px;">
+      <p class="section-label fade-up">Voor wie</p>
+      <h2 class="fade-up">Dit is voor jou als je website verkeer krijgt, maar de aanvragen achterblijven.</h2>
+      <p class="section-intro fade-up">Geen technische startup, geen groot bureau. Gewoon een bedrijf dat goede dienstverlening biedt en meer wil halen uit wat er al staat.</p>
+    </div>
+    <div class="bullets-grid">
+      <div class="bullet-item fade-up" data-num="1">
+        <p>Je website trekt bezoekers, maar het levert te weinig concrete aanvragen op.</p>
+      </div>
+      <div class="bullet-item fade-up" data-num="2">
+        <p>Je voelt dat er frictie zit, maar je weet niet precies waar het misgaat.</p>
+      </div>
+      <div class="bullet-item fade-up" data-num="3">
+        <p>Je wil geen maanden redesignen zonder te weten wat er echt toe doet.</p>
+      </div>
+      <div class="bullet-item fade-up" data-num="4">
+        <p>Je wil eerst scherp hebben wat de grootste kansen zijn, voor je geld uitgeeft.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WAT JE KRIJGT -->
+<section id="wat-je-krijgt">
+  <div class="container">
+    <div class="container-narrow" style="max-width:640px;">
+      <p class="section-label fade-up">Wat je krijgt</p>
+      <h2 class="fade-up">Niet een rapport vol jargon. Wel een duidelijk overzicht van wat je kunt doen.</h2>
+    </div>
+    <div class="deliverables-list fade-up">
+      <div class="deliverable">
+        <span class="deliverable-num">01</span>
+        <div class="deliverable-content">
+          <h3>Review van je huidige website</h3>
+          <p>We bekijken je website als een kritische bezoeker en als een UX-expert. Welke vragen blijven onbeantwoord? Waar haakt iemand af?</p>
+        </div>
+      </div>
+      <div class="deliverable">
+        <span class="deliverable-num">02</span>
+        <div class="deliverable-content">
+          <h3>Overzicht van gemiste kansen</h3>
+          <p>Waar laat je nu aanvragen liggen? Wat zorgt ervoor dat bezoekers niet doorklikken of contact opnemen?</p>
+        </div>
+      </div>
+      <div class="deliverable">
+        <span class="deliverable-num">03</span>
+        <div class="deliverable-content">
+          <h3>Concrete verbeterpunten</h3>
+          <p>Geen vage aanbevelingen, maar specifieke punten: wat staat er op de verkeerde plek, wat mist er, wat werkt averechts.</p>
+        </div>
+      </div>
+      <div class="deliverable">
+        <span class="deliverable-num">04</span>
+        <div class="deliverable-content">
+          <h3>Prioritering: wat heeft de meeste impact</h3>
+          <p>Je krijgt een duidelijk onderscheid tussen wat je als eerste oppakt en wat later kan. Geen eindeloze lijst, wel een logische volgorde.</p>
+        </div>
+      </div>
+      <div class="deliverable">
+        <span class="deliverable-num">05</span>
+        <div class="deliverable-content">
+          <h3>Actiepunten die direct uitvoerbaar zijn</h3>
+          <p>Veel verbeteringen kun je zelf of via je huidige bouwer doorvoeren. We schrijven het zo op dat het direct bruikbaar is.</p>
+        </div>
+      </div>
+      <div class="deliverable">
+        <span class="deliverable-num">06</span>
+        <div class="deliverable-content">
+          <h3>Presentatie van de uitkomsten</h3>
+          <p>We lopen de review samen door, zodat je begrijpt wat er staat en wat de volgende stap is.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WAAROM WERKT HET -->
+<section class="why-section">
+  <div class="container">
+    <div class="container-narrow" style="max-width:640px;">
+      <p class="section-label fade-up">Waarom dit werkt</p>
+      <h2 class="fade-up">Eerst zien wat er lekt. Dan pas verbeteren.</h2>
+      <p class="section-intro fade-up">Zonder inzicht verbeter je op gevoel. Dat kost tijd, geld en levert zelden het resultaat dat je verwacht.</p>
+    </div>
+    <div class="why-grid fade-up">
+      <div class="why-item">
+        <div class="why-num">1.</div>
+        <h3>Je weet precies waar het misgaat</h3>
+        <p>Geen aannames, geen buikgevoel. Je krijgt een helder beeld van wat bezoekers tegenhoudt om contact op te nemen.</p>
+      </div>
+      <div class="why-item">
+        <div class="why-num">2.</div>
+        <h3>Je werkt gericht, niet breed</h3>
+        <p>Je weet wat als eerste impact heeft. Dat voorkomt dat je energie steekt in zaken die er nauwelijks toe doen.</p>
+      </div>
+      <div class="why-item">
+        <div class="why-num">3.</div>
+        <h3>Je betaalt eenmalig een vaste prijs</h3>
+        <p>Geen lopend uurtarief, geen open einde. Je weet vooraf wat je krijgt en wat het kost.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- NA BETALING -->
+<section class="process-section">
+  <div class="container">
+    <div class="container-narrow" style="max-width:640px;">
+      <p class="section-label fade-up">Hoe het werkt</p>
+      <h2 class="fade-up">Van betaling tot rapport in vijf stappen.</h2>
+    </div>
+    <div class="process-steps fade-up">
+      <div class="process-step">
+        <div class="step-circle">1</div>
+        <h4>Betaling</h4>
+        <p>Je reserveert je plek via de betaalpagina.</p>
+      </div>
+      <div class="process-step">
+        <div class="step-circle">2</div>
+        <h4>Intake</h4>
+        <p>Korte vragenlijst over je doelgroep en doelstellingen.</p>
+      </div>
+      <div class="process-step">
+        <div class="step-circle">3</div>
+        <h4>Review</h4>
+        <p>We doen de review op basis van jouw website en input.</p>
+      </div>
+      <div class="process-step">
+        <div class="step-circle">4</div>
+        <h4>Rapport</h4>
+        <p>Je ontvangt een helder, actiegericht overzicht.</p>
+      </div>
+      <div class="process-step">
+        <div class="step-circle">5</div>
+        <h4>Presentatie</h4>
+        <p>We lopen het samen door. Daarna weet je wat te doen.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PILOT -->
+<section class="pilot-section" id="pilot">
+  <div class="container">
+    <div class="pilot-box fade-up">
+      <div>
+        <p class="section-label">Pilotaanbod</p>
+        <h2>Eerste klanten, vaste lage prijs.</h2>
+        <p class="pilot-details">
+          We brengen de Growth Review nu uit als pilotaanbod voor een beperkt aantal bedrijven. De prijs is bewust lager dan de reguliere prijs, omdat we met een kleine groep willen starten en de aanpak verder willen aanslijpen.
+          <br><br>
+          Heb je een dienstverlenend bedrijf met een bestaande website die meer moet opleveren? Dan is dit het juiste moment om in te stappen.
+        </p>
+      </div>
+      <div class="pilot-price-side">
+        <span class="pilot-badge-lg">Pilotprijs</span>
+        <div class="pilot-price">€998</div>
+        <div class="pilot-later">Reguliere prijs: €1.500</div>
+        <a href="https://payment-links.mollie.com/payment/2j2RgBM2fubzTHtgqpmLw" class="pilot-cta" target="_blank" rel="noopener">Koop nu voor €998</a>
+        <p class="pilot-spots">Pilotprijs voor de eerste 3 bedrijven</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="faq-section" id="faq">
+  <div class="container">
+    <div class="container-narrow">
+      <p class="section-label fade-up">Veelgestelde vragen</p>
+      <h2 class="fade-up">Kort en to the point.</h2>
+      <div class="faq-list fade-up">
+
+        <div class="faq-item">
+          <button class="faq-question" onclick="toggleFaq(this)">
+            Voor wie is de Growth Review bedoeld?
+            <span class="faq-icon"></span>
+          </button>
+          <div class="faq-answer">
+            <div class="faq-answer-inner">
+              Voor dienstverlenende bedrijven met een bestaande website die te weinig aanvragen oplevert. Denk aan adviesbureaus, accountants, coaches, installateurs, bureaus of andere service-gedreven bedrijven. Niet voor startups in een vroeg stadium of consumenten.
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question" onclick="toggleFaq(this)">
+            Wat krijg ik precies?
+            <span class="faq-icon"></span>
+          </button>
+          <div class="faq-answer">
+            <div class="faq-answer-inner">
+              Een persoonlijke review van je website, een overzicht van gemiste kansen, concrete verbeterpunten, een duidelijke prioritering en een presentatie waarbij we het samen doornemen. Geen generiek rapport, maar iets dat specifiek op jouw situatie is toegespitst.
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question" onclick="toggleFaq(this)">
+            Hoe snel ontvang ik de review?
+            <span class="faq-icon"></span>
+          </button>
+          <div class="faq-answer">
+            <div class="faq-answer-inner">
+              Na betaling en het invullen van de korte intake plannen we de review in. Doorgaans ontvang je het rapport binnen 5 tot 7 werkdagen, gevolgd door een presentatiemoment.
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question" onclick="toggleFaq(this)">
+            Wat gebeurt er na betaling?
+            <span class="faq-icon"></span>
+          </button>
+          <div class="faq-answer">
+            <div class="faq-answer-inner">
+              Je ontvangt een bevestiging met een korte vragenlijst. Daarin vragen we naar je doelgroep, wat je huidige doel is en welke vragen je hebt over je website. Op basis daarvan starten we met de review.
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question" onclick="toggleFaq(this)">
+            Kunnen jullie de verbeteringen ook uitvoeren?
+            <span class="faq-icon"></span>
+          </button>
+          <div class="faq-answer">
+            <div class="faq-answer-inner">
+              Dat kan. Na de review kun je de verbeterpunten zelf of via een eigen partij uitvoeren. Als je wil dat wij dat oppakken, kijken we samen wat daarvoor nodig is. Dat is een apart traject met een apart aanbod.
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FINAL CTA -->
+<section class="final-cta" id="betalen">
+  <h2 class="fade-up">Meer halen uit<br>je website, <em>zonder</em><br>opnieuw te beginnen.</h2>
+  <p class="fade-up">Scherp in beeld wat er nu misgaat. Dan weet je wat je moet doen.</p>
+  <a href="https://payment-links.mollie.com/payment/2j2RgBM2fubzTHtgqpmLw" class="btn-primary fade-up" style="font-size:16px;padding:18px 38px;" target="_blank" rel="noopener">Start je Growth Review &nbsp;&rarr;</a>
+  <p class="final-note fade-up">Pilotprijs €998 &nbsp;|&nbsp; Nog 3 plekken beschikbaar &nbsp;|&nbsp; Eenmalig, geen abonnement</p>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <span><strong>BOLD700</strong> &mdash; Utrecht</span>
+  <span>hello@bold700.com</span>
+</footer>
+
+<script>
+  // FAQ toggle
+  function toggleFaq(btn) {
+    const item = btn.closest('.faq-item');
+    const isOpen = item.classList.contains('open');
+    document.querySelectorAll('.faq-item.open').forEach(el => el.classList.remove('open'));
+    if (!isOpen) item.classList.add('open');
+  }
+
+  // Scroll reveal
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        // stagger children
+        const children = entry.target.parentElement?.querySelectorAll('.fade-up');
+        if (children) {
+          let i = 0;
+          children.forEach(child => {
+            if (!child.classList.contains('visible')) {
+              child.style.transitionDelay = (i * 0.08) + 's';
+              i++;
+            }
+          });
+        }
+      }
+    });
+  }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+
+  document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+
+  // Hero elements animate immediately
+  setTimeout(() => {
+    document.querySelectorAll('.hero .fade-up').forEach((el, i) => {
+      setTimeout(() => el.classList.add('visible'), i * 100);
+    });
+  }, 100);
+</script>
+</body>
+</html>
+html>
