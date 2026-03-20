@@ -670,7 +670,7 @@
     </svg>
   </div>
   <h2>Top. We hebben je intake ontvangen.</h2>
-  <p>Je review wordt nu voorbereid. Je ontvangt de volgende stap per mail.</p>
+  <p>Je review wordt nu voorbereid. Je ontvangt de volgende stap per mail. Je kunt nu ook direct door naar het dashboard.</p>
   <div class="success-steps">
     <div class="success-step"><span class="s-dot" style="background:var(--accent)">1</span>Intake ontvangen</div>
     <div class="success-step"><span class="s-dot">2</span>Review wordt klaargezet</div>
@@ -754,6 +754,7 @@
       document.getElementById('formPage').style.display = 'none';
       document.getElementById('successScreen').style.display = 'block';
       window.scrollTo({ top: 0, behavior: 'smooth' });
+      setTimeout(() => { window.location.href = '/growth-review-dashboard.html'; }, 1800);
     }, 800);
   }
 </script>
