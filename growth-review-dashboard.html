@@ -105,6 +105,29 @@
   .btn-sm-primary { background: var(--accent); color: #fff; }
   .btn-sm-primary:hover { background: var(--accent-light); }
   .content { padding: 28px 32px; flex: 1; }
+  .auth-gate {
+    min-height: 100vh;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 32px;
+    background: var(--paper);
+  }
+  .auth-gate.open { display: flex; }
+  .auth-card {
+    width: 100%;
+    max-width: 520px;
+    background: var(--warm-white);
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    padding: 28px;
+  }
+  .auth-card h2 { font-family: var(--serif); font-size: 32px; font-weight: 400; margin-bottom: 12px; }
+  .auth-card p { color: var(--mid); margin-bottom: 18px; }
+  .auth-row { display: grid; gap: 12px; margin-top: 16px; }
+  .auth-input { width: 100%; padding: 12px 14px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 14px; background: #fff; }
+  .auth-msg { margin-top: 12px; font-size: 13px; color: var(--mid); min-height: 18px; }
+
   .demo-notice {
     background: rgba(200,82,26,0.06); border: 1.5px dashed rgba(200,82,26,0.3); border-radius: 8px;
     padding: 14px 18px; display: flex; align-items: center; gap: 12px; margin-bottom: 20px; font-size: 13px; color: var(--mid);
@@ -210,6 +233,7 @@
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
 <script>
   const firebaseConfig = {
     apiKey: "AIzaSyDPQdEZk574PO7ft7aHTSPjzxwgSXFtf-o",
@@ -222,9 +246,23 @@
   };
   if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
+  const auth = firebase.auth();
 </script>
 </head>
 <body>
+<div class="auth-gate" id="authGate">
+  <div class="auth-card">
+    <h2>Dashboard login</h2>
+    <p>Dit dashboard is alleen voor intern gebruik. Log in met je bestaande BOLD700 account.</p>
+    <div class="auth-row">
+      <input id="loginEmail" class="auth-input" type="email" placeholder="E-mailadres">
+      <input id="loginPassword" class="auth-input" type="password" placeholder="Wachtwoord">
+      <button class="btn-sm btn-sm-primary" onclick="loginDashboard()">Inloggen</button>
+    </div>
+    <div class="auth-msg" id="authMsg"></div>
+  </div>
+</div>
+<div id="appShell" style="display:none">
 <nav class="sidebar">
   <a href="#" class="sidebar-logo">BOLD<span>700</span></a>
   <div class="sidebar-section">
@@ -411,7 +449,44 @@
     };
     allReviews.unshift(entry); saveReviews(); render();
   }
-  render();
+  async function loginDashboard() {
+    const email = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPassword').value;
+    const msg = document.getElementById('authMsg');
+    msg.textContent = 'Bezig met inloggen...';
+    try {
+      await auth.signInWithEmailAndPassword(email, password);
+      msg.textContent = '';
+    } catch (e) {
+      msg.textContent = 'Login mislukt. Controleer je gegevens.';
+    }
+  }
+
+  auth.onAuthStateChanged(async (user) => {
+    if (!user) {
+      document.getElementById('authGate').classList.add('open');
+      document.getElementById('appShell').style.display = 'none';
+      return;
+    }
+    try {
+      const profile = await db.collection('users').doc(user.uid).get();
+      const role = profile.exists ? profile.data().role : null;
+      if (role !== 'admin' && role !== 'auditor') {
+        await auth.signOut();
+        document.getElementById('authMsg').textContent = 'Geen toegang tot dit dashboard.';
+        document.getElementById('authGate').classList.add('open');
+        document.getElementById('appShell').style.display = 'none';
+        return;
+      }
+      document.getElementById('authGate').classList.remove('open');
+      document.getElementById('appShell').style.display = '';
+      await render();
+    } catch (e) {
+      document.getElementById('authMsg').textContent = 'Kon profiel niet laden.';
+      document.getElementById('authGate').classList.add('open');
+      document.getElementById('appShell').style.display = 'none';
+    }
+  });
 </script>
 </body>
 </html>
