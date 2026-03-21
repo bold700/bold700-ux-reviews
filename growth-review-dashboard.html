@@ -105,7 +105,7 @@
   .btn-sm-outline:hover { border-color: rgba(255,255,255,0.34); color: #fff; background: rgba(255,255,255,0.06); }
   .btn-sm-primary { background: var(--accent); color: #fff; }
   .btn-sm-primary:hover { background: var(--accent-light); }
-  .content { padding: 28px 32px; flex: 1; }
+  .content { padding: 28px 32px; flex: 1; width: 100%; max-width: 100%; overflow-x: hidden; }
   .auth-gate {
     min-height: 100vh;
     display: none;
@@ -147,7 +147,7 @@
     border: 1.5px solid var(--border); background: var(--warm-white); color: var(--mid); transition: all 0.15s; font-family: var(--sans);
   }
   .filter-pill.active { background: var(--ink); border-color: var(--ink); color: #fff; }
-  .table-wrap { background: var(--warm-white); border: 1.5px solid var(--border); border-radius: 10px; overflow: hidden; }
+  .table-wrap { background: var(--warm-white); border: 1.5px solid var(--border); border-radius: 10px; overflow-x: auto; width: 100%; max-width: 100%; }
   table { width: 100%; border-collapse: collapse; }
   thead th {
     background: var(--paper); padding: 12px 16px; text-align: left; font-size: 11px; font-weight: 600;
@@ -230,8 +230,27 @@
 
 
   @media (max-width: 1100px) { .stats-row { grid-template-columns: 1fr 1fr; } }
-  @media (max-width: 900px) { .sidebar { display: none; } .content { padding: 20px 16px; } .topbar { padding: 14px 16px; } .detail-grid { grid-template-columns: 1fr; } }
-  @media (max-width: 600px) { .stats-row { grid-template-columns: 1fr; } .topbar-actions { gap: 8px; } .btn-sm { padding: 8px 12px; } .panel-body { padding: 20px; } .panel-header { padding: 18px 20px; } }
+  @media (max-width: 900px) {
+    .app-shell { display: block; }
+    .sidebar { display: none; }
+    .main { width: 100%; max-width: 100%; }
+    .content { padding: 20px 16px; width: 100%; max-width: 100%; overflow-x: hidden; }
+    .topbar { padding: 14px 16px; width: 100%; max-width: 100%; }
+    .detail-grid { grid-template-columns: 1fr; }
+    .site-footer { padding: 24px 16px; }
+  }
+  @media (max-width: 600px) {
+    .stats-row { grid-template-columns: 1fr; }
+    .topbar { flex-wrap: wrap; gap: 10px; align-items: flex-start; }
+    .topbar-actions { gap: 8px; width: 100%; }
+    .btn-sm { padding: 8px 12px; }
+    .table-wrap { border-radius: 8px; }
+    table { min-width: 640px; }
+    .panel-body { padding: 20px; }
+    .panel-header { padding: 18px 20px; }
+    .detail-panel { width: 100vw; }
+    .site-footer-inner { width: 100%; }
+  }
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
@@ -282,7 +301,7 @@
 </nav>
 <div class="main">
   <div class="topbar">
-    <a href="/bold700-ux-review-landingpage.html" class="topbar-brand">BOLD<span>700</span></a>
+    <a href="/" class="topbar-brand">BOLD<span>700</span></a>
     <div class="topbar-actions">
       <button class="btn-sm btn-sm-primary" onclick="addDemoEntry()">Voeg demo toe</button>
     </div>
