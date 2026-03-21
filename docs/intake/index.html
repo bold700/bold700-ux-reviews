@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bedankt - BOLD700 Growth Review</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --ink: #0e0e0d;
+    --paper: #f5f2ec;
+    --warm-white: #faf8f4;
+    --accent: #c8521a;
+    --accent-light: #e8703a;
+    --mid: #6b6560;
+    --border: #ddd8d0;
+    --serif: 'Instrument Serif', Georgia, serif;
+    --sans: 'DM Sans', system-ui, sans-serif;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: var(--sans);
+    background: var(--warm-white);
+    color: var(--ink);
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+
+  .topbar {
+    background: var(--ink);
+    color: rgba(255,255,255,0.9);
+    padding: 20px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 14px;
+  }
+
+  .topbar-logo {
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-size: 15px;
+    color: #fff;
+    text-decoration: none;
+  }
+
+  .topbar-logo span { color: var(--accent); }
+
+  .topbar-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: rgba(255,255,255,0.6);
+  }
+
+  .topbar-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 9px 16px;
+    border: 1px solid rgba(255,255,255,0.18);
+    border-radius: 6px;
+    color: rgba(255,255,255,0.88);
+    text-decoration: none;
+    font-size: 14px;
+  }
+
+  .topbar-link:hover {
+    color: #fff;
+    border-color: rgba(255,255,255,0.34);
+  }
+
+  .status-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #4ade80;
+    display: inline-block;
+    box-shadow: 0 0 6px rgba(74,222,128,0.6);
+    animation: pulse 2s ease infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+
+  .page {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 60px 24px 100px;
+  }
+
+  .confirm-header {
+    margin-bottom: 52px;
+    animation: slideUp 0.5s ease forwards;
+  }
+
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .confirm-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #f0fdf4;
+    border: 1.5px solid #bbf7d0;
+    border-radius: 100px;
+    padding: 6px 16px 6px 10px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #166534;
+    margin-bottom: 24px;
+  }
+
+  .confirm-badge svg { width: 16px; height: 16px; }
+
+  .confirm-header h1 {
+    font-family: var(--serif);
+    font-size: clamp(30px, 4vw, 42px);
+    font-weight: 400;
+    line-height: 1.15;
+    margin-bottom: 14px;
+    color: var(--ink);
+  }
+
+  .confirm-header p {
+    font-size: 17px;
+    color: var(--mid);
+    font-weight: 300;
+    line-height: 1.6;
+    max-width: 540px;
+  }
+
+  .progress-bar {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin-bottom: 52px;
+    animation: slideUp 0.5s 0.1s ease both;
+  }
+
+  .progress-step {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+  }
+
+  .progress-step:last-child { flex: 0; }
+
+  .step-dot {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 600;
+    flex-shrink: 0;
+    transition: all 0.3s;
+  }
+
+  .step-dot.done { background: var(--ink); color: #fff; }
+  .step-dot.active { background: var(--accent); color: #fff; box-shadow: 0 0 0 4px rgba(200,82,26,0.15); }
+  .step-dot.pending { background: var(--border); color: var(--mid); }
+
+  .step-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--mid);
+    white-space: nowrap;
+  }
+
+  .step-label.active-label { color: var(--ink); font-weight: 600; }
+
+  .progress-line {
+    flex: 1;
+    height: 1.5px;
+    background: var(--border);
+    margin: 0 8px;
+  }
+
+  .progress-line.done-line { background: var(--ink); }
+
+  .form-block {
+    background: var(--warm-white);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    margin-bottom: 20px;
+    overflow: hidden;
+    animation: slideUp 0.5s ease both;
+  }
+
+  .form-block:nth-child(1) { animation-delay: 0.15s; }
+  .form-block:nth-child(2) { animation-delay: 0.25s; }
+  .form-block:nth-child(3) { animation-delay: 0.35s; }
+
+  .block-header {
+    padding: 20px 28px 18px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .block-num {
+    font-family: var(--serif);
+    font-size: 18px;
+    color: var(--accent);
+    font-style: italic;
+    line-height: 1;
+    width: 24px;
+    flex-shrink: 0;
+  }
+
+  .block-header h2 {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+
+  .block-header p {
+    font-size: 13px;
+    color: var(--mid);
+    margin-top: 2px;
+  }
+
+  .block-fields {
+    padding: 24px 28px;
+    display: grid;
+    gap: 18px;
+  }
+
+  .field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+  }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+  }
+
+  label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ink);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  label .req {
+    color: var(--accent);
+    font-size: 11px;
+  }
+
+  input[type="text"],
+  input[type="email"],
+  input[type="url"],
+  textarea {
+    font-family: var(--sans);
+    font-size: 15px;
+    color: var(--ink);
+    background: var(--paper);
+    border: 1.5px solid var(--border);
+    border-radius: 6px;
+    padding: 11px 14px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    width: 100%;
+    -webkit-appearance: none;
+  }
+
+  input:focus, textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(200,82,26,0.1);
+    background: #fff;
+  }
+
+  textarea {
+    resize: vertical;
+    min-height: 90px;
+    line-height: 1.55;
+  }
+
+  .chip-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .chip {
+    position: relative;
+    cursor: pointer;
+  }
+
+  .chip input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+
+  .chip-label {
+    display: inline-block;
+    padding: 9px 16px;
+    border: 1.5px solid var(--border);
+    border-radius: 6px;
+    font-size: 14px;
+    color: var(--mid);
+    background: var(--paper);
+    cursor: pointer;
+    transition: all 0.15s;
+    user-select: none;
+    line-height: 1.3;
+  }
+
+  .chip input:checked + .chip-label {
+    border-color: var(--accent);
+    background: #fff5f0;
+    color: var(--ink);
+    font-weight: 500;
+  }
+
+  .chip-label:hover {
+    border-color: rgba(200,82,26,0.4);
+    color: var(--ink);
+  }
+
+  .submit-area {
+    margin-top: 32px;
+    animation: slideUp 0.5s 0.45s ease both;
+  }
+
+  .submit-btn {
+    width: 100%;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 7px;
+    padding: 18px 28px;
+    font-family: var(--sans);
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  .submit-btn:hover { background: var(--accent-light); transform: translateY(-1px); }
+  .submit-btn:active { transform: translateY(0); }
+
+  .submit-note {
+    text-align: center;
+    font-size: 13px;
+    color: var(--mid);
+    margin-top: 14px;
+  }
+
+  .success-screen {
+    display: none;
+    text-align: center;
+    padding: 80px 24px;
+    animation: slideUp 0.5s ease forwards;
+  }
+
+  .success-icon {
+    width: 72px;
+    height: 72px;
+    background: #f0fdf4;
+    border: 2px solid #bbf7d0;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 28px;
+  }
+
+  .success-icon svg { width: 32px; height: 32px; color: #16a34a; }
+
+  .success-screen h2 {
+    font-family: var(--serif);
+    font-size: 34px;
+    font-weight: 400;
+    margin-bottom: 16px;
+    color: var(--ink);
+  }
+
+  .success-screen p {
+    font-size: 17px;
+    color: var(--mid);
+    line-height: 1.65;
+    font-weight: 300;
+    max-width: 440px;
+    margin: 0 auto 32px;
+  }
+
+  .success-steps {
+    display: inline-flex;
+    flex-direction: column;
+    gap: 12px;
+    text-align: left;
+    background: var(--paper);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 24px 28px;
+    max-width: 380px;
+    width: 100%;
+  }
+
+  .success-step {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 14px;
+    color: var(--mid);
+  }
+
+  .success-step .s-dot {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--ink);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+
+  
+  .site-footer {
+    border-top: 1px solid var(--border);
+    padding: 28px 40px;
+    background: var(--warm-white);
+  }
+
+  .site-footer-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 13px;
+    color: var(--mid);
+  }
+
+  @media (max-width: 600px) {
+    .site-footer-inner {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+  }
+
+
+  @media (max-width: 600px) {
+    .topbar { padding: 14px 20px; }
+    .page { padding: 40px 16px 80px; }
+    .block-fields { padding: 20px 20px; }
+    .block-header { padding: 16px 20px; }
+    .field-row { grid-template-columns: 1fr; }
+    .progress-bar { gap: 0; }
+    .step-label { display: none; }
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyDPQdEZk574PO7ft7aHTSPjzxwgSXFtf-o",
+    authDomain: "bold700-ux-reviews.firebaseapp.com",
+    projectId: "bold700-ux-reviews",
+    storageBucket: "bold700-ux-reviews.firebasestorage.app",
+    messagingSenderId: "61806362887",
+    appId: "1:61806362887:web:8e0667d1d01119279fc5a2",
+    measurementId: "G-94SCL9W7X3"
+  };
+  if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+</script>
+</head>
+<body>
+<div class="topbar">
+  <a href="#" class="topbar-logo">BOLD<span>700</span></a>
+  <a href="https://payment-links.mollie.com/payment/2j2RgBM2fubzTHtgqpmLw" class="topbar-link">Betalen</a>
+</div>
+
+<div class="page" id="formPage">
+  <div class="confirm-header">
+    <div class="confirm-badge">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="20 6 9 17 4 12"></polyline>
+      </svg>
+      Intake
+    </div>
+    <h1>Vertel kort waar je site nu kansen laat liggen.</h1>
+    <p>Vul eerst deze korte intake in. Daarna ga je direct door naar betaling.</p>
+  </div>
+
+  <div class="progress-bar">
+    <div class="progress-step">
+      <div class="step-dot active">1</div>
+      <span class="step-label active-label">Intake</span>
+    </div>
+    <div class="progress-line done-line"></div>
+    <div class="progress-step">
+      <div class="step-dot pending">2</div>
+      <span class="step-label">Betaling</span>
+    </div>
+    <div class="progress-line"></div>
+    <div class="progress-step">
+      <div class="step-dot pending">3</div>
+      <span class="step-label">Review</span>
+    </div>
+    <div class="progress-line"></div>
+    <div class="progress-step" style="flex:0">
+      <div class="step-dot pending">4</div>
+      <span class="step-label">Rapport</span>
+    </div>
+  </div>
+
+  <form id="intakeForm" onsubmit="handleSubmit(event)" novalidate>
+    <div class="form-block">
+      <div class="block-header">
+        <span class="block-num">1.</span>
+        <div>
+          <h2>Je gegevens</h2>
+          <p>Zodat we weten voor wie de review is.</p>
+        </div>
+      </div>
+      <div class="block-fields">
+        <div class="field-row">
+          <div class="field">
+            <label for="full_name">Naam <span class="req">verplicht</span></label>
+            <input type="text" id="full_name" name="full_name" placeholder="Je volledige naam" required>
+          </div>
+          <div class="field">
+            <label for="email">E-mailadres <span class="req">verplicht</span></label>
+            <input type="email" id="email" name="email" placeholder="naam@bedrijf.nl" required>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="company_name">Bedrijfsnaam <span class="req">verplicht</span></label>
+            <input type="text" id="company_name" name="company_name" placeholder="Jouw bedrijf BV" required>
+          </div>
+          <div class="field">
+            <label for="phone_number">Telefoonnummer <span class="req">verplicht</span></label>
+            <input type="text" id="phone_number" name="phone_number" placeholder="06 12345678" required>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="website_url">Website URL <span class="req">verplicht</span></label>
+            <input type="url" id="website_url" name="website_url" placeholder="https://jouwbedrijf.nl" required>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-block">
+      <div class="block-header">
+        <span class="block-num">2.</span>
+        <div>
+          <h2>Wat wil je bereiken</h2>
+          <p>Zo richten we de review op wat voor jou echt telt.</p>
+        </div>
+      </div>
+      <div class="block-fields">
+        <div class="field">
+          <label>Wat wil je dat je website meer oplevert?</label>
+          <div class="chip-group">
+            <label class="chip"><input type="radio" name="primary_goal" value="meer_leads" required><span class="chip-label">Meer leads</span></label>
+            <label class="chip"><input type="radio" name="primary_goal" value="meer_calls"><span class="chip-label">Meer calls</span></label>
+            <label class="chip"><input type="radio" name="primary_goal" value="meer_offertes"><span class="chip-label">Meer offerte-aanvragen</span></label>
+            <label class="chip"><input type="radio" name="primary_goal" value="meer_verkopen"><span class="chip-label">Meer verkopen</span></label>
+            <label class="chip"><input type="radio" name="primary_goal" value="anders"><span class="chip-label">Anders</span></label>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Wat is nu het grootste probleem van je website?</label>
+          <div class="chip-group">
+            <label class="chip"><input type="radio" name="main_problem" value="te_weinig_aanvragen"><span class="chip-label">Te weinig aanvragen</span></label>
+            <label class="chip"><input type="radio" name="main_problem" value="veel_bezoekers_weinig_actie"><span class="chip-label">Veel bezoekers, weinig actie</span></label>
+            <label class="chip"><input type="radio" name="main_problem" value="onduidelijke_boodschap"><span class="chip-label">Onduidelijke boodschap</span></label>
+            <label class="chip"><input type="radio" name="main_problem" value="te_weinig_vertrouwen"><span class="chip-label">Te weinig vertrouwen</span></label>
+            <label class="chip"><input type="radio" name="main_problem" value="slechte_structuur"><span class="chip-label">Slechte structuur</span></label>
+            <label class="chip"><input type="radio" name="main_problem" value="weet_ik_nog_niet"><span class="chip-label">Weet ik nog niet precies</span></label>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Welke pagina is het belangrijkst om mee te nemen?</label>
+          <div class="chip-group">
+            <label class="chip"><input type="radio" name="priority_page" value="homepage"><span class="chip-label">Homepage</span></label>
+            <label class="chip"><input type="radio" name="priority_page" value="dienstenpagina"><span class="chip-label">Dienstenpagina</span></label>
+            <label class="chip"><input type="radio" name="priority_page" value="landingspagina"><span class="chip-label">Landingspagina</span></label>
+            <label class="chip"><input type="radio" name="priority_page" value="contactpagina"><span class="chip-label">Contactpagina</span></label>
+            <label class="chip"><input type="radio" name="priority_page" value="hele_site"><span class="chip-label">Hele site</span></label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-block">
+      <div class="block-header">
+        <span class="block-num">3.</span>
+        <div>
+          <h2>Wat meer context</h2>
+          <p>Zodat de review echt aansluit op jouw situatie.</p>
+        </div>
+      </div>
+      <div class="block-fields">
+        <div class="field">
+          <label for="audience">Wie is je belangrijkste doelgroep?</label>
+          <input type="text" id="audience" name="audience" placeholder="Bijv: MKB-directeuren, zorgprofessionals, particulieren...">
+        </div>
+
+        <div class="field">
+          <label>Wat wil je dat deze review je vooral oplevert?</label>
+          <div class="chip-group">
+            <label class="chip"><input type="radio" name="desired_outcome" value="snel_zien_wat_misgaat"><span class="chip-label">Snel zien wat er misgaat</span></label>
+            <label class="chip"><input type="radio" name="desired_outcome" value="prioriteiten_verbetering"><span class="chip-label">Prioriteiten voor verbetering</span></label>
+            <label class="chip"><input type="radio" name="desired_outcome" value="actiepunten_bouwer"><span class="chip-label">Concrete actiepunten voor mijn bouwer</span></label>
+            <label class="chip"><input type="radio" name="desired_outcome" value="input_redesign"><span class="chip-label">Input voor redesign</span></label>
+            <label class="chip"><input type="radio" name="desired_outcome" value="grip_op_groei"><span class="chip-label">Meer grip op groei</span></label>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="extra_notes">Specifieke vragen of twijfels die we mee moeten nemen?</label>
+          <textarea id="extra_notes" name="extra_notes" placeholder="Optioneel. Alles wat helpt om gericht te starten."></textarea>
+        </div>
+
+        <div class="field">
+          <label>Wil je dat we na de review ook kunnen helpen met uitvoering?</label>
+          <div class="chip-group">
+            <label class="chip"><input type="radio" name="implementation_help" value="ja_graag"><span class="chip-label">Ja graag</span></label>
+            <label class="chip"><input type="radio" name="implementation_help" value="misschien"><span class="chip-label">Misschien</span></label>
+            <label class="chip"><input type="radio" name="implementation_help" value="nee"><span class="chip-label">Nee</span></label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="submit-area">
+      <button type="submit" class="submit-btn" id="submitBtn">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="22" y1="2" x2="11" y2="13"></line>
+          <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+        </svg>
+        Verstuur intake en start mijn review
+      </button>
+      <p class="submit-note">Je gegevens worden veilig opgeslagen en alleen gebruikt voor je review.</p>
+    </div>
+  </form>
+</div>
+
+<div class="success-screen" id="successScreen">
+  <div class="success-icon">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="20 6 9 17 4 12"></polyline>
+    </svg>
+  </div>
+  <h2>Top. Je intake is ontvangen.</h2>
+  <p>Je gaat nu door naar betaling om je Growth Review definitief te maken.</p>
+  <div class="success-steps">
+    <div class="success-step"><span class="s-dot" style="background:var(--accent)">1</span>Intake ontvangen</div>
+    <div class="success-step"><span class="s-dot">2</span>Doorgaan naar betaling</div>
+    <div class="success-step"><span class="s-dot">3</span>Na betaling komt je aanvraag in het dashboard</div>
+    <div class="success-step"><span class="s-dot">4</span>Daarna plannen we de review</div>
+  </div>
+</div>
+
+<footer class="site-footer">
+  <div class="site-footer-inner">
+    <span><strong>BOLD700</strong> · Utrecht</span>
+    <span>support@bold700.com</span>
+  </div>
+</footer>
+
+<script>
+  const DASHBOARD_KEY = 'bold700_reviews';
+  const COLLECTION = 'growth_review_requests';
+
+  function generateId() {
+    return 'gr_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+  }
+
+  function getFormData() {
+    const f = document.getElementById('intakeForm');
+    const data = {};
+    const inputs = f.querySelectorAll('input[type="text"], input[type="email"], input[type="url"], textarea');
+    inputs.forEach(el => { if (el.name) data[el.name] = el.value.trim(); });
+    const radios = f.querySelectorAll('input[type="radio"]:checked');
+    radios.forEach(el => { data[el.name] = el.value; });
+    return data;
+  }
+
+  async function saveIntake(data) {
+    const entry = {
+      id: generateId(),
+      name: data.company_name || data.full_name || 'Growth Review',
+      client: data.company_name || '',
+      userId: 'growth-review-public',
+      mode: 'professional',
+      source: 'growth-review-intake',
+      product_name: 'BOLD700 Growth Review',
+      amount: 998,
+      payment_status: 'pending_payment',
+      intake_status: 'received',
+      review_status: 'pending_payment',
+      auditStatus: 'pending_payment',
+      status: 'pending_payment',
+      payment_provider: 'mollie',
+      payment_id: new URLSearchParams(window.location.search).get('payment_id') || null,
+      createdAt: new Date().toISOString(),
+      created_at: new Date().toISOString(),
+      ...data
+    };
+
+    const reviews = JSON.parse(localStorage.getItem(DASHBOARD_KEY) || '[]');
+    reviews.unshift(entry);
+    localStorage.setItem(DASHBOARD_KEY, JSON.stringify(reviews));
+
+    try {
+      await db.collection(COLLECTION).doc(entry.id).set(entry, { merge: true });
+    } catch (e) {
+      console.error('Firestore save failed', e);
+    }
+
+    return entry;
+  }
+
+  function validate() {
+    const f = document.getElementById('intakeForm');
+    const required = ['full_name', 'email', 'company_name', 'phone_number', 'website_url'];
+    let valid = true;
+
+    required.forEach(name => {
+      const el = f.querySelector(`[name="${name}"]`);
+      if (!el || !el.value.trim()) {
+        if (el) el.style.borderColor = '#ef4444';
+        valid = false;
+      } else {
+        el.style.borderColor = '';
+      }
+    });
+
+    return valid;
+  }
+
+  function handleSubmit(e) {
+    e.preventDefault();
+    if (!validate()) return;
+
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.innerHTML = 'Bezig...';
+
+    setTimeout(async () => {
+      const data = getFormData();
+      await saveIntake(data);
+      document.getElementById('formPage').style.display = 'none';
+      document.getElementById('successScreen').style.display = 'block';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      setTimeout(() => { window.location.href = 'https://payment-links.mollie.com/payment/2j2RgBM2fubzTHtgqpmLw'; }, 1800);
+    }, 800);
+  }
+</script>
+</body>
+</html>
