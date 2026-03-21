@@ -35,7 +35,7 @@
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
     min-height: 100vh;
-    display: flex;
+    display: block;
   }
   .sidebar {
     width: 220px;
@@ -86,6 +86,7 @@
   }
   .sidebar-footer { margin-top: auto; padding: 20px 24px 0; border-top: 1px solid rgba(255,255,255,0.07); }
   .sidebar-footer p { font-size: 12px; color: rgba(255,255,255,0.2); line-height: 1.5; }
+  .app-shell { min-height: 100vh; display: flex; }
   .main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
   .topbar {
     background: var(--ink); border-bottom: 1px solid rgba(255,255,255,0.08); padding: 20px 40px;
@@ -228,8 +229,9 @@
   }
 
 
-  @media (max-width: 900px) { .sidebar { display: none; } .stats-row { grid-template-columns: 1fr 1fr; } .content { padding: 20px 16px; } .topbar { padding: 14px 16px; } }
-  @media (max-width: 600px) { .stats-row { grid-template-columns: 1fr; } }
+  @media (max-width: 1100px) { .stats-row { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 900px) { .sidebar { display: none; } .content { padding: 20px 16px; } .topbar { padding: 14px 16px; } .detail-grid { grid-template-columns: 1fr; } }
+  @media (max-width: 600px) { .stats-row { grid-template-columns: 1fr; } .topbar-actions { gap: 8px; } .btn-sm { padding: 8px 12px; } .panel-body { padding: 20px; } .panel-header { padding: 18px 20px; } }
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
@@ -262,7 +264,7 @@
     <div class="auth-msg" id="authMsg"></div>
   </div>
 </div>
-<div id="appShell" style="display:none">
+<div id="appShell" class="app-shell" style="display:none">
 <nav class="sidebar">
   <a href="#" class="sidebar-logo">BOLD<span>700</span></a>
   <div class="sidebar-section">
@@ -403,14 +405,37 @@
     document.getElementById('panelName').textContent = r.full_name || 'Onbekend';
     document.getElementById('panelMeta').textContent = (r.company_name || '') + ' • ' + formatDate(r.created_at);
     document.getElementById('panelStatusSelect').value = r.review_status || 'paid';
+    const labelMap = {
+      meer_leads:'Meer leads', meer_calls:'Meer calls', meer_offertes:'Meer offerte-aanvragen', meer_verkopen:'Meer verkopen', anders:'Anders',
+      te_weinig_aanvragen:'Te weinig aanvragen', veel_bezoekers_weinig_actie:'Veel bezoekers, weinig actie', onduidelijke_boodschap:'Onduidelijke boodschap', te_weinig_vertrouwen:'Te weinig vertrouwen', slechte_structuur:'Slechte structuur', weet_ik_nog_niet:'Weet ik nog niet precies',
+      homepage:'Homepage', dienstenpagina:'Dienstenpagina', landingspagina:'Landingspagina', contactpagina:'Contactpagina', hele_site:'Hele site',
+      snel_zien_wat_misgaat:'Snel zien wat er misgaat', prioriteiten_verbetering:'Prioriteiten voor verbetering', actiepunten_bouwer:'Concrete actiepunten voor mijn bouwer', input_redesign:'Input voor redesign', grip_op_groei:'Meer grip op groei',
+      ja_graag:'Ja graag', misschien:'Misschien', nee:'Nee', pending_payment:'Wacht op betaling', paid:'Betaald', intake_received:'Intake ontvangen', ready_for_review:'Klaar voor review', in_review:'In review', done:'Afgerond'
+    };
+    const lbl = (v) => labelMap[v] || v || '-';
     document.getElementById('panelBody').innerHTML = `
       <div class="panel-section"><p class="panel-section-label">Contact</p><div class="detail-grid">
-        <div class="detail-field"><label>E-mail</label><p>${r.email || ''}</p></div>
-        <div class="detail-field"><label>Website</label><p>${r.website_url || ''}</p></div>
+        <div class="detail-field"><label>Naam</label><p>${r.full_name || '-'}</p></div>
+        <div class="detail-field"><label>Bedrijf</label><p>${r.company_name || '-'}</p></div>
+        <div class="detail-field"><label>E-mail</label><p>${r.email || '-'}</p></div>
+        <div class="detail-field"><label>Telefoon</label><p>${r.phone_number || '-'}</p></div>
+        <div class="detail-field full"><label>Website</label><p>${r.website_url || '-'}</p></div>
+      </div></div>
+      <div class="panel-section"><p class="panel-section-label">Intake</p><div class="detail-grid">
+        <div class="detail-field"><label>Primair doel</label><p>${lbl(r.primary_goal)}</p></div>
+        <div class="detail-field"><label>Grootste probleem</label><p>${lbl(r.main_problem)}</p></div>
+        <div class="detail-field"><label>Belangrijkste pagina</label><p>${lbl(r.priority_page)}</p></div>
+        <div class="detail-field"><label>Gewenste uitkomst</label><p>${lbl(r.desired_outcome)}</p></div>
+        <div class="detail-field"><label>Hulp bij uitvoering</label><p>${lbl(r.implementation_help)}</p></div>
+        <div class="detail-field"><label>Betaalstatus</label><p>${lbl(r.payment_status)}</p></div>
         <div class="detail-field full"><label>Doelgroep</label><p>${r.audience || 'Niet ingevuld'}</p></div>
-        <div class="detail-field"><label>Primair doel</label><p>${getGoalLabel(r.primary_goal) || '-'}</p></div>
-        <div class="detail-field"><label>Probleem</label><p>${r.main_problem || '-'}</p></div>
         <div class="detail-field full"><label>Extra opmerkingen</label><p>${r.extra_notes || 'Geen'}</p></div>
+      </div></div>
+      <div class="panel-section"><p class="panel-section-label">Administratie</p><div class="detail-grid">
+        <div class="detail-field"><label>Bedrag</label><p>€${r.amount || 998}</p></div>
+        <div class="detail-field"><label>Datum</label><p>${formatDate(r.created_at)}</p></div>
+        <div class="detail-field"><label>Status</label><p>${lbl(r.review_status)}</p></div>
+        <div class="detail-field"><label>Payment ID</label><p>${r.payment_id || '-'}</p></div>
       </div></div>`;
     document.getElementById('overlay').classList.add('open');
     document.getElementById('detailPanel').classList.add('open');

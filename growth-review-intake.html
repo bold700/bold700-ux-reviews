@@ -570,6 +570,12 @@
             <input type="text" id="company_name" name="company_name" placeholder="Jouw bedrijf BV" required>
           </div>
           <div class="field">
+            <label for="phone_number">Telefoonnummer <span class="req">verplicht</span></label>
+            <input type="text" id="phone_number" name="phone_number" placeholder="06 12345678" required>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
             <label for="website_url">Website URL <span class="req">verplicht</span></label>
             <input type="url" id="website_url" name="website_url" placeholder="https://jouwbedrijf.nl" required>
           </div>
@@ -754,7 +760,7 @@
 
   function validate() {
     const f = document.getElementById('intakeForm');
-    const required = ['full_name', 'email', 'company_name', 'website_url'];
+    const required = ['full_name', 'email', 'company_name', 'phone_number', 'website_url'];
     let valid = true;
 
     required.forEach(name => {
