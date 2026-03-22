@@ -2821,6 +2821,7 @@ let authMode = 'login';    // 'login' or 'register'
 const urlParams = new URLSearchParams(window.location.search);
 const urlProjectId = urlParams.get('p');
 const urlPreviewId = urlParams.get('preview');
+const urlForceNew = urlParams.get('new');
 
 function getActiveProject() { return projects.find(p => p.id === activeProjectId); }
 function getAnswers() { const p = getActiveProject(); return p ? p.answers : {}; }
@@ -11709,6 +11710,12 @@ auth.onAuthStateChanged(async (user) => {
   // URL routing
   if (urlProjectId && projects.find(p => p.id === urlProjectId)) {
     openProject(urlProjectId);
+    return;
+  }
+
+  const forceWizard = urlForceNew === '1' || window.location.pathname.endsWith('/tool/') || window.location.pathname.endsWith('/tool/index.html');
+  if (forceWizard) {
+    showNewProject();
     return;
   }
 
