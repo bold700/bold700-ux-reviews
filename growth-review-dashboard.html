@@ -386,6 +386,10 @@
     if (!iso) return '';
     return new Date(iso).toLocaleDateString('nl-NL', { day:'numeric', month:'short', year:'numeric' });
   }
+  function normalizeUrl(url) {
+    if (!url) return '#';
+    return /^https?:\/\//i.test(url) ? url : 'https://' + url.replace(/^\/+/, '');
+  }
   async function render() {
     await loadReviews();
     const filtered = currentFilter === 'all' ? allReviews : allReviews.filter(r => r.review_status === currentFilter || r.payment_status === currentFilter);
@@ -406,7 +410,7 @@
     body.innerHTML = filtered.map(r => `
       <tr onclick="openPanel('${r.id}')">
         <td><div class="td-name">${r.full_name || ''}</div><div class="td-sub">${r.company_name || ''}</div></td>
-        <td><a class="td-url" href="${r.website_url || '#'}" target="_blank" onclick="event.stopPropagation()">${(r.website_url || '').replace('https://','')}</a></td>
+        <td><a class="td-url" href="${normalizeUrl(r.website_url)}" target="_blank" onclick="event.stopPropagation()">${(r.website_url || '').replace(/^https?:\/\//,'')}</a></td>
         <td><span class="badge badge-${r.review_status || 'paid'}">${getStatusLabel(r.review_status || 'paid')}</span></td>
         <td style="font-size:13px;color:var(--mid)">${getGoalLabel(r.primary_goal)}</td>
         <td class="amount-cell">€${r.amount || 998}</td>
@@ -446,7 +450,7 @@
         <div class="detail-field"><label>Bedrijf</label><p>${r.company_name || '-'}</p></div>
         <div class="detail-field"><label>E-mail</label><p>${r.email || '-'}</p></div>
         <div class="detail-field"><label>Telefoon</label><p>${r.phone_number || '-'}</p></div>
-        <div class="detail-field full"><label>Website</label><p>${r.website_url || '-'}</p></div>
+        <div class="detail-field full"><label>Website</label><p><a href="${normalizeUrl(r.website_url)}" target="_blank">${r.website_url || '-'}</a></p></div>
       </div></div>
       <div class="panel-section"><p class="panel-section-label">Intake</p><div class="detail-grid">
         <div class="detail-field"><label>Primair doel</label><p>${lbl(r.primary_goal)}</p></div>
