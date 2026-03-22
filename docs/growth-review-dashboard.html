@@ -510,7 +510,7 @@
     const req = allReviews.find(r => r.id === openId);
     if (!req) return;
     if (req.toolProjectId) {
-      window.open('/review-tool.html?p=' + encodeURIComponent(req.toolProjectId), '_blank');
+      window.open('/review-tool/?p=' + encodeURIComponent(req.toolProjectId), '_blank');
       return;
     }
     const projectId = 'proj_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
