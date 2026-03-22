@@ -350,7 +350,7 @@
 <div class="detail-panel" id="detailPanel">
   <div class="panel-header"><div><h2 id="panelName">Naam klant</h2><p id="panelMeta">Bedrijf</p></div><button class="close-btn" onclick="closePanel()">X</button></div>
   <div class="panel-body" id="panelBody"></div>
-  <div class="panel-footer"><select class="status-select" id="panelStatusSelect" onchange="updateStatus()"><option value="pending_payment">Wacht op betaling</option><option value="paid">Betaald</option><option value="intake_received">Intake ontvangen</option><option value="ready_for_review">Klaar voor review</option><option value="in_review">In review</option><option value="done">Afgerond</option></select></div>
+  <div class="panel-footer" style="display:grid;gap:10px"><select class="status-select" id="panelStatusSelect" onchange="updateStatus()"><option value="pending_payment">Wacht op betaling</option><option value="paid">Betaald</option><option value="intake_received">Intake ontvangen</option><option value="ready_for_review">Klaar voor review</option><option value="in_review">In review</option><option value="done">Afgerond</option></select><button class="btn-sm btn-sm-primary" id="createToolProjectBtn" onclick="createToolProject()">Maak project in tool</button></div>
 </div>
 <script>
   const STORAGE_KEY = 'bold700_reviews';
@@ -427,6 +427,11 @@
     document.getElementById('panelName').textContent = r.full_name || 'Onbekend';
     document.getElementById('panelMeta').textContent = (r.company_name || '') + ' • ' + formatDate(r.created_at);
     document.getElementById('panelStatusSelect').value = r.review_status || 'paid';
+    const btn = document.getElementById('createToolProjectBtn');
+    if (btn) {
+      if (r.toolProjectId) { btn.textContent = 'Open project in tool'; }
+      else { btn.textContent = 'Maak project in tool'; }
+    }
     const labelMap = {
       meer_leads:'Meer leads', meer_calls:'Meer calls', meer_offertes:'Meer offerte-aanvragen', meer_verkopen:'Meer verkopen', anders:'Anders',
       te_weinig_aanvragen:'Te weinig aanvragen', veel_bezoekers_weinig_actie:'Veel bezoekers, weinig actie', onduidelijke_boodschap:'Onduidelijke boodschap', te_weinig_vertrouwen:'Te weinig vertrouwen', slechte_structuur:'Slechte structuur', weet_ik_nog_niet:'Weet ik nog niet precies',
@@ -491,10 +496,65 @@
       review_status: 'ready_for_review', payment_provider: 'mollie', payment_id: 'tr_demo_' + Math.random().toString(36).slice(2, 8),
       full_name: 'Demo klant', email: 'demo@bold700.com', company_name: 'Demo BV', website_url: 'https://demo.nl',
       primary_goal: 'meer_leads', main_problem: 'te_weinig_aanvragen', priority_page: 'homepage', audience: 'MKB',
-      desired_outcome: 'prioriteiten_verbetering', extra_notes: 'Demo intake', implementation_help: 'misschien', created_at: new Date().toISOString()
+      desired_outcome: 'prioriteiten_verbetering', extra_notes: 'Demo intake', implementation_help: 'misschien', created_at: new Date().toISOString(), source: 'growth-review-intake'
     };
     allReviews.unshift(entry); saveReviews(); render();
   }
+
+  async function createToolProject() {
+    if (!openId) return;
+    const req = allReviews.find(r => r.id === openId);
+    if (!req) return;
+    if (req.toolProjectId) {
+      window.open('/tool/?p=' + encodeURIComponent(req.toolProjectId), '_blank');
+      return;
+    }
+    const projectId = 'proj_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+    const project = {
+      id: projectId,
+      name: req.company_name || req.full_name || 'Growth Review',
+      url: req.website_url || '',
+      urls: req.website_url ? [req.website_url] : [],
+      client: req.company_name || '',
+      package: 'growth-review',
+      mode: 'professional',
+      sourceType: 'url',
+      source: 'growth-review-dashboard',
+      sourceRequestId: req.id,
+      userId: auth.currentUser ? auth.currentUser.uid : null,
+      leadEmail: req.email || '',
+      leadPhone: req.phone_number || '',
+      answers: {},
+      currentStep: 0,
+      createdAt: new Date().toISOString(),
+      audience: req.audience || '',
+      primaryGoal: req.primary_goal || '',
+      mainProblem: req.main_problem || '',
+      priorityPage: req.priority_page || '',
+      desiredOutcome: req.desired_outcome || '',
+      extraNotes: req.extra_notes || '',
+      implementationHelp: req.implementation_help || '',
+      paymentStatus: req.payment_status || 'pending',
+      auditStatus: 'pending',
+      assignedTo: null,
+      assignedToName: null,
+      assignedAt: null,
+      completedAt: null
+    };
+    try {
+      await db.collection('projects').doc(projectId).set(project, { merge: true });
+      await db.collection(COLLECTION).doc(req.id).set({ toolProjectId: projectId }, { merge: true });
+      req.toolProjectId = projectId;
+      await saveReviews();
+      const btn = document.getElementById('createToolProjectBtn');
+      if (btn) btn.textContent = 'Open project in tool';
+      alert('Project aangemaakt in de tool.');
+    } catch (e) {
+      console.error('create tool project failed', e);
+      alert('Project aanmaken mislukt.');
+    }
+  }
+
   async function loginDashboard() {
     const email = document.getElementById('loginEmail').value.trim();
     const password = document.getElementById('loginPassword').value;
