@@ -2,13 +2,17 @@
 // BOLD700 UX Review — Cloudflare Worker Proxy
 // ═══════════════════════════════════════════════════════════
 // Dual-purpose proxy:
-// 1. POST /         → Anthropic AI API (for AI Actieplan)
+// 1. POST /         → OpenAI Chat Completions API (for AI Actieplan)
 // 2. GET  /fetch?url=... → Page fetcher (for Auto-Scan)
+//
+// De frontend stuurt een Anthropic-stijl request (system + messages met
+// tekst/afbeelding-blokken). Deze worker vertaalt dat naar OpenAI en
+// vertaalt het antwoord terug, zodat de frontend ongewijzigd blijft.
 //
 // Setup:
 // 1. Deploy this worker to Cloudflare Workers
-// 2. Add your Anthropic API key as a secret:
-//    wrangler secret put ANTHROPIC_API_KEY
+// 2. Add your OpenAI API key as a secret:
+//    wrangler secret put OPENAI_API_KEY
 // 3. Set the worker URL in the BOLD700 admin panel (Platform Instellingen)
 // ═══════════════════════════════════════════════════════════
 
@@ -65,7 +69,7 @@ export default {
       }
     }
 
-    // ── POST / → Anthropic AI API proxy ──
+    // ── POST / → OpenAI Chat Completions API proxy ──
     if (request.method !== 'POST') {
       return new Response(JSON.stringify({ error: 'Method not allowed' }), {
         status: 405,
@@ -73,30 +77,67 @@ export default {
       });
     }
 
+    // Model dat we bij OpenAI gebruiken. gpt-4o-mini is goedkoop én
+    // ondersteunt vision (afbeeldingen). Zet op 'gpt-4o' voor hogere kwaliteit.
+    const OPENAI_MODEL = 'gpt-4o-mini';
+
     try {
       const body = await request.json();
 
-      const anthropicResp = await fetch('https://api.anthropic.com/v1/messages', {
+      // ── Vertaal Anthropic-stijl request → OpenAI Chat Completions ──
+      const messages = [];
+      if (body.system) messages.push({ role: 'system', content: body.system });
+
+      for (const msg of (body.messages || [])) {
+        let content = msg.content;
+        if (Array.isArray(content)) {
+          content = content.map((block) => {
+            if (block.type === 'text') return { type: 'text', text: block.text };
+            if (block.type === 'image' && block.source?.type === 'base64') {
+              return {
+                type: 'image_url',
+                image_url: { url: `data:${block.source.media_type};base64,${block.source.data}` },
+              };
+            }
+            if (block.type === 'image_url') return block; // al OpenAI-stijl
+            return { type: 'text', text: '' };
+          });
+        }
+        messages.push({ role: msg.role, content });
+      }
+
+      const openaiBody = {
+        model: OPENAI_MODEL,
+        max_tokens: body.max_tokens || 2000,
+        messages,
+      };
+
+      const openaiResp = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-api-key': env.ANTHROPIC_API_KEY,
-          'anthropic-version': '2023-06-01',
+          'Authorization': `Bearer ${env.OPENAI_API_KEY}`,
         },
-        body: JSON.stringify(body),
+        body: JSON.stringify(openaiBody),
       });
 
-      const result = await anthropicResp.text();
+      const data = await openaiResp.json();
 
-      return new Response(result, {
-        status: anthropicResp.status,
-        headers: {
-          ...corsHeaders,
-          'Content-Type': 'application/json',
-        },
+      if (!openaiResp.ok) {
+        return new Response(JSON.stringify({ error: data.error || { message: 'OpenAI API fout' } }), {
+          status: openaiResp.status,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      // ── Vertaal OpenAI-antwoord → Anthropic-stijl { content: [{ type, text }] } ──
+      const text = data.choices?.[0]?.message?.content || '';
+      return new Response(JSON.stringify({ content: [{ type: 'text', text }] }), {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     } catch (err) {
-      return new Response(JSON.stringify({ error: err.message }), {
+      return new Response(JSON.stringify({ error: { message: err.message } }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
