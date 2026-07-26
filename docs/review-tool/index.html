@@ -2204,7 +2204,8 @@
       <div class="topbar-right">
         <input type="url" id="scanUrlInput" class="scan-url-input" placeholder="Pagina URL voor scan…" title="URL van de pagina die je wilt scannen">
         <button class="btn-icon" onclick="toggleContrastChecker()" style="border-color:var(--purple);color:var(--purple)" title="Contrast"><i data-lucide="contrast"></i></button>
-        <button class="btn-icon" onclick="runAutoScan()" id="btnAutoScan" style="border-color:var(--blue);color:var(--blue)" title="Auto-Scan"><i data-lucide="zap"></i></button>
+        <button class="btn-icon" onclick="runAutoScan()" id="btnAutoScan" style="border-color:var(--blue);color:var(--blue)" title="Auto-Scan (technische checks)"><i data-lucide="zap"></i></button>
+        <button class="btn-icon" onclick="runAiReview()" id="btnAiReview" style="border-color:var(--accent);color:var(--accent)" title="AI Auto-Review — vult de hele checklist vooraf in"><i data-lucide="sparkles"></i></button>
         <button class="btn-icon" onclick="showScorecard()" style="border-color:var(--green);color:var(--green)" title="Scorecard"><i data-lucide="check-circle"></i></button>
         <button class="btn-icon" onclick="exportResults()" title="Exporteer"><i data-lucide="download"></i></button>
       </div>
@@ -6091,7 +6092,7 @@ function renderStep(stepIndex, resetScroll) { try {
       const a = answers[q.id] || {};
       return `
         <div class="question-card ${a.score === 'nvt' ? 'answered-nvt' : a.score ? 'answered' : ''}" id="card-${q.id}" onclick="setActiveQuestion('${q.id}')">
-          <div class="question-label"><span class="q-num">${qi + 1}.</span>${q.text}${a.autoScanned ? '<span class="auto-badge"><i data-lucide="zap"></i> auto</span>' : ''}${q.type === 'auto' ? '<span class="auto-badge" style="background:#3b82f622;color:#3b82f6;border-color:#3b82f644"><i data-lucide="cpu"></i> auto-check</span>' : ''}${q.severity === 'critical' ? '<span class="sev-badge sev-critical">kritiek</span>' : ''}</div>
+          <div class="question-label"><span class="q-num">${qi + 1}.</span>${q.text}${a.aiFilled ? '<span class="auto-badge" style="background:#ff500322;color:var(--accent);border-color:#ff500344"><i data-lucide="sparkles"></i> AI</span>' : a.autoScanned ? '<span class="auto-badge"><i data-lucide="zap"></i> auto</span>' : ''}${q.type === 'auto' ? '<span class="auto-badge" style="background:#3b82f622;color:#3b82f6;border-color:#3b82f644"><i data-lucide="cpu"></i> auto-check</span>' : ''}${q.severity === 'critical' ? '<span class="sev-badge sev-critical">kritiek</span>' : ''}</div>
           ${q.business_impact_nl && (a.score === 'bad' || a.score === 'ok') ? '<div class="check-impact"><i data-lucide="alert-triangle" style="width:12px;height:12px;flex-shrink:0"></i> ' + q.business_impact_nl + '</div>' : ''}
           ${q.fix_suggestion_nl && (a.score === 'bad' || a.score === 'ok') ? '<div class="check-fix"><i data-lucide="wrench" style="width:12px;height:12px;flex-shrink:0"></i> ' + q.fix_suggestion_nl + '</div>' : ''}
           <div class="score-row">
@@ -6676,6 +6677,155 @@ function hideScanToast() {
     setTimeout(() => { if (scanToastEl) { scanToastEl.remove(); scanToastEl = null; } }, 300);
   }
   if (scanToastTimer) { clearTimeout(scanToastTimer); scanToastTimer = null; }
+}
+
+// ═══════════════ AI AUTO-REVIEW ═══════════════
+// Vult de hele checklist vooraf in (score + korte onderbouwing per vraag) op
+// basis van de pagina-inhoud. De reviewer controleert en past aan.
+function extractPageText(doc) {
+  try {
+    const parts = [];
+    const title = doc.querySelector('title');
+    if (title) parts.push('TITEL: ' + title.textContent.trim());
+    const md = doc.querySelector('meta[name="description"]');
+    if (md) parts.push('META-DESCRIPTION: ' + (md.getAttribute('content') || '').trim());
+    ['h1', 'h2', 'h3'].forEach(tag => {
+      doc.querySelectorAll(tag).forEach(h => {
+        const t = h.textContent.trim();
+        if (t) parts.push(tag.toUpperCase() + ': ' + t);
+      });
+    });
+    const ctas = [];
+    doc.querySelectorAll('a, button').forEach(el => {
+      const t = el.textContent.trim();
+      if (t && t.length < 40) ctas.push(t);
+    });
+    if (ctas.length) parts.push('KNOPPEN/LINKS: ' + [...new Set(ctas)].slice(0, 30).join(' | '));
+    const imgs = doc.querySelectorAll('img');
+    const imgsNoAlt = [...imgs].filter(i => !(i.getAttribute('alt') || '').trim()).length;
+    parts.push(`AFBEELDINGEN: ${imgs.length} totaal, ${imgsNoAlt} zonder alt-tekst`);
+    const body = doc.body ? doc.body.textContent.replace(/\s+/g, ' ').trim() : '';
+    parts.push('ZICHTBARE TEKST: ' + body.slice(0, 5000));
+    return parts.join('\n');
+  } catch (e) { return ''; }
+}
+
+function parseAiJsonArray(text) {
+  if (!text) return null;
+  try {
+    const d = JSON.parse(text);
+    if (Array.isArray(d)) return d;
+    if (d && Array.isArray(d.answers)) return d.answers;
+  } catch (e) {}
+  const m = text.match(/\[[\s\S]*\]/);
+  if (m) { try { return JSON.parse(m[0]); } catch (e) {} }
+  return null;
+}
+
+async function runAiReview() {
+  const project = getActiveProject();
+  if (!project) return;
+  if (project.reviewType === 'free-form') {
+    alert('AI Auto-Review werkt met de checklist-reviews, niet met de vrije review.');
+    return;
+  }
+  const proxyUrl = getAiProxyUrl();
+  if (!proxyUrl) { alert('AI is niet beschikbaar. Stel eerst de proxy-URL in bij Platform Instellingen.'); return; }
+  if (!canCallAI()) { alert('Je hebt het maximum van ' + AI_RATE_LIMIT.maxPerHour + ' AI-verzoeken per uur bereikt. Probeer het later opnieuw.'); return; }
+
+  const answers = project.answers || (project.answers = {});
+
+  // Verzamel vragen die nog niet handmatig zijn beantwoord
+  const questions = [];
+  reviewSteps.forEach(step => {
+    step.questions.forEach(q => {
+      const a = answers[q.id];
+      if (a && a.score && !a.autoScanned && !a.aiFilled) return; // handmatig → overslaan
+      questions.push({ id: q.id, text: q.text, category: step.shortTitle });
+    });
+  });
+  if (questions.length === 0) {
+    showScanToast('success', 'Niets te doen', 'Alle vragen zijn al handmatig beantwoord.', 3000);
+    return;
+  }
+
+  // URL bepalen (zelfde logica als Auto-Scan)
+  const scanUrlInput = document.getElementById('scanUrlInput');
+  const urlInput = document.getElementById('urlInput');
+  let url = (scanUrlInput && scanUrlInput.value.trim()) || (urlInput && urlInput.value.trim()) || project.url;
+  if (url && !url.startsWith('http')) url = 'https://' + url;
+
+  const btn = document.getElementById('btnAiReview');
+  if (btn) { btn.classList.add('scanning'); btn.style.pointerEvents = 'none'; btn.style.opacity = '0.6'; }
+  showScanToast('scanning', 'AI Auto-Review…', 'Pagina wordt geanalyseerd');
+
+  try {
+    // 1) Pagina-inhoud ophalen
+    let pageText = '';
+    if (url) {
+      const pageData = await getPageDocument(url);
+      if (pageData && pageData.doc) pageText = extractPageText(pageData.doc);
+    }
+    if (!pageText) pageText = '(pagina-inhoud kon niet opgehaald worden — beoordeel op basis van de URL en vraag)';
+
+    // 2) Prompt bouwen
+    const qList = questions.map((q, i) => `${i + 1}. [id:${q.id}] (${q.category}) ${q.text}`).join('\n');
+    const system = `Je bent een senior UX/CRO/SEO-reviewer van BOLD700. Je beoordeelt een webpagina op een checklist. Voor ELKE vraag geef je een score en een korte onderbouwing in het Nederlands.
+Scores: "good" = goed/voldoet, "ok" = matig/kan beter, "bad" = niet OK/probleem, "nvt" = niet te beoordelen op basis van de aangeleverde info.
+Wees eerlijk en concreet. Als je iets echt niet kunt zien in de aangeleverde inhoud, gebruik "nvt" in plaats van gokken. Houd elke notitie kort (1 zin).`;
+    const user = `URL: ${url || '(onbekend)'}
+
+PAGINA-INHOUD (ingekort):
+"""
+${pageText.slice(0, 8000)}
+"""
+
+CHECKLIST — beantwoord ELKE vraag hieronder:
+${qList}
+
+Antwoord UITSLUITEND met een JSON-array, geen tekst eromheen. Gebruik exact de meegegeven id's. Formaat:
+[{"id":"<id>","score":"good|ok|bad|nvt","note":"<korte onderbouwing>"}]`;
+
+    trackAICall();
+    const resp = await fetch(proxyUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: 'gpt-4o-mini', max_tokens: 4000, system, messages: [{ role: 'user', content: [{ type: 'text', text: user }] }] })
+    });
+    if (!resp.ok) { const e = await resp.json().catch(() => ({})); throw new Error(e.error?.message || ('API fout ' + resp.status)); }
+    const result = await resp.json();
+    const text = result.content?.[0]?.text || '';
+
+    // 3) JSON parsen
+    const arr = parseAiJsonArray(text);
+    if (!arr || !arr.length) throw new Error('Geen bruikbaar AI-antwoord ontvangen. Probeer opnieuw.');
+
+    // 4) Invullen (handmatige antwoorden nooit overschrijven)
+    const validScores = new Set(['good', 'ok', 'bad', 'nvt']);
+    let filled = 0;
+    arr.forEach(item => {
+      if (!item || !item.id || !validScores.has(item.score)) return;
+      const qId = (typeof LEGACY_ID_MAP !== 'undefined' && LEGACY_ID_MAP[item.id]) ? LEGACY_ID_MAP[item.id] : item.id;
+      const a = answers[qId] || (answers[qId] = {});
+      if (a.score && !a.autoScanned && !a.aiFilled) return; // handmatig → laten staan
+      a.score = item.score;
+      if (item.score === 'nvt' || item.score === 'good') delete a.severity;
+      const note = (item.note || '').trim();
+      if (note) a.notes = '[AI] ' + note;
+      a.aiFilled = true;
+      a.autoScanned = true;
+      filled++;
+    });
+    saveState();
+    renderStep(currentStep, false);
+    buildStepper();
+    showScanToast('success', 'AI Auto-Review klaar', filled + ' vragen vooraf ingevuld. Loop ze na en pas aan waar nodig.', 6000);
+  } catch (e) {
+    console.error('[AiReview]', e);
+    showScanToast('error', 'AI Auto-Review mislukt', e.message || 'Onbekende fout', 5000);
+  } finally {
+    if (btn) { btn.classList.remove('scanning'); btn.style.pointerEvents = ''; btn.style.opacity = ''; }
+  }
 }
 
 async function runAutoScan() {
@@ -10835,7 +10985,7 @@ function exportResults() {
         lines.push(`• ${i.q.text}`);
         if (i.q.business_impact_nl) lines.push(`  Impact: ${i.q.business_impact_nl}`);
         if (i.q.fix_suggestion_nl) lines.push(`  Fix: ${i.q.fix_suggestion_nl}`);
-        if (i.a.notes) lines.push(`  Notitie: ${i.a.notes.replace(/\[Auto-scan\]\s*/g, '').trim()}`);
+        if (i.a.notes) lines.push(`  Notitie: ${i.a.notes.replace(/\[(Auto-scan|AI)\]\s*/g, '').trim()}`);
         lines.push('');
       });
 
@@ -11010,7 +11160,7 @@ function buildAiPromptData() {
           question: q.text,
           score: a.score,
           impact: a.severity || step.impact || 'low',
-          notes: (a.notes || '').replace(/\[Auto-scan\]\s*/g, '').trim(),
+          notes: (a.notes || '').replace(/\[(Auto-scan|AI)\]\s*/g, '').trim(),
           tip: questionTips[q.id] || '',
           images: getScreenshots(q.id)
         };
