@@ -1,0 +1,30 @@
+rules_version = '2';
+
+// ═══════════════════════════════════════════════════════════
+// BOLD700 UX Review — Firebase Storage Rules
+// ═══════════════════════════════════════════════════════════
+// Screenshots van reviews worden opgeslagen onder screenshots/{projectId}/...
+// Zonder deze regels weigert Firebase alle uploads (storage/unauthorized),
+// waardoor geuploade foto's niet bewaard blijven.
+//
+// Plaatsen: Firebase Console → Storage → tab "Rules" → plak → Publish.
+// ═══════════════════════════════════════════════════════════
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // Screenshots bij UX-reviews
+    match /screenshots/{allPaths=**} {
+      // Ingelogde gebruikers (admin, auditor, reviewer) mogen lezen.
+      allow read: if request.auth != null;
+      // Uploaden mag alleen ingelogd en per bestand max 15 MB.
+      allow write: if request.auth != null
+                   && request.resource.size < 15 * 1024 * 1024;
+    }
+
+    // Al het overige standaard dichthouden.
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
