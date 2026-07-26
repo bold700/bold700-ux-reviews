@@ -6712,13 +6712,21 @@ function extractPageText(doc) {
 
 function parseAiJsonArray(text) {
   if (!text) return null;
+  let t = text.trim().replace(/^```(?:json)?/i, '').replace(/```$/, '').trim();
   try {
-    const d = JSON.parse(text);
+    const d = JSON.parse(t);
     if (Array.isArray(d)) return d;
     if (d && Array.isArray(d.answers)) return d.answers;
   } catch (e) {}
-  const m = text.match(/\[[\s\S]*\]/);
-  if (m) { try { return JSON.parse(m[0]); } catch (e) {} }
+  const m = t.match(/\[[\s\S]*\]/);
+  if (m) { try { const d = JSON.parse(m[0]); if (Array.isArray(d)) return d; } catch (e) {} }
+  // Fallback: verzamel alle complete {…} objecten — bestand tegen afgekapte JSON
+  const objs = t.match(/\{[^{}]*\}/g);
+  if (objs) {
+    const out = [];
+    objs.forEach(o => { try { const d = JSON.parse(o); if (d && d.id) out.push(d); } catch (e) {} });
+    if (out.length) return out;
+  }
   return null;
 }
 
@@ -6757,10 +6765,10 @@ async function runAiReview() {
 
   const btn = document.getElementById('btnAiReview');
   if (btn) { btn.classList.add('scanning'); btn.style.pointerEvents = 'none'; btn.style.opacity = '0.6'; }
-  showScanToast('scanning', 'AI Auto-Review…', 'Pagina wordt geanalyseerd');
+  showScanToast('scanning', 'AI Auto-Review…', 'Pagina wordt opgehaald…');
 
   try {
-    // 1) Pagina-inhoud ophalen
+    // 1) Pagina-inhoud ophalen (één keer)
     let pageText = '';
     if (url) {
       const pageData = await getPageDocument(url);
@@ -6768,16 +6776,26 @@ async function runAiReview() {
     }
     if (!pageText) pageText = '(pagina-inhoud kon niet opgehaald worden — beoordeel op basis van de URL en vraag)';
 
-    // 2) Prompt bouwen
-    const qList = questions.map((q, i) => `${i + 1}. [id:${q.id}] (${q.category}) ${q.text}`).join('\n');
     const system = `Je bent een senior UX/CRO/SEO-reviewer van BOLD700. Je beoordeelt een webpagina op een checklist. Voor ELKE vraag geef je een score en een korte onderbouwing in het Nederlands.
 Scores: "good" = goed/voldoet, "ok" = matig/kan beter, "bad" = niet OK/probleem, "nvt" = niet te beoordelen op basis van de aangeleverde info.
 Wees eerlijk en concreet. Als je iets echt niet kunt zien in de aangeleverde inhoud, gebruik "nvt" in plaats van gokken. Houd elke notitie kort (1 zin).`;
-    const user = `URL: ${url || '(onbekend)'}
+
+    // 2) In blokken opknippen zodat het antwoord nooit wordt afgekapt
+    const CHUNK = 30;
+    const chunks = [];
+    for (let i = 0; i < questions.length; i += CHUNK) chunks.push(questions.slice(i, i + CHUNK));
+
+    trackAICall();
+    let allAnswers = [];
+    let failedChunks = 0;
+    for (let ci = 0; ci < chunks.length; ci++) {
+      if (chunks.length > 1) showScanToast('scanning', 'AI Auto-Review…', `Deel ${ci + 1}/${chunks.length} wordt beoordeeld…`);
+      const qList = chunks[ci].map((q, i) => `${i + 1}. [id:${q.id}] (${q.category}) ${q.text}`).join('\n');
+      const user = `URL: ${url || '(onbekend)'}
 
 PAGINA-INHOUD (ingekort):
 """
-${pageText.slice(0, 8000)}
+${pageText.slice(0, 7000)}
 """
 
 CHECKLIST — beantwoord ELKE vraag hieronder:
@@ -6785,25 +6803,29 @@ ${qList}
 
 Antwoord UITSLUITEND met een JSON-array, geen tekst eromheen. Gebruik exact de meegegeven id's. Formaat:
 [{"id":"<id>","score":"good|ok|bad|nvt","note":"<korte onderbouwing>"}]`;
+      try {
+        const resp = await fetch(proxyUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ model: 'gpt-4o-mini', max_tokens: 4000, system, messages: [{ role: 'user', content: [{ type: 'text', text: user }] }] })
+        });
+        if (!resp.ok) { const e = await resp.json().catch(() => ({})); throw new Error(e.error?.message || ('API fout ' + resp.status)); }
+        const result = await resp.json();
+        const arr = parseAiJsonArray(result.content?.[0]?.text || '');
+        if (arr && arr.length) allAnswers = allAnswers.concat(arr);
+        else failedChunks++;
+      } catch (e) {
+        console.warn('[AiReview] blok ' + (ci + 1) + ' mislukt:', e.message);
+        failedChunks++;
+      }
+    }
 
-    trackAICall();
-    const resp = await fetch(proxyUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: 'gpt-4o-mini', max_tokens: 4000, system, messages: [{ role: 'user', content: [{ type: 'text', text: user }] }] })
-    });
-    if (!resp.ok) { const e = await resp.json().catch(() => ({})); throw new Error(e.error?.message || ('API fout ' + resp.status)); }
-    const result = await resp.json();
-    const text = result.content?.[0]?.text || '';
+    if (!allAnswers.length) throw new Error('Geen bruikbaar AI-antwoord ontvangen. Probeer opnieuw.');
 
-    // 3) JSON parsen
-    const arr = parseAiJsonArray(text);
-    if (!arr || !arr.length) throw new Error('Geen bruikbaar AI-antwoord ontvangen. Probeer opnieuw.');
-
-    // 4) Invullen (handmatige antwoorden nooit overschrijven)
+    // 3) Invullen (handmatige antwoorden nooit overschrijven)
     const validScores = new Set(['good', 'ok', 'bad', 'nvt']);
     let filled = 0;
-    arr.forEach(item => {
+    allAnswers.forEach(item => {
       if (!item || !item.id || !validScores.has(item.score)) return;
       const qId = (typeof LEGACY_ID_MAP !== 'undefined' && LEGACY_ID_MAP[item.id]) ? LEGACY_ID_MAP[item.id] : item.id;
       const a = answers[qId] || (answers[qId] = {});
@@ -6819,7 +6841,8 @@ Antwoord UITSLUITEND met een JSON-array, geen tekst eromheen. Gebruik exact de m
     saveState();
     renderStep(currentStep, false);
     buildStepper();
-    showScanToast('success', 'AI Auto-Review klaar', filled + ' vragen vooraf ingevuld. Loop ze na en pas aan waar nodig.', 6000);
+    const warn = failedChunks > 0 ? ` (${failedChunks} deel(en) niet gelukt — klik nogmaals voor de rest)` : '';
+    showScanToast('success', 'AI Auto-Review klaar', filled + ' vragen vooraf ingevuld. Loop ze na en pas aan waar nodig.' + warn, 6000);
   } catch (e) {
     console.error('[AiReview]', e);
     showScanToast('error', 'AI Auto-Review mislukt', e.message || 'Onbekende fout', 5000);
