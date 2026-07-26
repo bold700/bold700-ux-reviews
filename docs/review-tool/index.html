@@ -10763,7 +10763,16 @@ function submitLeadGate() {
   setTimeout(() => { renderDashboard(); }, 500);
 }
 
-function closeScorecard() { document.getElementById('scorecardScreen').classList.add('hidden'); }
+function closeScorecard() {
+  document.getElementById('scorecardScreen').classList.add('hidden');
+  // Terug naar de review, zodat je verder kunt werken (niet een leeg scherm)
+  const project = getActiveProject();
+  if (project) {
+    openProject(project.id);
+  } else {
+    backToDashboardFromScorecard();
+  }
+}
 
 function toggleFindings() {
   const toggle = document.getElementById('findingsToggle');
