@@ -6209,15 +6209,8 @@ function setScore(qId, score) {
   if (score === 'nvt' || score === 'good') { delete answers[qId].severity; }
   saveState();
 
-  // Auto-advance: bij 'goed' of 'nvt' → spring naar volgende onbeantwoorde vraag
-  if (score === 'good' || score === 'nvt') {
-    const nextUnanswered = step.questions.findIndex((q, i) => i > _focusQIndex && !answers[q.id]?.score);
-    if (nextUnanswered >= 0) {
-      _focusQIndex = nextUnanswered;
-    } else if (_focusQIndex < step.questions.length - 1) {
-      _focusQIndex++;
-    }
-  }
+  // Geen auto-advance: blijf op de vraag staan zodat de reviewer nog
+  // feedback/notities kan toevoegen. Doorgaan gebeurt met de knop "Volgende".
 
   renderStep(currentStep, false);
   buildStepper();
