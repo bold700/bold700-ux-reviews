@@ -99,6 +99,9 @@ export default {
                 image_url: { url: `data:${block.source.media_type};base64,${block.source.data}` },
               };
             }
+            if (block.type === 'image' && block.source?.type === 'url') {
+              return { type: 'image_url', image_url: { url: block.source.url } };
+            }
             if (block.type === 'image_url') return block; // al OpenAI-stijl
             return { type: 'text', text: '' };
           });

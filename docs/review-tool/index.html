@@ -2852,6 +2852,8 @@ async function syncProjectToFirestore(project) {
       cleanAnswers[qId] = { ...ans };
       delete cleanAnswers[qId].screenshot; // Remove base64, use Storage instead
       delete cleanAnswers[qId].screenshots;
+      // LET OP: screenshotUrls NIET verwijderen — dat zijn de Storage-URL's
+      // waarmee de foto's na herladen behouden blijven.
     }
     docData.answers = cleanAnswers;
     await db.collection('projects').doc(project.id).set(docData, { merge: true });
@@ -6285,7 +6287,10 @@ function handleScreenshot(qId, input) {
 function getScreenshots(qId) {
   const a = getAnswers()[qId];
   if (!a) return [];
-  if (a.screenshots && Array.isArray(a.screenshots)) return a.screenshots;
+  // Lokale base64 (huidige sessie) heeft voorrang…
+  if (a.screenshots && Array.isArray(a.screenshots) && a.screenshots.length) return a.screenshots;
+  // …anders de Storage-URL's uit de database (blijven na herladen bestaan)
+  if (a.screenshotUrls && Array.isArray(a.screenshotUrls) && a.screenshotUrls.length) return a.screenshotUrls;
   if (a.screenshot) return [a.screenshot]; // backward compat
   return [];
 }
@@ -6301,10 +6306,21 @@ function addScreenshot(qId, dataUrl) {
   if (!answers[qId].screenshots) answers[qId].screenshots = [];
   answers[qId].screenshots.push(dataUrl);
   saveState();
-  // Upload to Firebase
+  // Upload naar Firebase Storage en bewaar de download-URL, zodat de
+  // screenshot na herladen behouden blijft (base64 wordt niet in Firestore
+  // opgeslagen, de URL wél).
   const project = getActiveProject();
   const idx = answers[qId].screenshots.length - 1;
-  if (project) uploadScreenshotToStorage(project.id, qId + '_' + idx, dataUrl);
+  if (project) {
+    uploadScreenshotToStorage(project.id, qId + '_' + idx, dataUrl).then((downloadUrl) => {
+      if (!downloadUrl) return;
+      const ans = getAnswers()[qId];
+      if (!ans) return;
+      if (!Array.isArray(ans.screenshotUrls)) ans.screenshotUrls = [];
+      ans.screenshotUrls[idx] = downloadUrl;
+      saveState();
+    });
+  }
 }
 
 function removeScreenshot(qId, idx) {
@@ -6318,6 +6334,10 @@ function removeScreenshot(qId, idx) {
   if (answers[qId].screenshots) {
     answers[qId].screenshots.splice(idx, 1);
     if (answers[qId].screenshots.length === 0) delete answers[qId].screenshots;
+  }
+  if (Array.isArray(answers[qId].screenshotUrls)) {
+    answers[qId].screenshotUrls.splice(idx, 1);
+    if (answers[qId].screenshotUrls.length === 0) delete answers[qId].screenshotUrls;
   }
   delete answers[qId].screenshot; // clean up old field
   saveState();
@@ -11059,13 +11079,20 @@ async function generateAiPlan() {
   [...data.issues, ...data.strengths].forEach(item => {
     (item.images || []).forEach(src => {
       if (imageBlocks.filter(b => b.type === 'image').length >= MAX_IMAGES) return;
-      const m = /^data:(image\/[a-zA-Z0-9.+-]+);base64,(.+)$/.exec(src || '');
-      if (!m) return;
-      let mt = m[1].toLowerCase();
-      if (mt === 'image/jpg') mt = 'image/jpeg';
-      if (!['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(mt)) return;
-      imageBlocks.push({ type: 'text', text: `Screenshot bij bevinding: "${item.question}"` });
-      imageBlocks.push({ type: 'image', source: { type: 'base64', media_type: mt, data: m[2] } });
+      if (!src) return;
+      const m = /^data:(image\/[a-zA-Z0-9.+-]+);base64,(.+)$/.exec(src);
+      if (m) {
+        // Base64 (huidige sessie)
+        let mt = m[1].toLowerCase();
+        if (mt === 'image/jpg') mt = 'image/jpeg';
+        if (!['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(mt)) return;
+        imageBlocks.push({ type: 'text', text: `Screenshot bij bevinding: "${item.question}"` });
+        imageBlocks.push({ type: 'image', source: { type: 'base64', media_type: mt, data: m[2] } });
+      } else if (/^https?:\/\//.test(src)) {
+        // Storage-URL (na herladen) — proxy vertaalt dit naar OpenAI image_url
+        imageBlocks.push({ type: 'text', text: `Screenshot bij bevinding: "${item.question}"` });
+        imageBlocks.push({ type: 'image', source: { type: 'url', url: src } });
+      }
     });
   });
   const imgCount = imageBlocks.filter(b => b.type === 'image').length;
