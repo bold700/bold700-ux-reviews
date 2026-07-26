@@ -10971,7 +10971,8 @@ function buildAiPromptData() {
         score: a.score,
         impact: a.severity || 'low',
         notes: (a.notes || '').trim(),
-        tip: ''
+        tip: '',
+        images: getScreenshots(fId)
       };
       if (a.score === 'bad' || a.score === 'ok') issues.push(item);
       else strengths.push(item);
@@ -10987,7 +10988,8 @@ function buildAiPromptData() {
           score: a.score,
           impact: a.severity || step.impact || 'low',
           notes: (a.notes || '').replace(/\[Auto-scan\]\s*/g, '').trim(),
-          tip: questionTips[q.id] || ''
+          tip: questionTips[q.id] || '',
+          images: getScreenshots(q.id)
         };
         if (a.score === 'bad' || a.score === 'ok') issues.push(item);
         else strengths.push(item);
@@ -11005,7 +11007,7 @@ function buildAiPromptData() {
   return {
     project: { name: project.name, client: project.client, url: project.url },
     issues,
-    strengths: strengths.length,
+    strengths,
     totalQuestions: totalQ
   };
 }
@@ -11018,8 +11020,8 @@ async function generateAiPlan() {
   if (!proxyUrl) { alert('AI Actieplan is momenteel niet beschikbaar. Neem contact op met BOLD700.'); return; }
 
   const data = buildAiPromptData();
-  if (!data || data.issues.length === 0) {
-    document.getElementById('aiPlanBody').innerHTML = '<div class="ai-plan-empty">Geen verbeterpunten gevonden — alles is goed beoordeeld!</div>';
+  if (!data || (data.issues.length === 0 && data.strengths.length === 0)) {
+    document.getElementById('aiPlanBody').innerHTML = '<div class="ai-plan-empty">Nog geen bevindingen genoteerd — beoordeel eerst een paar punten voordat je een rapport genereert.</div>';
     return;
   }
 
@@ -11030,35 +11032,71 @@ async function generateAiPlan() {
   body.innerHTML = '<div class="ai-plan-empty ai-loading"><i data-lucide="sparkles" style="width:32px;height:32px;opacity:0.5;margin-bottom:8px;display:block;margin-inline:auto"></i>AI analyseert de review resultaten…</div>';
   if (typeof lucide !== 'undefined') lucide.createIcons({nodes:[body]});
 
+  const hasIssues = data.issues.length > 0;
+
   const issuesSummary = data.issues.map(i => {
     const scoreLabel = i.score === 'bad' ? 'Niet OK' : 'Matig';
     const impactLabel = i.impact === 'high' ? 'Hoog' : 'Laag';
     let line = `- [${scoreLabel}] [Impact: ${impactLabel}] ${i.question}`;
     if (i.notes) line += ` | Notitie reviewer: "${i.notes}"`;
     if (i.tip) line += ` | Suggestie: ${i.tip}`;
+    if (i.images && i.images.length) line += ` | ${i.images.length} screenshot(s) bijgevoegd`;
     line += ` (${i.category})`;
     return line;
   }).join('\n');
 
+  const strengthsSummary = data.strengths.map(s => {
+    let line = `- ${s.question}`;
+    if (s.notes) line += ` | Notitie reviewer: "${s.notes}"`;
+    if (s.images && s.images.length) line += ` | ${s.images.length} screenshot(s) bijgevoegd`;
+    line += ` (${s.category})`;
+    return line;
+  }).join('\n') || '- (geen expliciet benoemd)';
+
+  // ── Verzamel geüploade screenshots als afbeeldingen voor de AI (vision) ──
+  const MAX_IMAGES = 12;
+  const imageBlocks = [];
+  [...data.issues, ...data.strengths].forEach(item => {
+    (item.images || []).forEach(src => {
+      if (imageBlocks.filter(b => b.type === 'image').length >= MAX_IMAGES) return;
+      const m = /^data:(image\/[a-zA-Z0-9.+-]+);base64,(.+)$/.exec(src || '');
+      if (!m) return;
+      let mt = m[1].toLowerCase();
+      if (mt === 'image/jpg') mt = 'image/jpeg';
+      if (!['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(mt)) return;
+      imageBlocks.push({ type: 'text', text: `Screenshot bij bevinding: "${item.question}"` });
+      imageBlocks.push({ type: 'image', source: { type: 'base64', media_type: mt, data: m[2] } });
+    });
+  });
+  const imgCount = imageBlocks.filter(b => b.type === 'image').length;
+
   const systemPrompt = `Je bent een senior UX consultant van BOLD700, een bureau dat bedrijven helpt met UX design en development. Je schrijft in het Nederlands, direct en to-the-point. Geen vakjargon — schrijf alsof je tegen een ondernemer of marketing manager praat.
 
-Je doel: maak een kort, helder actieplan dat de klant overtuigt om te investeren in verbeteringen. Focus op RESULTAAT en BUSINESS IMPACT, niet op technische details.`;
+Je doel: maak een compleet, helder rapport op basis van ALLES wat de reviewer heeft vastgelegd — zowel de sterke punten als de verbeterpunten, inclusief de geschreven notities en de bijgevoegde screenshots. Focus op RESULTAAT en BUSINESS IMPACT, niet op technische details. Ook wanneer alles goed beoordeeld is schrijf je een volwaardig rapport dat benoemt wat er goed gaat en waarom dat waardevol is.`;
 
   const isFreeForm = project?.reviewType === 'free-form';
   const userPrompt = `Hier zijn de resultaten van een ${isFreeForm ? 'vrije expert review' : 'UX review'} van ${data.project.url || 'een website'}${data.project.name ? ' ('+data.project.name+')' : ''}${data.project.client ? ' voor '+data.project.client : ''}.
 
 ${isFreeForm
-  ? `De reviewer heeft ${data.totalQuestions} bevindingen genoteerd: ${data.issues.length} verbeterpunten en ${data.strengths} sterke punten. Dit is een vrije review — de bevindingen zijn door de expert zelf gekozen, niet uit een checklist.`
-  : `Van de ${data.totalQuestions} beoordeelde punten zijn er ${data.issues.length} verbeterpunten gevonden en ${data.strengths} punten goed beoordeeld.`}
+  ? `De reviewer heeft ${data.totalQuestions} bevindingen genoteerd: ${data.issues.length} verbeterpunten en ${data.strengths.length} sterke punten. Dit is een vrije review — de bevindingen zijn door de expert zelf gekozen, niet uit een checklist.`
+  : `Van de ${data.totalQuestions} beoordeelde punten zijn er ${data.issues.length} verbeterpunten gevonden en ${data.strengths.length} punten goed beoordeeld.`}
 
-VERBETERPUNTEN:
-${issuesSummary}
+STERKE PUNTEN (${data.strengths.length}):
+${strengthsSummary}
 
-Maak een klantgericht actieplan met deze structuur:
+${hasIssues
+  ? `VERBETERPUNTEN (${data.issues.length}):\n${issuesSummary}`
+  : `VERBETERPUNTEN: geen — alle beoordeelde punten zijn positief.`}
+${imgCount > 0 ? `\nEr zijn ${imgCount} screenshot(s) bijgevoegd bij deze bevindingen. Bekijk wat er op de afbeeldingen te zien is en betrek dat concreet in je rapport.` : ''}
+
+Maak een klantgericht rapport met deze structuur:
 
 ## Samenvatting
-Een korte samenvatting (2-3 zinnen) over de staat van de website. Begin positief (wat gaat goed), dan wat er beter kan.
+Een korte samenvatting (2-3 zinnen) over de staat van de website. Begin positief (wat gaat goed)${hasIssues ? ', benoem daarna wat er beter kan' : ''}.
 
+## Wat gaat goed
+Benoem de sterke punten concreet en koppel ze aan wat het de business oplevert (vertrouwen, conversie, professionele uitstraling). Gebruik hierbij de notities van de reviewer en wat je op de bijgevoegde screenshots ziet.
+${hasIssues ? `
 ## Top Prioriteiten
 De 3-5 belangrijkste acties. Per actie:
 ### [Korte titel]
@@ -11071,12 +11109,16 @@ De 3-5 belangrijkste acties. Per actie:
 Punten die snel gefixt kunnen worden met groot effect. Kort en bondig, max 5 items als bullet points.
 
 ## Overige Aanbevelingen
-De rest van de verbeterpunten, gegroepeerd en kort samengevat. Niet elk punt apart — groepeer gerelateerde items.
+De rest van de verbeterpunten, gegroepeerd en kort samengevat. Niet elk punt apart — groepeer gerelateerde items.`
+: `
+## Kansen om nog beter te worden
+Er zijn geen echte verbeterpunten. Geef 2-4 optionele, subtiele suggesties waarmee de site nóg sterker wordt. Houd het licht en niet geforceerd — het rapport blijft overwegend positief.`}
 
 Regels:
 - Schrijf in het Nederlands
 - Gebruik GEEN technische termen (geen WCAG codes, geen HTML-termen, geen developer jargon)
 - Focus op wat het de klant OPLEVERT (meer klanten, minder uitval, betere Google positie, professionelere uitstraling)
+- Betrek de geschreven notities en de bijgevoegde screenshots in je oordeel
 - Wees concreet maar kort
 - Gebruik Markdown formatting`;
 
@@ -11097,7 +11139,7 @@ Regels:
         model: 'claude-sonnet-4-20250514',
         max_tokens: 2000,
         system: systemPrompt,
-        messages: [{ role: 'user', content: userPrompt }]
+        messages: [{ role: 'user', content: [{ type: 'text', text: userPrompt }, ...imageBlocks] }]
       })
     });
 
