@@ -14537,9 +14537,18 @@ function buildReviewSteps(moduleConfig) {
   let includeChecks = null;
   if (moduleConfig && moduleConfig._modules) {
     const rawMods = moduleConfig._modules;
-    activeModules = Array.isArray(rawMods) && rawMods.length > 0 ? rawMods : null;
     includeChecks = moduleConfig._includeChecks || null;
-    moduleConfig = null; // clear so the forEach logic below works
+    if (Array.isArray(rawMods)) {
+      // Array-formaat (o.a. Figma-bundles): lijst van actieve module-ids
+      activeModules = rawMods.length > 0 ? rawMods : null;
+      moduleConfig = null; // clear so the forEach logic below works
+    } else if (rawMods && typeof rawMods === 'object') {
+      // Object-map-formaat (URL quick-scans): { moduleId: { active, weight, _pageType } }
+      // Gebruik als moduleConfig zodat active-flags én _pageType-filter werken.
+      moduleConfig = rawMods;
+    } else {
+      moduleConfig = null;
+    }
   }
 
   MODULE_REGISTRY.modules.forEach(mod => {
