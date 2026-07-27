@@ -10788,6 +10788,29 @@ function buildSparkline(dataPoints, width, height, color) {
   </svg>`;
 }
 
+// ── Score-verloop grafiek: één schaalbare SVG waarin lijn, punten én
+//    labels dezelfde x-posities delen, zodat elk puntje boven zijn datum staat ──
+function buildScoreChart(history) {
+  if (!history || history.length < 2) return '';
+  const vals = history.map(h => h.avg);
+  const lo = Math.max(0, Math.min(...vals) - 0.5);
+  const hi = Math.min(10, Math.max(...vals) + 0.5);
+  const range = (hi - lo) || 1;
+  const W = 1000, H = 122, L = 32, R = 32, top = 14, chartH = 56;
+  const n = history.length;
+  const x = i => n === 1 ? W / 2 : L + i * (W - L - R) / (n - 1);
+  const y = v => top + (1 - (v - lo) / range) * chartH;
+  const dotColor = v => v >= 7.5 ? '#22c55e' : v >= 5 ? '#eab308' : '#ef4444';
+  const pts = history.map((h, i) => `${x(i).toFixed(1)},${y(h.avg).toFixed(1)}`).join(' ');
+  const dots = history.map((h, i) => `<circle cx="${x(i).toFixed(1)}" cy="${y(h.avg).toFixed(1)}" r="4" fill="${dotColor(h.avg)}" style="stroke:var(--surface2);stroke-width:2"/>`).join('');
+  const scoreLabels = history.map((h, i) => `<text x="${x(i).toFixed(1)}" y="96" text-anchor="middle" font-size="15" font-weight="600" style="fill:var(--text)">${h.avg.toFixed(1)}</text>`).join('');
+  const dateLabels = history.map((h, i) => `<text x="${x(i).toFixed(1)}" y="113" text-anchor="middle" font-size="11" style="fill:var(--text-muted)">${h.date ? new Date(h.date).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short' }) : ''}</text>`).join('');
+  return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" style="width:100%;height:auto;display:block" role="img" aria-label="Score verloop">
+    <polyline points="${pts}" style="fill:none;stroke:var(--accent);stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round"/>
+    ${dots}${scoreLabels}${dateLabels}
+  </svg>`;
+}
+
 // ── Render Site Insights section ──
 function renderSiteInsights(project, currentScore, container) {
   const isPremium = isAdmin || (userProfile && userProfile.plan === 'pro');
@@ -10878,10 +10901,7 @@ function renderSiteInsights(project, currentScore, container) {
           <div class="insights-chart">
             <div class="insights-chart-label">Score verloop</div>
             <div class="insights-chart-body">
-              ${buildSparkline(sparkData, 280, 50, currentScore >= 7.5 ? '#22c55e' : currentScore >= 5 ? '#eab308' : '#ef4444')}
-              <div class="insights-chart-points">
-                ${history.map((h, i) => `<span class="insights-point">${h.avg.toFixed(1)}${h.date ? '<br><small>' + new Date(h.date).toLocaleDateString('nl-NL', {day:'numeric',month:'short'}) + '</small>' : ''}</span>`).join('')}
-              </div>
+              ${buildScoreChart(history)}
             </div>
           </div>` : `
           <div class="insights-empty-chart">
