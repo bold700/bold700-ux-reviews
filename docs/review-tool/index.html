@@ -10361,7 +10361,8 @@ function showScorecard() { try {
         <div class="dash-topbar-right">
           <div class="dash-topbar-meta">${new Date().toLocaleDateString('nl-NL')} · ${ffFindings.length} bevindingen</div>
           <button class="btn-icon" onclick="closeScorecard()"><i data-lucide="chevron-left" style="width:14px;height:14px"></i> Terug</button>
-          <button class="btn-icon" onclick="shareReport()" style="border-color:var(--green);color:var(--green)"><i data-lucide="share-2" style="width:14px;height:14px"></i> Deel rapport</button>
+          <button class="btn-icon" onclick="publishReport()" style="border-color:var(--green);color:var(--green)"><i data-lucide="share-2" style="width:14px;height:14px"></i> Deel link</button>
+          <button class="btn-icon" onclick="shareReport()" style="border-color:var(--accent);color:var(--accent)"><i data-lucide="file-text" style="width:14px;height:14px"></i> PDF</button>
           <button class="btn-icon" onclick="exportResults()" style="border-color:var(--accent);color:var(--accent)"><i data-lucide="download" style="width:14px;height:14px"></i> Exporteer</button>
         </div>
       </div>`;
@@ -10499,7 +10500,8 @@ function showScorecard() { try {
       <div class="dash-topbar-right">
         <div class="dash-topbar-meta">${new Date().toLocaleDateString('nl-NL')} · ${allScored.length}/${overallEffective} beoordeeld${allNvt > 0 ? ` · ${allNvt} n.v.t.` : ''}</div>
         <button class="btn-icon" onclick="closeScorecard()"><i data-lucide="chevron-left" style="width:14px;height:14px"></i> Terug</button>
-        <button class="btn-icon" onclick="shareReport()" style="border-color:var(--green);color:var(--green)"><i data-lucide="share-2" style="width:14px;height:14px"></i> Deel rapport</button>
+        <button class="btn-icon" onclick="publishReport()" style="border-color:var(--green);color:var(--green)"><i data-lucide="share-2" style="width:14px;height:14px"></i> Deel link</button>
+        <button class="btn-icon" onclick="shareReport()" style="border-color:var(--accent);color:var(--accent)"><i data-lucide="file-text" style="width:14px;height:14px"></i> PDF</button>
         <button class="btn-icon" onclick="exportResults()" style="border-color:var(--accent);color:var(--accent)"><i data-lucide="download" style="width:14px;height:14px"></i> Exporteer</button>
       </div>
     </div>`;
@@ -11520,6 +11522,65 @@ function shareReport() {
   const w = window.open('', '_blank');
   if (!w) { alert('Sta pop-ups toe om het rapport te openen (of gebruik Exporteer).'); return; }
   w.document.open(); w.document.write(html); w.document.close();
+}
+
+// ═══════════════ PUBLIEKE DEEL-LINK ═══════════════
+function reportPublicUrl(projectId) {
+  const path = location.pathname;
+  const idx = path.indexOf('review-tool');
+  const base = location.origin + (idx >= 0 ? path.slice(0, idx) : '/') + 'report/';
+  return base + '?id=' + encodeURIComponent(projectId);
+}
+
+async function publishReport() {
+  const project = getActiveProject();
+  if (!project) { alert('Geen actieve review.'); return; }
+  if (typeof saveCurrentAnswers === 'function') saveCurrentAnswers();
+  project.public = true;
+  project.sharedAt = new Date().toISOString();
+  saveState();
+  try { await syncProjectToFirestore(project); } catch (e) { console.warn('[Share] sync', e); }
+  const link = reportPublicUrl(project.id);
+  try { await navigator.clipboard.writeText(link); } catch (e) {}
+  showShareLinkModal(link, project);
+}
+
+async function unpublishReport() {
+  const project = getActiveProject();
+  if (!project) return;
+  project.public = false;
+  saveState();
+  try { await syncProjectToFirestore(project); } catch (e) {}
+  const ov = document.getElementById('shareLinkOverlay');
+  if (ov) ov.remove();
+  showScanToast('success', 'Delen gestopt', 'De publieke link werkt niet meer.', 3000);
+}
+
+function showShareLinkModal(link, project) {
+  const old = document.getElementById('shareLinkOverlay');
+  if (old) old.remove();
+  const ov = document.createElement('div');
+  ov.id = 'shareLinkOverlay';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:6000;display:flex;align-items:center;justify-content:center;padding:20px';
+  ov.onclick = e => { if (e.target === ov) ov.remove(); };
+  ov.innerHTML = `
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;max-width:460px;width:100%;padding:24px">
+      <div style="display:flex;align-items:center;gap:8px;font-size:16px;font-weight:700;margin-bottom:6px"><i data-lucide="share-2" style="width:18px;height:18px;color:var(--green)"></i> Rapport gedeeld</div>
+      <p style="font-size:13px;color:var(--text-muted);margin:0 0 14px">Iedereen met deze link ziet het live rapport op het platform — geen login nodig. De link toont altijd de actuele versie.</p>
+      <div style="display:flex;gap:6px;margin-bottom:14px">
+        <input id="shareLinkInput" readonly value="${link}" style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 11px;font-size:12px;color:var(--text);font-family:monospace" onclick="this.select()">
+        <button class="btn btn-accent btn-sm" onclick="navigator.clipboard.writeText('${link}').then(()=>{this.textContent='Gekopieerd'})">Kopieer</button>
+      </div>
+      <div style="display:flex;justify-content:space-between;gap:8px">
+        <button class="btn btn-secondary btn-sm" onclick="window.open('${link}','_blank')"><i data-lucide="external-link" style="width:13px;height:13px"></i> Openen</button>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-secondary btn-sm" onclick="unpublishReport()" style="color:var(--red);border-color:var(--red)">Stop met delen</button>
+          <button class="btn btn-secondary btn-sm" onclick="document.getElementById('shareLinkOverlay').remove()">Sluiten</button>
+        </div>
+      </div>
+    </div>`;
+  document.body.appendChild(ov);
+  if (typeof lucide !== 'undefined') lucide.createIcons({ nodes: [ov] });
 }
 
 function markdownToHtml(md) {

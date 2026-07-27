@@ -21,6 +21,9 @@ service cloud.firestore {
     match /projects/{projectId} {
       // Users can create projects (userId must match)
       allow create: if request.auth != null;
+      // PUBLIEK gedeelde rapporten: iedereen (ook zonder login) mag lezen,
+      // maar ALLEEN als de eigenaar het rapport expliciet heeft gedeeld.
+      allow read: if resource.data.public == true;
       // Users can read their own projects
       allow read: if request.auth != null && (
         resource.data.userId == request.auth.uid ||
