@@ -10499,6 +10499,7 @@ function showScorecard() { try {
       <div class="dash-topbar-right">
         <div class="dash-topbar-meta">${new Date().toLocaleDateString('nl-NL')} · ${allScored.length}/${overallEffective} beoordeeld${allNvt > 0 ? ` · ${allNvt} n.v.t.` : ''}</div>
         <button class="btn-icon" onclick="closeScorecard()"><i data-lucide="chevron-left" style="width:14px;height:14px"></i> Terug</button>
+        <button class="btn-icon" onclick="shareReport()" style="border-color:var(--green);color:var(--green)"><i data-lucide="share-2" style="width:14px;height:14px"></i> Deel rapport</button>
         <button class="btn-icon" onclick="exportResults()" style="border-color:var(--accent);color:var(--accent)"><i data-lucide="download" style="width:14px;height:14px"></i> Exporteer</button>
       </div>
     </div>`;
