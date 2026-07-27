@@ -5914,6 +5914,20 @@ function buildStepper() { try {
         <div class="stepper-progress-pct" id="progressPct" style="color:${progressColor}">${pct}%</div>
       </div>
     </div>` + (() => {
+    // Enkel-staps review (Quick Scan): toon de losse vragen i.p.v. één stap
+    if (reviewSteps.length === 1) {
+      const step = reviewSteps[0];
+      return `<div style="padding:12px 8px">
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted);margin-bottom:10px;padding:0 4px">${esc(step.shortTitle)} (${step.questions.length})</div>
+        ${step.questions.map((q, i) => {
+          const a = answers[q.id] || {};
+          const scoreColor = a.score === 'good' ? 'var(--score-good)' : a.score === 'ok' ? 'var(--score-ok)' : a.score === 'bad' ? 'var(--score-bad)' : a.score === 'nvt' ? 'var(--text-muted)' : 'var(--border)';
+          const label = q.text || ('Vraag ' + (i + 1));
+          const isActive = i === _focusQIndex;
+          return `<div class="qnav-item" style="padding:7px 8px;cursor:pointer;font-size:12px;line-height:1.35;border-radius:6px;margin-bottom:2px;display:flex;align-items:flex-start;gap:8px;${isActive ? 'background:var(--surface2);font-weight:600' : ''}" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='${isActive ? 'var(--surface2)' : 'transparent'}'" onclick="focusGoTo(${i})"><span style="width:8px;height:8px;border-radius:50%;background:${scoreColor};flex-shrink:0;margin-top:4px"></span><span style="overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">${i + 1}. ${esc(label)}</span></div>`;
+        }).join('')}
+      </div>`;
+    }
     let lastModuleId = null;
     return reviewSteps.map((step, i) => {
       const scored = step.questions.filter(q => answers[q.id]?.score && answers[q.id].score !== 'nvt');
@@ -6043,6 +6057,7 @@ function focusNextQ() {
   if (_focusQIndex < step.questions.length - 1) {
     _focusQIndex++;
     updateFocusView(step);
+    if (reviewSteps.length === 1) buildStepper();
   }
 }
 
@@ -6050,12 +6065,14 @@ function focusPrevQ() {
   if (_focusQIndex > 0) {
     _focusQIndex--;
     updateFocusView(reviewSteps[currentStep]);
+    if (reviewSteps.length === 1) buildStepper();
   }
 }
 
 function focusGoTo(index) {
   _focusQIndex = index;
   updateFocusView(reviewSteps[currentStep]);
+  if (reviewSteps.length === 1) buildStepper();
 }
 
 function renderStep(stepIndex, resetScroll) { try {
