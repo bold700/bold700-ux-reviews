@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>BOLD700 — UX Review Platform</title>
+<link rel="apple-touch-icon" href="/bold700-ux-reviews/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-title" content="BOLD700 UX">
+<style>.rep-menu-item{display:flex;align-items:center;gap:10px;width:100%;background:none;border:0;color:var(--text);font-size:13px;padding:10px 12px;border-radius:8px;cursor:pointer;text-align:left}.rep-menu-item:hover{background:var(--surface2)}</style>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 238 245'><path fill='%23ff5003' d='M194.252 118.59C207.964 113.052 218.412 104.907 226.247 94.1556C234.082 83.4043 238 70.6981 238 55.7114C238 37.7926 230.818 23.7832 216.453 14.3351C202.741 5.21277 183.805 0.325798 158.993 0H0V61.25H46.3594V46.2633H88.8011L0 245H116.878C150.178 245 176.949 238.484 197.191 225.452C217.432 212.42 227.226 193.198 227.226 167.786C227.226 155.731 224.288 145.957 218.738 137.487C213.188 129.016 205.026 122.826 194.252 118.59ZM157.687 193.198C148.872 199.388 136.466 202.32 120.469 202.32H69.5391L96.6365 141.722H134.181C158.667 141.722 171.073 150.193 171.073 166.809C171.073 178.537 166.502 187.008 157.687 193.198ZM166.176 92.2008C158.014 97.7394 146.261 100.672 131.243 100.672H114.919L139.078 46.5891H142.669C166.829 46.5891 178.908 53.7566 178.908 68.0918C178.582 78.5173 174.337 86.6622 166.176 92.2008Z'/></svg>">
 <style>
   :root {
@@ -1625,6 +1628,8 @@
   }
 
   @media (max-width: 768px) {
+    /* iOS zoomt in bij focus als de lettergrootte < 16px is — forceer 16px op mobiel */
+    input, textarea, select, .form-input, .form-select, .scan-url-input, .notes-input, .auth-input { font-size: 16px !important; }
     /* ─── Review topbar mobile ─── */
     .url-toolbar { padding: 4px 10px; padding-top: calc(4px + env(safe-area-inset-top, 0px)); gap: 6px; }
     .url-toolbar .url-bar { font-size: 12px; padding: 4px 8px; }
@@ -10361,9 +10366,14 @@ function showScorecard() { try {
         <div class="dash-topbar-right">
           <div class="dash-topbar-meta">${new Date().toLocaleDateString('nl-NL')} · ${ffFindings.length} bevindingen</div>
           <button class="btn-icon" onclick="closeScorecard()"><i data-lucide="chevron-left" style="width:14px;height:14px"></i> Terug</button>
-          <button class="btn-icon" onclick="publishReport()" style="border-color:var(--green);color:var(--green)"><i data-lucide="share-2" style="width:14px;height:14px"></i> Deel link</button>
-          <button class="btn-icon" onclick="shareReport()" style="border-color:var(--accent);color:var(--accent)"><i data-lucide="file-text" style="width:14px;height:14px"></i> PDF</button>
-          <button class="btn-icon" onclick="exportResults()" style="border-color:var(--accent);color:var(--accent)"><i data-lucide="download" style="width:14px;height:14px"></i> Exporteer</button>
+          <div style="position:relative">
+            <button class="btn-icon" onclick="toggleReportMenu(event)" title="Meer acties"><i data-lucide="more-vertical" style="width:16px;height:16px"></i></button>
+            <div id="reportMenu" style="display:none;position:absolute;right:0;top:calc(100% + 6px);background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:6px;min-width:190px;z-index:4000;box-shadow:0 10px 30px rgba(0,0,0,.45)">
+              <button class="rep-menu-item" onclick="closeReportMenu();publishReport()"><i data-lucide="share-2" style="width:15px;height:15px;color:var(--green)"></i> Deel link</button>
+              <button class="rep-menu-item" onclick="closeReportMenu();shareReport()"><i data-lucide="file-text" style="width:15px;height:15px;color:var(--accent)"></i> PDF opslaan</button>
+              <button class="rep-menu-item" onclick="closeReportMenu();exportResults()"><i data-lucide="download" style="width:15px;height:15px"></i> Exporteer (tekst)</button>
+            </div>
+          </div>
         </div>
       </div>`;
 
@@ -10500,9 +10510,14 @@ function showScorecard() { try {
       <div class="dash-topbar-right">
         <div class="dash-topbar-meta">${new Date().toLocaleDateString('nl-NL')} · ${allScored.length}/${overallEffective} beoordeeld${allNvt > 0 ? ` · ${allNvt} n.v.t.` : ''}</div>
         <button class="btn-icon" onclick="closeScorecard()"><i data-lucide="chevron-left" style="width:14px;height:14px"></i> Terug</button>
-        <button class="btn-icon" onclick="publishReport()" style="border-color:var(--green);color:var(--green)"><i data-lucide="share-2" style="width:14px;height:14px"></i> Deel link</button>
-        <button class="btn-icon" onclick="shareReport()" style="border-color:var(--accent);color:var(--accent)"><i data-lucide="file-text" style="width:14px;height:14px"></i> PDF</button>
-        <button class="btn-icon" onclick="exportResults()" style="border-color:var(--accent);color:var(--accent)"><i data-lucide="download" style="width:14px;height:14px"></i> Exporteer</button>
+        <div style="position:relative">
+          <button class="btn-icon" onclick="toggleReportMenu(event)" title="Meer acties"><i data-lucide="more-vertical" style="width:16px;height:16px"></i></button>
+          <div id="reportMenu" style="display:none;position:absolute;right:0;top:calc(100% + 6px);background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:6px;min-width:190px;z-index:4000;box-shadow:0 10px 30px rgba(0,0,0,.45)">
+            <button class="rep-menu-item" onclick="closeReportMenu();publishReport()"><i data-lucide="share-2" style="width:15px;height:15px;color:var(--green)"></i> Deel link</button>
+            <button class="rep-menu-item" onclick="closeReportMenu();shareReport()"><i data-lucide="file-text" style="width:15px;height:15px;color:var(--accent)"></i> PDF opslaan</button>
+            <button class="rep-menu-item" onclick="closeReportMenu();exportResults()"><i data-lucide="download" style="width:15px;height:15px"></i> Exporteer (tekst)</button>
+          </div>
+        </div>
       </div>
     </div>`;
 
@@ -11530,6 +11545,19 @@ function reportPublicUrl(projectId) {
   const idx = path.indexOf('review-tool');
   const base = location.origin + (idx >= 0 ? path.slice(0, idx) : '/') + 'report/';
   return base + '?id=' + encodeURIComponent(projectId);
+}
+
+function toggleReportMenu(e) {
+  if (e) e.stopPropagation();
+  const m = document.getElementById('reportMenu');
+  if (!m) return;
+  const show = m.style.display === 'none' || !m.style.display;
+  m.style.display = show ? 'block' : 'none';
+  if (show) setTimeout(() => document.addEventListener('click', closeReportMenu, { once: true }), 0);
+}
+function closeReportMenu() {
+  const m = document.getElementById('reportMenu');
+  if (m) m.style.display = 'none';
 }
 
 async function publishReport() {
