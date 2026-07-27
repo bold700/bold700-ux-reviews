@@ -10361,6 +10361,7 @@ function showScorecard() { try {
         <div class="dash-topbar-right">
           <div class="dash-topbar-meta">${new Date().toLocaleDateString('nl-NL')} · ${ffFindings.length} bevindingen</div>
           <button class="btn-icon" onclick="closeScorecard()"><i data-lucide="chevron-left" style="width:14px;height:14px"></i> Terug</button>
+          <button class="btn-icon" onclick="shareReport()" style="border-color:var(--green);color:var(--green)"><i data-lucide="share-2" style="width:14px;height:14px"></i> Deel rapport</button>
           <button class="btn-icon" onclick="exportResults()" style="border-color:var(--accent);color:var(--accent)"><i data-lucide="download" style="width:14px;height:14px"></i> Exporteer</button>
         </div>
       </div>`;
@@ -11420,6 +11421,104 @@ Regels:
   }
 
   if (btn) { btn.disabled = false; btn.innerHTML = '<i data-lucide="sparkles"></i> Genereer Actieplan'; lucide.createIcons({nodes:[btn]}); }
+}
+
+// ═══════════════ DEEL RAPPORT (zelfstandig HTML/PDF) ═══════════════
+function shareReport() {
+  const project = getActiveProject();
+  if (!project) { alert('Geen actieve review.'); return; }
+  if (typeof saveCurrentAnswers === 'function') saveCurrentAnswers();
+
+  const data = buildAiPromptData(); // { project:{name,url,client}, issues[], strengths[], totalQuestions }
+  if (!data) { alert('Kon de reviewgegevens niet laden.'); return; }
+  const sc = typeof calcProjectScoreSimple === 'function' ? calcProjectScoreSimple(project) : null;
+  const scoreVal = sc ? sc.avg : null;
+  const scoreColor = scoreVal == null ? '#888' : scoreVal >= 7.5 ? '#22c55e' : scoreVal >= 5 ? '#eab308' : '#ef4444';
+  const dateStr = new Date(project.createdAt || Date.now()).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' });
+  const esch = s => (s || '').toString().replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const cleanNote = s => (s || '').replace(/\[(Auto-scan|AI)\]\s*/g, '').trim();
+  const dot = { good: '#22c55e', ok: '#eab308', bad: '#ef4444' };
+
+  const renderItem = it => `
+    <div class="rep-item">
+      <div class="rep-item-head">
+        <span class="rep-dot" style="background:${dot[it.score] || '#888'}"></span>
+        <span class="rep-q">${esch(it.question)}</span>
+        ${it.category ? `<span class="rep-cat">${esch(it.category)}</span>` : ''}
+      </div>
+      ${cleanNote(it.notes) ? `<div class="rep-note">${esch(cleanNote(it.notes))}</div>` : ''}
+      ${(it.images && it.images.length) ? `<div class="rep-imgs">${it.images.map(src => `<img src="${esch(src)}" alt="">`).join('')}</div>` : ''}
+    </div>`;
+
+  const issuesHtml = data.issues.length ? data.issues.map(renderItem).join('') : '<p class="rep-empty">Geen verbeterpunten — netjes!</p>';
+  const strengthsHtml = data.strengths.length ? data.strengths.map(renderItem).join('') : '<p class="rep-empty">Geen expliciete sterke punten genoteerd.</p>';
+  const aiHtml = project.aiPlan && typeof markdownToHtml === 'function' ? markdownToHtml(project.aiPlan) : '';
+  const bPath = "M194.252 118.59C207.964 113.052 218.412 104.907 226.247 94.1556C234.082 83.4043 238 70.6981 238 55.7114C238 37.7926 230.818 23.7832 216.453 14.3351C202.741 5.21277 183.805 0.325798 158.993 0H0V61.25H46.3594V46.2633H88.8011L0 245H116.878C150.178 245 176.949 238.484 197.191 225.452C217.432 212.42 227.226 193.198 227.226 167.786C227.226 155.731 224.288 145.957 218.738 137.487C213.188 129.016 205.026 122.826 194.252 118.59ZM157.687 193.198C148.872 199.388 136.466 202.32 120.469 202.32H69.5391L96.6365 141.722H134.181C158.667 141.722 171.073 150.193 171.073 166.809C171.073 178.537 166.502 187.008 157.687 193.198ZM166.176 92.2008C158.014 97.7394 146.261 100.672 131.243 100.672H114.919L139.078 46.5891H142.669C166.829 46.5891 178.908 53.7566 178.908 68.0918C178.582 78.5173 174.337 86.6622 166.176 92.2008Z";
+  const title = data.project.name || data.project.url || 'UX Review';
+
+  const html = `<!doctype html><html lang="nl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>UX Review — ${esch(title)}</title>
+<style>
+  *{box-sizing:border-box} html,body{margin:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#1a1a1a;background:#f4f4f5;line-height:1.5}
+  .rep-toolbar{position:sticky;top:0;display:flex;gap:12px;align-items:center;padding:12px 20px;background:#111;color:#fff;font-size:13px}
+  .rep-toolbar button{background:#ff5003;color:#fff;border:0;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer}
+  .rep-toolbar button.sec{background:#333}
+  .rep-toolbar .hint{color:#aaa}
+  .rep-page{max-width:800px;margin:24px auto;background:#fff;padding:40px 44px;border-radius:12px;box-shadow:0 2px 20px rgba(0,0,0,.08)}
+  .rep-head{display:flex;align-items:center;justify-content:space-between;gap:20px;border-bottom:2px solid #eee;padding-bottom:20px;margin-bottom:24px}
+  .rep-brand{display:flex;align-items:center;gap:12px}
+  .rep-brand svg{height:32px}
+  .rep-brand .t{font-size:12px;letter-spacing:.5px;text-transform:uppercase;color:#888}
+  .rep-brand h1{font-size:20px;margin:2px 0 0}
+  .rep-meta{font-size:13px;color:#666;margin-top:4px}
+  .rep-score{text-align:center;flex-shrink:0}
+  .rep-score .n{font-size:34px;font-weight:800;line-height:1;color:${scoreColor}}
+  .rep-score .l{font-size:11px;text-transform:uppercase;color:#999;letter-spacing:.5px}
+  h2.rep-sec{font-size:15px;text-transform:uppercase;letter-spacing:.5px;margin:28px 0 12px;display:flex;align-items:center;gap:8px}
+  .rep-item{border:1px solid #eee;border-left:4px solid #ddd;border-radius:8px;padding:12px 14px;margin-bottom:10px;page-break-inside:avoid}
+  .rep-item-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .rep-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+  .rep-q{font-weight:600;font-size:14px}
+  .rep-cat{font-size:11px;color:#888;background:#f4f4f5;padding:2px 8px;border-radius:20px}
+  .rep-note{font-size:13px;color:#444;margin-top:6px;white-space:pre-wrap}
+  .rep-imgs{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+  .rep-imgs img{max-width:180px;max-height:130px;border-radius:6px;border:1px solid #eee}
+  .rep-empty{color:#999;font-size:13px}
+  .rep-ai{background:#faf9ff;border:1px solid #ece8ff;border-radius:10px;padding:16px 18px}
+  .rep-ai h2,.rep-ai h3{margin:12px 0 6px} .rep-ai h2{font-size:16px} .rep-ai h3{font-size:14px} .rep-ai p,.rep-ai li{font-size:13px}
+  .rep-foot{margin-top:32px;padding-top:16px;border-top:1px solid #eee;font-size:12px;color:#999;text-align:center}
+  @media print{.no-print{display:none!important}body{background:#fff}.rep-page{box-shadow:none;margin:0;max-width:none;padding:0}}
+</style></head>
+<body>
+  <div class="rep-toolbar no-print">
+    <button onclick="window.print()">Opslaan als PDF / printen</button>
+    <button class="sec" onclick="(function(){var b=new Blob([document.documentElement.outerHTML],{type:'text/html'});var a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='ux-review-${esch((title||'rapport').replace(/[^a-z0-9]/gi,'-').toLowerCase())}.html';a.click();})()">Download HTML</button>
+    <span class="hint">Tip: kies "Bewaar als PDF" in het printvenster.</span>
+  </div>
+  <div class="rep-page">
+    <div class="rep-head">
+      <div class="rep-brand">
+        <svg viewBox="0 0 238 245"><path fill="#ff5003" d="${bPath}"/></svg>
+        <div>
+          <div class="t">BOLD700 · UX Review</div>
+          <h1>${esch(title)}</h1>
+          <div class="rep-meta">${esch(data.project.url || '')}${data.project.client ? ' · ' + esch(data.project.client) : ''} · ${dateStr}</div>
+        </div>
+      </div>
+      ${scoreVal != null ? `<div class="rep-score"><div class="n">${scoreVal.toFixed(1)}</div><div class="l">Score</div></div>` : ''}
+    </div>
+    ${aiHtml ? `<h2 class="rep-sec">✨ Samenvatting &amp; Actieplan</h2><div class="rep-ai">${aiHtml}</div>` : ''}
+    <h2 class="rep-sec" style="color:#16a34a">✓ Sterke punten (${data.strengths.length})</h2>
+    ${strengthsHtml}
+    <h2 class="rep-sec" style="color:#dc2626">⚠ Verbeterpunten (${data.issues.length})</h2>
+    ${issuesHtml}
+    <div class="rep-foot">Gemaakt met de BOLD700 UX Review tool · ${dateStr}</div>
+  </div>
+</body></html>`;
+
+  const w = window.open('', '_blank');
+  if (!w) { alert('Sta pop-ups toe om het rapport te openen (of gebruik Exporteer).'); return; }
+  w.document.open(); w.document.write(html); w.document.close();
 }
 
 function markdownToHtml(md) {
