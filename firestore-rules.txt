@@ -22,8 +22,9 @@ service cloud.firestore {
       // Users can create projects (userId must match)
       allow create: if request.auth != null;
       // PUBLIEK gedeelde rapporten: iedereen (ook zonder login) mag lezen,
-      // maar ALLEEN als de eigenaar het rapport expliciet heeft gedeeld.
-      allow read: if resource.data.public == true;
+      // maar ALLEEN als expliciet gedeeld én de deellink nog niet verlopen is (7 dagen).
+      allow read: if resource.data.public == true
+        && (!('shareExpiresAtMs' in resource.data) || request.time.toMillis() < resource.data.shareExpiresAtMs);
       // Users can read their own projects
       allow read: if request.auth != null && (
         resource.data.userId == request.auth.uid ||

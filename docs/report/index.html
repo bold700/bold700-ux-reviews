@@ -198,10 +198,14 @@
         document.getElementById('root').innerHTML = stateHtml('<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>', 'Rapport niet gedeeld', 'De eigenaar heeft dit rapport (nog) niet openbaar gemaakt.');
         return;
       }
+      if (project.shareExpiresAtMs && Date.now() > project.shareExpiresAtMs) {
+        document.getElementById('root').innerHTML = stateHtml('<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>', 'Deellink verlopen', 'De deelperiode van dit rapport is voorbij. Vraag de eigenaar om een nieuwe link.');
+        return;
+      }
       render(project);
     } catch (e) {
       console.error(e);
-      document.getElementById('root').innerHTML = stateHtml('<circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/>', 'Kon rapport niet laden', 'Probeer het later opnieuw.');
+      document.getElementById('root').innerHTML = stateHtml('<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>', 'Rapport niet (meer) beschikbaar', 'De deellink is mogelijk verlopen of ingetrokken. Vraag de eigenaar om een nieuwe link.');
     }
   })();
 </script>
